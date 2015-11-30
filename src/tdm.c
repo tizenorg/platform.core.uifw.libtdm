@@ -687,6 +687,8 @@ tdm_display_init(tdm_error *error)
     {
         g_private_display->init_count++;
         pthread_mutex_unlock(&gLock);
+        if (error)
+            *error = TDM_ERROR_NONE;
         return g_private_display;
     }
 
@@ -720,6 +722,9 @@ tdm_display_init(tdm_error *error)
     private_display->init_count = 1;
 
     g_private_display = private_display;
+
+    if (error)
+        *error = TDM_ERROR_NONE;
 
     pthread_mutex_unlock(&gLock);
 
