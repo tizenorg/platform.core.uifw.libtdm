@@ -108,7 +108,7 @@ tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capability *capabilit
 }
 
 EXTERN tdm_error
-tdm_display_get_pp_capabilities(tdm_display *dpy, unsigned int *capabilities)
+tdm_display_get_pp_capabilities(tdm_display *dpy, tdm_pp_capability *capabilities)
 {
     DISPLAY_FUNC_ENTRY();
 
@@ -183,7 +183,7 @@ tdm_display_get_pp_available_properties(tdm_display *dpy, const tdm_prop **props
 }
 
 EXTERN tdm_error
-tdm_display_get_capture_capabilities(tdm_display *dpy, unsigned int *capabilities)
+tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *capabilities)
 {
     DISPLAY_FUNC_ENTRY();
 
@@ -807,7 +807,7 @@ tdm_output_create_capture(tdm_output *output, tdm_error *error)
 }
 
 EXTERN tdm_error
-tdm_layer_get_capabilities(tdm_layer *layer, unsigned int *capabilities)
+tdm_layer_get_capabilities(tdm_layer *layer, tdm_layer_capability *capabilities)
 {
     LAYER_FUNC_ENTRY();
 

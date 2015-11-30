@@ -59,11 +59,11 @@ tdm_error    tdm_display_get_fd(tdm_display *dpy, int *fd);
 tdm_error    tdm_display_handle_events(tdm_display *dpy);
 
 tdm_error    tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capability *capabilities);
-tdm_error    tdm_display_get_pp_capabilities(tdm_display *dpy, unsigned int *capabilities);
+tdm_error    tdm_display_get_pp_capabilities(tdm_display *dpy, tdm_pp_capability *capabilities);
 tdm_error    tdm_display_get_pp_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
 tdm_error    tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align);
 tdm_error    tdm_display_get_pp_available_properties(tdm_display *dpy, const tdm_prop **props, int *count);
-tdm_error    tdm_display_get_capture_capabilities(tdm_display *dpy, unsigned int *capabilities);
+tdm_error    tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *capabilities);
 tdm_error    tdm_display_get_catpure_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
 tdm_error    tdm_display_get_output_count(tdm_display *dpy, int *count);
 const tdm_output* tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error);
@@ -97,7 +97,7 @@ tdm_capture *tdm_output_create_capture(tdm_output *output, tdm_error *error);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-tdm_error   tdm_layer_get_capabilities(tdm_layer *layer, unsigned int *capabilities);
+tdm_error   tdm_layer_get_capabilities(tdm_layer *layer, tdm_layer_capability *capabilities);
 tdm_error   tdm_layer_get_available_formats(tdm_layer *layer, const tbm_format **formats, int *count);
 tdm_error   tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props, int *count);
 tdm_error   tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos); /* zpos of layer is fixed */
