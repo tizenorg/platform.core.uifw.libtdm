@@ -514,6 +514,22 @@ tdm_output_get_subpixel(tdm_output *output, unsigned int *subpixel)
 }
 
 EXTERN tdm_error
+tdm_output_get_pipe(tdm_output *output, unsigned int *pipe)
+{
+    OUTPUT_FUNC_ENTRY();
+    TDM_RETURN_VAL_IF_FAIL(pipe != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    pthread_mutex_lock(&private_display->lock);
+
+    *pipe = private_output->pipe;
+
+    pthread_mutex_unlock(&private_display->lock);
+
+    return ret;
+}
+
+
+EXTERN tdm_error
 tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
 {
     tdm_func_display *func_display;

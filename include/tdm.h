@@ -81,6 +81,7 @@ tdm_error   tdm_output_get_available_modes(tdm_output *output, const tdm_output_
 tdm_error   tdm_output_get_available_size(tdm_output *output, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align);
 tdm_error   tdm_output_get_physical_size(tdm_output *output, unsigned int *mmWidth, unsigned int *mmHeight);
 tdm_error   tdm_output_get_subpixel(tdm_output *output, unsigned int *subpixel);
+tdm_error   tdm_output_get_pipe(tdm_output *output, unsigned int *pipe);
 
 tdm_error   tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value);
 tdm_error   tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value);

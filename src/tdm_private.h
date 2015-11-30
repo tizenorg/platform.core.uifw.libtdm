@@ -181,6 +181,8 @@ struct _tdm_private_output
     tdm_caps_output caps;
     tdm_output *output;
 
+    unsigned int pipe;
+
     int regist_vblank_cb;
     int regist_commit_cb;
 

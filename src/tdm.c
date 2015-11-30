@@ -349,7 +349,7 @@ failed_update:
 }
 
 static tdm_error
-_tdm_display_update_output(tdm_private_display *private_display, tdm_output *output)
+_tdm_display_update_output(tdm_private_display *private_display, tdm_output *output, int pipe)
 {
     tdm_func_display *func_display = &private_display->func_display;
     tdm_private_output *private_output = NULL;
@@ -367,6 +367,7 @@ _tdm_display_update_output(tdm_private_display *private_display, tdm_output *out
         private_output->func_display = func_display;
         private_output->private_display = private_display;
         private_output->output = output;
+        private_output->pipe = pipe;
 
         LIST_INITHEAD(&private_output->layer_list);
         LIST_INITHEAD(&private_output->capture_list);
@@ -428,7 +429,7 @@ _tdm_display_update_internal(tdm_private_display *private_display, int only_disp
 
     for (i = 0; i < output_count; i++)
     {
-        ret = _tdm_display_update_output(private_display, outputs[i]);
+        ret = _tdm_display_update_output(private_display, outputs[i], i);
         if (ret != TDM_ERROR_NONE)
             goto failed_update;
     }
