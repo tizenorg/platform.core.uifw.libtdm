@@ -502,11 +502,11 @@ EXTERN tdm_error
 tdm_output_get_subpixel(tdm_output *output, unsigned int *subpixel)
 {
     OUTPUT_FUNC_ENTRY();
+    TDM_RETURN_VAL_IF_FAIL(subpixel != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    if (subpixel)
-        *subpixel = private_output->caps.subpixel;
+    *subpixel = private_output->caps.subpixel;
 
     pthread_mutex_unlock(&private_display->lock);
 
