@@ -175,7 +175,7 @@ tdm_display_get_pp_available_properties(tdm_display *dpy, const tdm_prop **props
     pthread_mutex_lock(&private_display->lock);
 
     *props = (const tdm_prop*)private_display->caps_pp.props;
-    *count = private_display->caps_pp.format_count;
+    *count = private_display->caps_pp.prop_count;
 
     pthread_mutex_unlock(&private_display->lock);
 
