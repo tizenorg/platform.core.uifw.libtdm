@@ -195,14 +195,14 @@ _tdm_display_update_caps_pp(tdm_private_display *private_display, tdm_caps_pp *c
         return TDM_ERROR_BAD_MODULE;
     }
 
-    TDM_INFO("pp capabilities: %x", caps->capabilities);
+    TDM_DBG("pp capabilities: %x", caps->capabilities);
     buf[0] = '\0';
     for (i = 0; i < caps->format_count; i++)
         TDM_SNPRINTF(str_buf, len_buf, "%c%c%c%c ", FOURCC_STR(caps->formats[i]));
-    TDM_INFO("pp formats: %s", buf);
-    TDM_INFO("pp min  : %dx%d", caps->min_w, caps->min_h);
-    TDM_INFO("pp max  : %dx%d", caps->max_w, caps->max_h);
-    TDM_INFO("pp align: %d", caps->preferred_align);
+    TDM_DBG("pp formats: %s", buf);
+    TDM_DBG("pp min  : %dx%d", caps->min_w, caps->min_h);
+    TDM_DBG("pp max  : %dx%d", caps->max_w, caps->max_h);
+    TDM_DBG("pp align: %d", caps->preferred_align);
 
     return TDM_ERROR_NONE;
 }
@@ -237,7 +237,7 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display, tdm_caps_
     buf[0] = '\0';
     for (i = 0; i < caps->format_count; i++)
         TDM_SNPRINTF(str_buf, len_buf, "%c%c%c%c ", FOURCC_STR(caps->formats[i]));
-    TDM_INFO("capture formats: %s", buf);
+    TDM_DBG("capture formats: %s", buf);
 
     return TDM_ERROR_NONE;
 }
@@ -266,14 +266,14 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display, tdm_layer *
         return TDM_ERROR_BAD_MODULE;
     }
 
-    TDM_INFO("layer capabilities: %x", caps->capabilities);
-    TDM_INFO("layer zpos : %d", caps->zpos);
+    TDM_DBG("layer capabilities: %x", caps->capabilities);
+    TDM_DBG("layer zpos : %d", caps->zpos);
     buf[0] = '\0';
     for (i = 0; i < caps->format_count; i++)
         TDM_SNPRINTF(str_buf, len_buf, "%c%c%c%c ", FOURCC_STR(caps->formats[i]));
-    TDM_INFO("layer formats: %s", buf);
+    TDM_DBG("layer formats: %s", buf);
     for (i = 0; i < caps->prop_count; i++)
-        TDM_INFO("layer props: %d, %s", caps->props[i].id, caps->props[i].name);
+        TDM_DBG("layer props: %d, %s", caps->props[i].id, caps->props[i].name);
 
     return TDM_ERROR_NONE;
 }
@@ -298,17 +298,17 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, tdm_output
         return TDM_ERROR_BAD_MODULE;
     }
 
-    TDM_INFO("output status: %d", caps->status);
-    TDM_INFO("output type : %d", caps->type);
+    TDM_DBG("output status: %d", caps->status);
+    TDM_DBG("output type : %d", caps->type);
     for (i = 0; i < caps->prop_count; i++)
-        TDM_INFO("output props: %d, %s", caps->props[i].id, caps->props[i].name);
+        TDM_DBG("output props: %d, %s", caps->props[i].id, caps->props[i].name);
     for (i = 0; i < caps->mode_count; i++)
-        TDM_INFO("output modes: name(%s), size(%dx%d), refresh(%d), flags(%d), type(%d)",
+        TDM_DBG("output modes: name(%s), size(%dx%d), refresh(%d), flags(%d), type(%d)",
                  caps->modes[i]->name, caps->modes[i]->width, caps->modes[i]->height,
                  caps->modes[i]->refresh, caps->modes[i]->flags, caps->modes[i]->type);
-    TDM_INFO("output min  : %dx%d", caps->min_w, caps->min_h);
-    TDM_INFO("output max  : %dx%d", caps->max_w, caps->max_h);
-    TDM_INFO("output align: %d", caps->preferred_align);
+    TDM_DBG("output min  : %dx%d", caps->min_w, caps->min_h);
+    TDM_DBG("output max  : %dx%d", caps->max_w, caps->max_h);
+    TDM_DBG("output align: %d", caps->preferred_align);
 
     return TDM_ERROR_NONE;
 }
