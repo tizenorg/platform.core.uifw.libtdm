@@ -616,7 +616,7 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display, const c
     private_display->module_data = module_data;
     private_display->module = module;
 
-    TDM_INFO("Success to load module(%s)\n", file);
+    TDM_INFO("Success to load module(%s)", file);
 
     return TDM_ERROR_NONE;
 failed_load:
