@@ -55,7 +55,7 @@ extern int tdm_debug;
 #define LOG_TAG "TDM"
 
 #define TDM_DBG(fmt, args...) \
-	if (tdm_debug < 1) \
+    if (tdm_debug) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -65,7 +65,6 @@ extern int tdm_debug;
 	} while (0);
 
 #define TDM_INFO(fmt, args...) \
-	if (tdm_debug < 2) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -75,7 +74,6 @@ extern int tdm_debug;
 	} while (0);
 
 #define TDM_WRN(fmt, args...) \
-	if (tdm_debug < 3) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -85,7 +83,6 @@ extern int tdm_debug;
 	} while (0);
 
 #define TDM_ERR(fmt, args...) \
-	if (tdm_debug < 4) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -100,7 +97,7 @@ extern int tdm_debug;
 #include <time.h>
 
 #define TDM_DBG(fmt, args...) \
-	if (tdm_debug < 1) \
+    if (tdm_debug) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -109,7 +106,6 @@ extern int tdm_debug;
 	} while (0);
 
 #define TDM_INFO(fmt, args...) \
-	if (tdm_debug < 2) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -118,7 +114,6 @@ extern int tdm_debug;
 	} while (0);
 
 #define TDM_WRN(fmt, args...) \
-	if (tdm_debug < 3) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
@@ -127,7 +122,6 @@ extern int tdm_debug;
 	} while (0);
 
 #define TDM_ERR(fmt, args...) \
-	if (tdm_debug < 4) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\

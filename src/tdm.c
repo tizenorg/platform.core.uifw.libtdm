@@ -465,7 +465,7 @@ tdm_display_update(tdm_display *dpy)
 #define SUFFIX_MODULE    ".so"
 #define DEFAULT_MODULE   "libtdm-default"SUFFIX_MODULE
 
-int tdm_debug = 2;
+int tdm_debug;
 
 static tdm_private_display *g_private_display;
 static pthread_mutex_t gLock = PTHREAD_MUTEX_INITIALIZER;
@@ -693,12 +693,8 @@ tdm_display_init(tdm_error *error)
     }
 
     debug = getenv("TDM_DEBUG");
-    if (debug)
-    {
-        char buf[64];
-        snprintf (buf, sizeof buf, "%s", debug);
-        tdm_debug = atoi(buf);
-    }
+    if (debug && (strstr(debug, "1")))
+        tdm_debug = 1;
 
     private_display = calloc(1, sizeof(tdm_private_display));
     if (!private_display)
