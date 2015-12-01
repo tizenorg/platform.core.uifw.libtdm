@@ -46,6 +46,14 @@ extern "C" {
 
 typedef void tdm_backend_data;
 
+typedef struct _tdm_caps_display
+{
+    tdm_display_capability capabilities;
+
+    /* -1: not defined */
+    int max_layer_count;
+} tdm_caps_display;
+
 typedef struct _tdm_caps_output
 {
     tdm_output_conn_status status;
@@ -117,7 +125,7 @@ typedef struct _tdm_caps_capture
 
 typedef struct _tdm_func_display
 {
-    tdm_error    (*display_get_capabilitiy)(tdm_backend_data *bdata, tdm_display_capability *capabilities); /* init */
+    tdm_error    (*display_get_capabilitiy)(tdm_backend_data *bdata, tdm_caps_display *caps); /* init */
     tdm_error    (*display_get_pp_capability)(tdm_backend_data *bdata, tdm_caps_pp *caps); /* init */
     tdm_error    (*display_get_capture_capability)(tdm_backend_data *bdata, tdm_caps_capture *caps); /* init */
     tdm_output **(*display_get_outputs)(tdm_backend_data *bdata, int *count, tdm_error *error); /* init */

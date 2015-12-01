@@ -100,7 +100,7 @@ tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capability *capabilit
 
     pthread_mutex_lock(&private_display->lock);
 
-    *capabilities = private_display->capabilities;
+    *capabilities = private_display->caps_display.capabilities;
 
     pthread_mutex_unlock(&private_display->lock);
 

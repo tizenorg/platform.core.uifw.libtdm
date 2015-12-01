@@ -160,7 +160,7 @@ struct _tdm_private_display
     tdm_func_capture func_capture;
 
     /* backend capability */
-    tdm_display_capability capabilities;
+    tdm_caps_display caps_display;
     tdm_caps_pp caps_pp;
     tdm_caps_capture caps_capture;
 

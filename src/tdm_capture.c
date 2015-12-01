@@ -71,7 +71,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
     func_display = &private_display->func_display;
     func_capture = &private_display->func_capture;
 
-    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
+    if (!(private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
     {
         TDM_ERR("no capture capability");
         if (error)
@@ -137,7 +137,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
     func_display = &private_display->func_display;
     func_capture = &private_display->func_capture;
 
-    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
+    if (!(private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
     {
         TDM_ERR("no capture capability");
         if (error)

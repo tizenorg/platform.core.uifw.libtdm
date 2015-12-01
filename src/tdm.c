@@ -165,7 +165,7 @@ _tdm_display_destroy_private_display(tdm_private_display *private_display)
 
     _tdm_display_destroy_caps_pp(&private_display->caps_pp);
     _tdm_display_destroy_caps_capture(&private_display->caps_capture);
-    private_display->capabilities = 0;
+    private_display->caps_display.capabilities = 0;
 }
 
 static tdm_error
@@ -179,7 +179,7 @@ _tdm_display_update_caps_pp(tdm_private_display *private_display, tdm_caps_pp *c
     int i;
     tdm_error ret;
 
-    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP))
+    if (!(private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_PP))
         return TDM_ERROR_NONE;
 
     if (!func_display->display_get_pp_capability)
@@ -218,7 +218,7 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display, tdm_caps_
     int i;
     tdm_error ret;
 
-    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
+    if (!(private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
         return TDM_ERROR_NONE;
 
     if (!func_display->display_get_capture_capability)
@@ -536,14 +536,14 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
     TDM_RETURN_VAL_IF_FAIL(func_display->layer_get_capability, TDM_ERROR_BAD_MODULE);
 
     ret = func_display->display_get_capabilitiy(private_display->bdata,
-                                                &private_display->capabilities);
+                                                &private_display->caps_display);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("display_get_capabilitiy() failed");
         return TDM_ERROR_BAD_MODULE;
     }
 
-    if (private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP)
+    if (private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_PP)
     {
         tdm_func_pp *func_pp = &private_display->func_pp;
         TDM_RETURN_VAL_IF_FAIL(func_display->display_get_pp_capability, TDM_ERROR_BAD_MODULE);
@@ -553,7 +553,7 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
         TDM_RETURN_VAL_IF_FAIL(func_pp->pp_set_done_handler, TDM_ERROR_BAD_MODULE);
     }
 
-    if (private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE)
+    if (private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE)
     {
         tdm_func_capture *func_capture = &private_display->func_capture;
         TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capture_capability, TDM_ERROR_BAD_MODULE);
