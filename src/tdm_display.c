@@ -950,6 +950,8 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 
     func_display = &private_display->func_display;
 
+    private_layer->usable = 0;
+
     if (!func_display->layer_set_info)
     {
         pthread_mutex_unlock(&private_display->lock);
@@ -1000,6 +1002,8 @@ tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer)
 
     func_display = &private_display->func_display;
 
+    private_layer->usable = 0;
+
     if (!func_display->layer_set_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
@@ -1027,6 +1031,8 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 
     func_display = &private_display->func_display;
 
+    private_layer->usable = 1;
+
     if (!func_display->layer_unset_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
@@ -1039,6 +1045,23 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 
     return ret;
 }
+
+EXTERN tdm_error
+tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable)
+{
+    LAYER_FUNC_ENTRY();
+
+    TDM_RETURN_VAL_IF_FAIL(usable != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    pthread_mutex_lock(&private_display->lock);
+
+    *usable = private_layer->usable;
+
+    pthread_mutex_unlock(&private_display->lock);
+
+    return ret;
+}
+
 
 EXTERN tdm_capture*
 tdm_layer_create_capture(tdm_layer *layer, tdm_error *error)

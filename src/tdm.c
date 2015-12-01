@@ -334,6 +334,8 @@ _tdm_display_update_layer(tdm_private_display *private_display,
         private_layer->layer = layer;
 
         LIST_INITHEAD(&private_layer->capture_list);
+
+        private_layer->usable = 1;
     }
     else
         _tdm_display_destroy_caps_layer(&private_layer->caps);

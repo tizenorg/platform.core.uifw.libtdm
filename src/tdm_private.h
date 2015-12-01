@@ -206,6 +206,8 @@ struct _tdm_private_layer
     tdm_layer *layer;
 
     struct list_head capture_list;
+
+    unsigned int usable;
 };
 
 struct _tdm_private_pp
