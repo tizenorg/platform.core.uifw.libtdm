@@ -96,7 +96,7 @@ tdm_buffer_create(tbm_surface_h buffer, tdm_error *error)
     LIST_INITHEAD(&buf_info->release_funcs);
 
     if (error)
-        error = TDM_ERROR_NONE;
+        *error = TDM_ERROR_NONE;
 
     return (tdm_buffer*)buf_info;
 }
