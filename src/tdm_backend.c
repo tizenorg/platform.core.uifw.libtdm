@@ -69,6 +69,7 @@ tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp)
         return TDM_ERROR_NONE;
 
     pthread_mutex_lock(&private_display->lock);
+    private_display->capabilities |= TDM_DISPLAY_CAPABILITY_PP;
     private_display->func_pp = *func_pp;
     pthread_mutex_unlock(&private_display->lock);
 
@@ -84,6 +85,7 @@ tdm_backend_register_func_capture(tdm_display *dpy, tdm_func_capture *func_captu
         return TDM_ERROR_NONE;
 
     pthread_mutex_lock(&private_display->lock);
+    private_display->capabilities |= TDM_DISPLAY_CAPABILITY_CAPTURE;
     private_display->func_capture = *func_capture;
     pthread_mutex_unlock(&private_display->lock);
 

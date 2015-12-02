@@ -113,12 +113,6 @@ typedef enum
 
 typedef enum
 {
-    TDM_DISPLAY_CAPABILITY_PP       = (1<<0),
-    TDM_DISPLAY_CAPABILITY_CAPTURE  = (1<<1),
-} tdm_display_capability;
-
-typedef enum
-{
     TDM_LAYER_CAPABILITY_CURSOR         = (1<<0),
     TDM_LAYER_CAPABILITY_PRIMARY        = (1<<1),
     TDM_LAYER_CAPABILITY_OVERLAY        = (1<<2),

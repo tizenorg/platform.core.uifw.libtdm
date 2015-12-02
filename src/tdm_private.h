@@ -155,6 +155,7 @@ struct _tdm_private_display
     tdm_backend_data *bdata;
 
     /* backend function */
+    tdm_display_capability capabilities;
     tdm_func_display func_display;
     tdm_func_pp func_pp;
     tdm_func_capture func_capture;

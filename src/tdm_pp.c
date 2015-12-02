@@ -70,7 +70,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
     func_display = &private_display->func_display;
     func_pp = &private_display->func_pp;
 
-    if (!(private_display->caps_display.capabilities & TDM_DISPLAY_CAPABILITY_PP))
+    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP))
     {
         TDM_ERR("no pp capability");
         if (error)

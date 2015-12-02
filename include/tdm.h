@@ -48,6 +48,12 @@ extern "C" {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+typedef enum
+{
+    TDM_DISPLAY_CAPABILITY_PP       = (1<<0),
+    TDM_DISPLAY_CAPABILITY_CAPTURE  = (1<<1),
+} tdm_display_capability;
+
 /* not neccessary for user to know what backend is */
 tdm_display* tdm_display_init(tdm_error *error);
 void         tdm_display_deinit(tdm_display *dpy);

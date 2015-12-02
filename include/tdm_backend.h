@@ -48,8 +48,6 @@ typedef void tdm_backend_data;
 
 typedef struct _tdm_caps_display
 {
-    tdm_display_capability capabilities;
-
     /* -1: not defined */
     int max_layer_count;
 } tdm_caps_display;
