@@ -866,8 +866,8 @@ tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props, int
 
     pthread_mutex_lock(&private_display->lock);
 
-    *props = (const tdm_prop*)private_output->caps.props;
-    *count = private_output->caps.prop_count;
+    *props = (const tdm_prop*)private_layer->caps.props;
+    *count = private_layer->caps.prop_count;
 
     pthread_mutex_unlock(&private_display->lock);
 
