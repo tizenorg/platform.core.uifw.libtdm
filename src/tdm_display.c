@@ -1010,11 +1010,18 @@ tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer)
         return TDM_ERROR_NONE;
     }
 
-    //TODO
+    if (private_layer->current_buffer)
+    {
+        /* TODO: need to unref after next buffer is showing on screen */
+        tdm_buffer_unref_backend(private_layer->current_buffer);
+        tdm_buffer_unref(private_layer->current_buffer);
+    }
+
+    private_layer->current_buffer = tdm_buffer_ref(buffer, NULL);
     tdm_buffer_ref_backend(buffer);
+
     ret = func_display->layer_set_buffer(private_layer->layer,
                                          tdm_buffer_get_surface(buffer));
-    tdm_buffer_unref_backend(buffer);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1030,6 +1037,13 @@ tdm_layer_unset_buffer(tdm_layer *layer)
     pthread_mutex_lock(&private_display->lock);
 
     func_display = &private_display->func_display;
+
+    if (private_layer->current_buffer)
+    {
+        tdm_buffer_unref(private_layer->current_buffer);
+        tdm_buffer_unref_backend(private_layer->current_buffer);
+        private_layer->current_buffer = NULL;
+    }
 
     private_layer->usable = 1;
 

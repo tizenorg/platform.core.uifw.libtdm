@@ -206,6 +206,8 @@ struct _tdm_private_layer
     tdm_caps_layer caps;
     tdm_layer *layer;
 
+    tdm_buffer *current_buffer;
+
     struct list_head capture_list;
 
     unsigned int usable;
