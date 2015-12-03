@@ -160,6 +160,8 @@ tdm_buffer_unref(tdm_buffer *buffer)
         free(func_info);
     }
 
+    LIST_DEL(&buf_info->link);
+
     free(buf_info);
 }
 
