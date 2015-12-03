@@ -60,12 +60,22 @@ typedef struct _tdm_buffer_info
     int backend_ref_count;
 
     struct list_head release_funcs;
+    struct list_head link;
 } tdm_buffer_info;
+
+static int buffer_list_init;
+static struct list_head buffer_list;
 
 EXTERN tdm_buffer*
 tdm_buffer_create(tbm_surface_h buffer, tdm_error *error)
 {
     tdm_buffer_info *buf_info;
+
+    if (!buffer_list_init)
+    {
+        LIST_INITHEAD(&buffer_list);
+        buffer_list_init = 1;
+    }
 
     if (!buffer)
     {
@@ -94,6 +104,7 @@ tdm_buffer_create(tbm_surface_h buffer, tdm_error *error)
     buf_info->buffer = buffer;
 
     LIST_INITHEAD(&buf_info->release_funcs);
+    LIST_ADDTAIL(&buf_info->link, &buffer_list);
 
     if (error)
         *error = TDM_ERROR_NONE;
@@ -238,14 +249,24 @@ tdm_buffer_get_surface(tdm_buffer *buffer)
     return buf_info->buffer;
 }
 
-#undef container_of
-#define container_of(ptr, type, member) \
-    (type *)((char *)(ptr) - offsetof(type, member))
-
 INTERN tdm_buffer*
 tdm_buffer_get(tbm_surface_h buffer)
 {
+    tdm_buffer_info *found;
+
     TDM_RETURN_VAL_IF_FAIL(buffer != NULL, NULL);
 
-    return container_of(buffer, tdm_buffer_info, buffer);
+    if (!buffer_list_init)
+    {
+        LIST_INITHEAD(&buffer_list);
+        buffer_list_init = 1;
+    }
+
+    LIST_FOR_EACH_ENTRY(found, &buffer_list, link)
+    {
+        if (found->buffer == buffer)
+            return found;
+    }
+
+    return NULL;
 }
