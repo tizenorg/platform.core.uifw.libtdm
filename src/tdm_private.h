@@ -241,6 +241,7 @@ struct _tdm_private_vblank_handler
 {
     struct list_head link;
 
+    tdm_private_output *private_output;
     tdm_output_vblank_handler func;
     void *user_data;
 };
@@ -249,6 +250,7 @@ struct _tdm_private_commit_handler
 {
     struct list_head link;
 
+    tdm_private_output *private_output;
     tdm_output_commit_handler func;
     void *user_data;
 };
