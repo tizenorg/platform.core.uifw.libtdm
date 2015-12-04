@@ -162,6 +162,8 @@ tdm_buffer_unref(tdm_buffer *buffer)
 
     LIST_DEL(&buf_info->link);
 
+    tbm_surface_internal_unref(buf_info->buffer);
+
     free(buf_info);
 }
 
