@@ -565,29 +565,20 @@ static void
 _tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
                       unsigned int tv_sec, unsigned int tv_usec, void *user_data)
 {
-    tdm_private_output *private_output;
-    tdm_private_display *private_display;
-    tdm_private_display *private_display_backend;
     tdm_private_vblank_handler *vblank_handler = user_data;
+    tdm_private_display *private_display;
+
     TDM_RETURN_IF_FAIL(vblank_handler);
 
-    private_output = vblank_handler->private_output;
-    TDM_RETURN_IF_FAIL(private_output);
+    private_display = vblank_handler->private_output->private_display;
 
-    private_display = private_output->private_display;
-    LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link)
-    {
-        if (private_output->output_backend == output_backend)
-            private_display_backend = private_output->private_display;
-    }
-
-    pthread_mutex_unlock(&private_display_backend->lock);
+    pthread_mutex_unlock(&private_display->lock);
 
     if (vblank_handler->func)
         vblank_handler->func(vblank_handler->private_output, sequence,
                              tv_sec, tv_usec, vblank_handler->user_data);
 
-    pthread_mutex_lock(&private_display_backend->lock);
+    pthread_mutex_lock(&private_display->lock);
 
     LIST_DEL(&vblank_handler->link);
     free(vblank_handler);
@@ -597,29 +588,20 @@ static void
 _tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
                       unsigned int tv_sec, unsigned int tv_usec, void *user_data)
 {
-    tdm_private_output *private_output;
-    tdm_private_display *private_display;
-    tdm_private_display *private_display_backend;
     tdm_private_commit_handler *commit_handler = user_data;
+    tdm_private_display *private_display;
+
     TDM_RETURN_IF_FAIL(commit_handler);
 
-    private_output = commit_handler->private_output;
-    TDM_RETURN_IF_FAIL(private_output);
+    private_display = commit_handler->private_output->private_display;
 
-    private_display = private_output->private_display;
-    LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link)
-    {
-        if (private_output->output_backend == output_backend)
-            private_display_backend = private_output->private_display;
-    }
-
-    pthread_mutex_unlock(&private_display_backend->lock);
+    pthread_mutex_unlock(&private_display->lock);
 
     if (commit_handler->func)
         commit_handler->func(commit_handler->private_output, sequence,
                              tv_sec, tv_usec, commit_handler->user_data);
 
-    pthread_mutex_lock(&private_display_backend->lock);
+    pthread_mutex_lock(&private_display->lock);
 
     LIST_DEL(&commit_handler->link);
     free(commit_handler);
