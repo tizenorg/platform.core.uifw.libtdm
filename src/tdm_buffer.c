@@ -53,10 +53,10 @@ typedef struct _tdm_buffer_info
 {
     tbm_surface_h buffer;
 
-    /* frontend ref_count */
+    /* ref_count for frontend */
     int ref_count;
 
-    /* backend ref_count */
+    /* ref_count for backend */
     int backend_ref_count;
 
     struct list_head release_funcs;
@@ -65,6 +65,26 @@ typedef struct _tdm_buffer_info
 
 static int buffer_list_init;
 static struct list_head buffer_list;
+
+static void
+_tdm_buffer_destroy(tdm_buffer_info *buf_info)
+{
+    tdm_buffer_func_info *func_info = NULL, *next = NULL;
+
+    TDM_WARNING_IF_FAIL(buf_info->ref_count == 0);
+    TDM_WARNING_IF_FAIL(buf_info->backend_ref_count == 0);
+
+    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link)
+    {
+        LIST_DEL(&func_info->link);
+        free(func_info);
+    }
+
+    LIST_DEL(&buf_info->link);
+
+    tbm_surface_internal_unref(buf_info->buffer);
+    free(buf_info);
+}
 
 EXTERN tdm_buffer*
 tdm_buffer_create(tbm_surface_h buffer, tdm_error *error)
@@ -140,31 +160,20 @@ EXTERN void
 tdm_buffer_unref(tdm_buffer *buffer)
 {
     tdm_buffer_info *buf_info;
-    tdm_buffer_func_info *func_info = NULL, *next = NULL;
 
     if (!buffer)
         return;
 
     buf_info = buffer;
+    TDM_RETURN_IF_FAIL (buf_info->ref_count > 0);
+
     buf_info->ref_count--;
 
-    if (buf_info->ref_count > 0)
+    /* destroy tdm_buffer when both ref_count and backend_ref_count are 0. */
+    if (buf_info->ref_count > 0 || buf_info->backend_ref_count > 0)
         return;
 
-    /* Before ref_count become 0, all backend reference should be removed */
-    TDM_WARNING_IF_FAIL(buf_info->backend_ref_count == 0);
-
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link)
-    {
-        LIST_DEL(&func_info->link);
-        free(func_info);
-    }
-
-    LIST_DEL(&buf_info->link);
-
-    tbm_surface_internal_unref(buf_info->buffer);
-
-    free(buf_info);
+    _tdm_buffer_destroy(buf_info);
 }
 
 EXTERN tdm_error
@@ -230,6 +239,7 @@ tdm_buffer_unref_backend(tdm_buffer *buffer)
 {
     tdm_buffer_info *buf_info;
     tdm_buffer_func_info *func_info = NULL, *next = NULL;
+    int old_ref_count;
 
     TDM_RETURN_IF_FAIL(buffer != NULL);
 
@@ -239,8 +249,18 @@ tdm_buffer_unref_backend(tdm_buffer *buffer)
     if (buf_info->backend_ref_count > 0)
         return;
 
+    /* ref_count can become 0 in user release function. In that case, buf_info
+     * will be destroyed in tbm_buffer_unref. So we destroy buf_info in this
+     * function only in case that old_ref_count is 0.
+     */
+    old_ref_count = buf_info->ref_count;
+
     LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link)
         func_info->func(buffer, func_info->user_data);
+
+    /* finally, both ref_count and backend_ref_count are 0. destroy tdm_buffer */
+    if (old_ref_count == 0 && buf_info->ref_count == 0)
+        _tdm_buffer_destroy(buf_info);
 }
 
 INTERN tbm_surface_h
