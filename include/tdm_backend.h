@@ -95,9 +95,6 @@ typedef struct _tdm_caps_pp
     unsigned int format_count;
     tbm_format *formats;
 
-    unsigned int prop_count;
-    tdm_prop *props;
-
     /* -1: not defined */
     int min_w;
     int min_h;
@@ -160,8 +157,6 @@ typedef void (*tdm_pp_done_handler)(tdm_pp *pp, tbm_surface_h src, tbm_surface_h
 typedef struct _tdm_func_pp
 {
     void         (*pp_destroy)(tdm_pp *pp); /* init */
-    tdm_error    (*pp_set_property)(tdm_pp *pp, unsigned int id, tdm_value value);
-    tdm_error    (*pp_get_property)(tdm_pp *pp, unsigned int id, tdm_value *value);
     tdm_error    (*pp_set_info)(tdm_pp *pp, tdm_info_pp *info);
     tdm_error    (*pp_attach)(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
     tdm_error    (*pp_commit)(tdm_pp *pp); /* init */

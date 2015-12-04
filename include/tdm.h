@@ -68,7 +68,6 @@ tdm_error    tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capabili
 tdm_error    tdm_display_get_pp_capabilities(tdm_display *dpy, tdm_pp_capability *capabilities);
 tdm_error    tdm_display_get_pp_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
 tdm_error    tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align);
-tdm_error    tdm_display_get_pp_available_properties(tdm_display *dpy, const tdm_prop **props, int *count);
 tdm_error    tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *capabilities);
 tdm_error    tdm_display_get_catpure_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
 tdm_error    tdm_display_get_output_count(tdm_display *dpy, int *count);
@@ -122,8 +121,6 @@ tdm_capture *tdm_layer_create_capture(tdm_layer *layer, tdm_error *error);
 ///////////////////////////////////////////////////////////////////////////////
 
 void         tdm_pp_destroy(tdm_pp *pp);
-tdm_error    tdm_pp_set_property(tdm_pp *pp, unsigned int id, tdm_value value);
-tdm_error    tdm_pp_get_property(tdm_pp *pp, unsigned int id, tdm_value *value);
 tdm_error    tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info);
 tdm_error    tdm_pp_attach(tdm_pp *pp, tdm_buffer *src, tdm_buffer *dst);
 tdm_error    tdm_pp_commit(tdm_pp *pp);

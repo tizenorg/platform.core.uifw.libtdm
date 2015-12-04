@@ -165,24 +165,6 @@ tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h, int 
 }
 
 EXTERN tdm_error
-tdm_display_get_pp_available_properties(tdm_display *dpy, const tdm_prop **props, int *count)
-{
-    DISPLAY_FUNC_ENTRY();
-
-    TDM_RETURN_VAL_IF_FAIL(props != NULL, TDM_ERROR_INVALID_PARAMETER);
-    TDM_RETURN_VAL_IF_FAIL(count != NULL, TDM_ERROR_INVALID_PARAMETER);
-
-    pthread_mutex_lock(&private_display->lock);
-
-    *props = (const tdm_prop*)private_display->caps_pp.props;
-    *count = private_display->caps_pp.prop_count;
-
-    pthread_mutex_unlock(&private_display->lock);
-
-    return ret;
-}
-
-EXTERN tdm_error
 tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *capabilities)
 {
     DISPLAY_FUNC_ENTRY();

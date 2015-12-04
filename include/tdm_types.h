@@ -227,6 +227,7 @@ typedef struct _tdm_info_pp
     tdm_info_config dst_config;
     tdm_transform transform;
     int sync;
+    int flags;
 } tdm_info_pp;
 
 typedef struct _tdm_info_capture
@@ -235,6 +236,7 @@ typedef struct _tdm_info_capture
     tdm_transform transform;
     int oneshot;
     int frequency;
+    int flags;
 } tdm_info_capture;
 
 typedef void tdm_display;

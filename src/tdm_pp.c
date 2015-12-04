@@ -152,48 +152,6 @@ tdm_pp_destroy(tdm_pp *pp)
 }
 
 EXTERN tdm_error
-tdm_pp_set_property(tdm_pp *pp, unsigned int id, tdm_value value)
-{
-    PP_FUNC_ENTRY();
-
-    pthread_mutex_lock(&private_display->lock);
-
-    if (!func_pp->pp_set_property)
-    {
-        pthread_mutex_unlock(&private_display->lock);
-        return TDM_ERROR_NONE;
-    }
-
-    ret = func_pp->pp_set_property(private_pp->pp, id, value);
-
-    pthread_mutex_unlock(&private_display->lock);
-
-    return ret;
-}
-
-EXTERN tdm_error
-tdm_pp_get_property(tdm_pp *pp, unsigned int id, tdm_value *value)
-{
-    PP_FUNC_ENTRY();
-
-    TDM_RETURN_VAL_IF_FAIL(value != NULL, TDM_ERROR_INVALID_PARAMETER);
-
-    pthread_mutex_lock(&private_display->lock);
-
-    if (!func_pp->pp_get_property)
-    {
-        pthread_mutex_unlock(&private_display->lock);
-        return TDM_ERROR_NONE;
-    }
-
-    ret = func_pp->pp_get_property(private_pp->pp, id, value);
-
-    pthread_mutex_unlock(&private_display->lock);
-
-    return ret;
-}
-
-EXTERN tdm_error
 tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 {
     PP_FUNC_ENTRY();
