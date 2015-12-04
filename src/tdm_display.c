@@ -142,7 +142,8 @@ tdm_display_get_pp_available_formats(tdm_display *dpy, const tbm_format **format
 }
 
 EXTERN tdm_error
-tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align)
+tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h,
+                                  int *max_w, int *max_h, int *preferred_align)
 {
     DISPLAY_FUNC_ENTRY();
 
@@ -441,7 +442,8 @@ tdm_output_get_available_modes(tdm_output *output, const tdm_output_mode **modes
 }
 
 EXTERN tdm_error
-tdm_output_get_available_size(tdm_output *output, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align)
+tdm_output_get_available_size(tdm_output *output, int *min_w, int *min_h,
+                              int *max_w, int *max_h, int *preferred_align)
 {
     OUTPUT_FUNC_ENTRY();
 
@@ -527,7 +529,7 @@ tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_set_property(private_output->output, id, value);
+    ret = func_display->output_set_property(private_output->output_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -552,7 +554,7 @@ tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_get_property(private_output->output, id, value);
+    ret = func_display->output_get_property(private_output->output_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -560,7 +562,7 @@ tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value)
 }
 
 static void
-_tdm_output_cb_vblank(tdm_output *output, unsigned int sequence,
+_tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
                       unsigned int tv_sec, unsigned int tv_usec, void *user_data)
 {
     tdm_private_output *private_output;
@@ -575,14 +577,15 @@ _tdm_output_cb_vblank(tdm_output *output, unsigned int sequence,
     private_display = private_output->private_display;
     LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link)
     {
-        if (private_output->output == output)
+        if (private_output->output_backend == output_backend)
             private_display_backend = private_output->private_display;
     }
 
     pthread_mutex_unlock(&private_display_backend->lock);
 
     if (vblank_handler->func)
-        vblank_handler->func(vblank_handler->private_output, sequence, tv_sec, tv_usec, vblank_handler->user_data);
+        vblank_handler->func(vblank_handler->private_output, sequence,
+                             tv_sec, tv_usec, vblank_handler->user_data);
 
     pthread_mutex_lock(&private_display_backend->lock);
 
@@ -591,7 +594,7 @@ _tdm_output_cb_vblank(tdm_output *output, unsigned int sequence,
 }
 
 static void
-_tdm_output_cb_commit(tdm_output *output, unsigned int sequence,
+_tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
                       unsigned int tv_sec, unsigned int tv_usec, void *user_data)
 {
     tdm_private_output *private_output;
@@ -606,14 +609,15 @@ _tdm_output_cb_commit(tdm_output *output, unsigned int sequence,
     private_display = private_output->private_display;
     LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link)
     {
-        if (private_output->output == output)
+        if (private_output->output_backend == output_backend)
             private_display_backend = private_output->private_display;
     }
 
     pthread_mutex_unlock(&private_display_backend->lock);
 
     if (commit_handler->func)
-        commit_handler->func(commit_handler->private_output, sequence, tv_sec, tv_usec, commit_handler->user_data);
+        commit_handler->func(commit_handler->private_output, sequence,
+                             tv_sec, tv_usec, commit_handler->user_data);
 
     pthread_mutex_lock(&private_display_backend->lock);
 
@@ -622,7 +626,8 @@ _tdm_output_cb_commit(tdm_output *output, unsigned int sequence,
 }
 
 EXTERN tdm_error
-tdm_output_wait_vblank(tdm_output *output, int interval, int sync, tdm_output_vblank_handler func, void *user_data)
+tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
+                       tdm_output_vblank_handler func, void *user_data)
 {
     tdm_func_display *func_display;
     tdm_private_vblank_handler *vblank_handler;
@@ -651,7 +656,8 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync, tdm_output_vb
     vblank_handler->func = func;
     vblank_handler->user_data = user_data;
 
-    ret = func_display->output_wait_vblank(private_output->output, interval, sync, vblank_handler);
+    ret = func_display->output_wait_vblank(private_output->output_backend, interval,
+                                           sync, vblank_handler);
     if (ret != TDM_ERROR_NONE)
     {
         pthread_mutex_unlock(&private_display->lock);
@@ -661,7 +667,8 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync, tdm_output_vb
     if (!private_output->regist_vblank_cb)
     {
         private_output->regist_vblank_cb = 1;
-        ret = func_display->output_set_vblank_handler(private_output->output, _tdm_output_cb_vblank);
+        ret = func_display->output_set_vblank_handler(private_output->output_backend,
+                                                      _tdm_output_cb_vblank);
     }
 
     pthread_mutex_unlock(&private_display->lock);
@@ -699,7 +706,7 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
     commit_handler->func = func;
     commit_handler->user_data = user_data;
 
-    ret = func_display->output_commit(private_output->output, sync, commit_handler);
+    ret = func_display->output_commit(private_output->output_backend, sync, commit_handler);
     if (ret != TDM_ERROR_NONE)
     {
         pthread_mutex_unlock(&private_display->lock);
@@ -709,7 +716,8 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
     if (!private_output->regist_commit_cb)
     {
         private_output->regist_commit_cb = 1;
-        ret = func_display->output_set_commit_handler(private_output->output, _tdm_output_cb_commit);
+        ret = func_display->output_set_commit_handler(private_output->output_backend,
+                                                      _tdm_output_cb_commit);
     }
 
     pthread_mutex_unlock(&private_display->lock);
@@ -735,7 +743,7 @@ tdm_output_set_mode(tdm_output *output, tdm_output_mode *mode)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_set_mode(private_output->output, mode);
+    ret = func_display->output_set_mode(private_output->output_backend, mode);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -760,7 +768,7 @@ tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_get_mode(private_output->output, mode);
+    ret = func_display->output_get_mode(private_output->output_backend, mode);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -786,7 +794,7 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_set_dpms(private_output->output, dpms_value);
+    ret = func_display->output_set_dpms(private_output->output_backend, dpms_value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -811,7 +819,7 @@ tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_get_dpms(private_output->output, dpms_value);
+    ret = func_display->output_get_dpms(private_output->output_backend, dpms_value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -918,7 +926,7 @@ tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_set_property(private_layer->layer, id, value);
+    ret = func_display->layer_set_property(private_layer->layer_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -943,7 +951,7 @@ tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_get_property(private_layer->layer, id, value);
+    ret = func_display->layer_get_property(private_layer->layer_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -970,7 +978,7 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_set_info(private_layer->layer, info);
+    ret = func_display->layer_set_info(private_layer->layer_backend, info);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -995,7 +1003,7 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_get_info(private_layer->layer, info);
+    ret = func_display->layer_get_info(private_layer->layer_backend, info);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1032,7 +1040,7 @@ tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer)
     private_layer->current_buffer = tdm_buffer_ref(buffer, NULL);
     tdm_buffer_ref_backend(buffer);
 
-    ret = func_display->layer_set_buffer(private_layer->layer,
+    ret = func_display->layer_set_buffer(private_layer->layer_backend,
                                          tdm_buffer_get_surface(buffer));
 
     pthread_mutex_unlock(&private_display->lock);
@@ -1065,7 +1073,7 @@ tdm_layer_unset_buffer(tdm_layer *layer)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_unset_buffer(private_layer->layer);
+    ret = func_display->layer_unset_buffer(private_layer->layer_backend);
 
     pthread_mutex_unlock(&private_display->lock);
 

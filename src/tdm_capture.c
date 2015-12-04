@@ -52,7 +52,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     func_capture = private_capture->func_capture
 
 static void
-_tdm_caputre_cb_done(tdm_capture *capture, tbm_surface_h buffer, void *user_data)
+_tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer, void *user_data)
 {
     tdm_buffer_unref_backend(tdm_buffer_get(buffer));
 }
@@ -64,7 +64,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
     tdm_func_display *func_display;
     tdm_func_capture *func_capture;
     tdm_private_capture *private_capture = NULL;
-    tdm_capture *capture = NULL;
+    tdm_capture *capture_backend = NULL;
     tdm_error ret = TDM_ERROR_NONE;
 
     private_display = private_output->private_display;
@@ -79,7 +79,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
         return NULL;
     }
 
-    capture = func_display->output_create_capture(private_output->output, &ret);
+    capture_backend = func_display->output_create_capture(private_output->output_backend, &ret);
     if (ret != TDM_ERROR_NONE)
     {
         if (error)
@@ -91,17 +91,17 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
     if (!private_capture)
     {
         TDM_ERR("failed: alloc memory");
-        func_capture->capture_destroy(capture);
+        func_capture->capture_destroy(capture_backend);
         if (error)
             *error = TDM_ERROR_OUT_OF_MEMORY;
         return NULL;
     }
 
-    ret = func_capture->capture_set_done_handler(capture, _tdm_caputre_cb_done, private_capture);
+    ret = func_capture->capture_set_done_handler(capture_backend, _tdm_caputre_cb_done, private_capture);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("set capture_done_handler failed");
-        func_capture->capture_destroy(capture);
+        func_capture->capture_destroy(capture_backend);
         if (error)
             *error = ret;
         return NULL;
@@ -113,7 +113,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
     private_capture->private_display = private_display;
     private_capture->private_output = private_output;
     private_capture->private_layer = NULL;
-    private_capture->capture = capture;
+    private_capture->capture_backend = capture_backend;
 
     if (error)
         *error = TDM_ERROR_NONE;
@@ -129,7 +129,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
     tdm_func_display *func_display;
     tdm_func_capture *func_capture;
     tdm_private_capture *private_capture = NULL;
-    tdm_capture *capture = NULL;
+    tdm_capture *capture_backend = NULL;
     tdm_error ret = TDM_ERROR_NONE;
 
     private_output = private_layer->private_output;
@@ -145,7 +145,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
         return NULL;
     }
 
-    capture = func_display->layer_create_capture(private_layer->layer, &ret);
+    capture_backend = func_display->layer_create_capture(private_layer->layer_backend, &ret);
     if (ret != TDM_ERROR_NONE)
         return NULL;
 
@@ -153,7 +153,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
     if (!private_capture)
     {
         TDM_ERR("failed: alloc memory");
-        func_capture->capture_destroy(capture);
+        func_capture->capture_destroy(capture_backend);
         if (error)
             *error = TDM_ERROR_OUT_OF_MEMORY;
         return NULL;
@@ -165,7 +165,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
     private_capture->private_display = private_display;
     private_capture->private_output = private_output;
     private_capture->private_layer = private_layer;
-    private_capture->capture = capture;
+    private_capture->capture_backend = capture_backend;
 
     if (error)
         *error = TDM_ERROR_NONE;
@@ -184,7 +184,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
     LIST_DEL(&private_capture->link);
 
     func_capture = private_capture->func_capture;
-    func_capture->capture_destroy(private_capture->capture);
+    func_capture->capture_destroy(private_capture->capture_backend);
 
     free(private_capture);
 }
@@ -192,13 +192,12 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 EXTERN void
 tdm_capture_destroy(tdm_capture *capture)
 {
+    tdm_private_capture *private_capture = capture;
     tdm_private_display *private_display;
-    tdm_private_capture *private_capture;
 
-    if (!capture)
+    if (!private_capture)
         return;
 
-    private_capture = (tdm_private_capture*)capture;
     private_display = private_capture->private_display;
 
     pthread_mutex_lock(&private_display->lock);
@@ -221,7 +220,7 @@ tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_capture->capture_set_info(private_capture->capture, info);
+    ret = func_capture->capture_set_info(private_capture->capture_backend, info);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -244,7 +243,7 @@ tdm_capture_attach(tdm_capture *capture, tdm_buffer *buffer)
     }
 
     tdm_buffer_ref_backend(buffer);
-    ret = func_capture->capture_attach(private_capture->capture,
+    ret = func_capture->capture_attach(private_capture->capture_backend,
                                        tdm_buffer_get_surface(buffer));
 
     pthread_mutex_unlock(&private_display->lock);
@@ -265,7 +264,7 @@ tdm_capture_commit(tdm_capture *capture)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_capture->capture_commit(private_capture->capture);
+    ret = func_capture->capture_commit(private_capture->capture_backend);
 
     pthread_mutex_unlock(&private_display->lock);
 

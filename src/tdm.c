@@ -42,13 +42,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_private.h"
 
 static tdm_private_layer*
-_tdm_display_find_private_layer(tdm_private_output *private_output, tdm_layer *layer)
+_tdm_display_find_private_layer(tdm_private_output *private_output, tdm_layer *layer_backend)
 {
     tdm_private_layer *private_layer = NULL;
 
     LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link)
     {
-        if (private_layer->layer == layer)
+        if (private_layer->layer_backend == layer_backend)
             return private_layer;
     }
 
@@ -56,13 +56,13 @@ _tdm_display_find_private_layer(tdm_private_output *private_output, tdm_layer *l
 }
 
 static tdm_private_output*
-_tdm_display_find_private_output(tdm_private_display *private_display, tdm_output *output)
+_tdm_display_find_private_output(tdm_private_display *private_display, tdm_output *output_backend)
 {
     tdm_private_output *private_output = NULL;
 
     LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link)
     {
-        if (private_output->output == output)
+        if (private_output->output_backend == output_backend)
             return private_output;
     }
 
@@ -245,7 +245,8 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display, tdm_caps_
 }
 
 static tdm_error
-_tdm_display_update_caps_layer(tdm_private_display *private_display, tdm_layer *layer, tdm_caps_layer *caps)
+_tdm_display_update_caps_layer(tdm_private_display *private_display,
+                               tdm_layer *layer_backend, tdm_caps_layer *caps)
 {
     tdm_func_display *func_display = &private_display->func_display;
     char buf[1024];
@@ -261,7 +262,7 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display, tdm_layer *
         return TDM_ERROR_BAD_MODULE;
     }
 
-    ret = func_display->layer_get_capability(layer, caps);
+    ret = func_display->layer_get_capability(layer_backend, caps);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("layer_get_capability() failed");
@@ -281,7 +282,8 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display, tdm_layer *
 }
 
 static tdm_error
-_tdm_display_update_caps_output(tdm_private_display *private_display, tdm_output *output, tdm_caps_output *caps)
+_tdm_display_update_caps_output(tdm_private_display *private_display,
+                                tdm_output *output_backend, tdm_caps_output *caps)
 {
     tdm_func_display *func_display = &private_display->func_display;
     int i;
@@ -293,7 +295,7 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, tdm_output
         return TDM_ERROR_BAD_MODULE;
     }
 
-    ret = func_display->output_get_capability(output, caps);
+    ret = func_display->output_get_capability(output_backend, caps);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("output_get_capability() failed");
@@ -318,12 +320,12 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, tdm_output
 static tdm_error
 _tdm_display_update_layer(tdm_private_display *private_display,
                           tdm_private_output *private_output,
-                          tdm_layer *layer)
+                          tdm_layer *layer_backend)
 {
     tdm_private_layer *private_layer;
     tdm_error ret;
 
-    private_layer = _tdm_display_find_private_layer(private_output, layer);
+    private_layer = _tdm_display_find_private_layer(private_output, layer_backend);
     if (!private_layer)
     {
         private_layer = calloc(1, sizeof(tdm_private_layer));
@@ -333,7 +335,7 @@ _tdm_display_update_layer(tdm_private_display *private_display,
         private_layer->func_display = &private_display->func_display;
         private_layer->private_display = private_display;
         private_layer->private_output = private_output;
-        private_layer->layer = layer;
+        private_layer->layer_backend = layer_backend;
 
         LIST_INITHEAD(&private_layer->capture_list);
 
@@ -342,7 +344,7 @@ _tdm_display_update_layer(tdm_private_display *private_display,
     else
         _tdm_display_destroy_caps_layer(&private_layer->caps);
 
-    ret = _tdm_display_update_caps_layer(private_display, layer, &private_layer->caps);
+    ret = _tdm_display_update_caps_layer(private_display, layer_backend, &private_layer->caps);
     if (ret != TDM_ERROR_NONE)
         goto failed_update;
 
@@ -353,7 +355,8 @@ failed_update:
 }
 
 static tdm_error
-_tdm_display_update_output(tdm_private_display *private_display, tdm_output *output, int pipe)
+_tdm_display_update_output(tdm_private_display *private_display,
+                           tdm_output *output_backend, int pipe)
 {
     tdm_func_display *func_display = &private_display->func_display;
     tdm_private_output *private_output = NULL;
@@ -361,7 +364,7 @@ _tdm_display_update_output(tdm_private_display *private_display, tdm_output *out
     int layer_count = 0, i;
     tdm_error ret;
 
-    private_output = _tdm_display_find_private_output(private_display, output);
+    private_output = _tdm_display_find_private_output(private_display, output_backend);
     if (!private_output)
     {
         private_output = calloc(1, sizeof(tdm_private_output));
@@ -370,7 +373,7 @@ _tdm_display_update_output(tdm_private_display *private_display, tdm_output *out
         LIST_ADD(&private_output->link, &private_display->output_list);
         private_output->func_display = func_display;
         private_output->private_display = private_display;
-        private_output->output = output;
+        private_output->output_backend = output_backend;
         private_output->pipe = pipe;
 
         LIST_INITHEAD(&private_output->layer_list);
@@ -381,11 +384,11 @@ _tdm_display_update_output(tdm_private_display *private_display, tdm_output *out
     else
         _tdm_display_destroy_caps_output(&private_output->caps);
 
-    ret = _tdm_display_update_caps_output(private_display, output, &private_output->caps);
+    ret = _tdm_display_update_caps_output(private_display, output_backend, &private_output->caps);
     if (ret != TDM_ERROR_NONE)
         return ret;
 
-    layers = func_display->output_get_layers(output, &layer_count, &ret);
+    layers = func_display->output_get_layers(output_backend, &layer_count, &ret);
     if (ret != TDM_ERROR_NONE)
         goto failed_update;
 

@@ -52,7 +52,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     func_pp = private_pp->func_pp
 
 static void
-_tdm_pp_cb_done(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst, void *user_data)
+_tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst, void *user_data)
 {
     tdm_buffer_unref_backend(tdm_buffer_get(src));
     tdm_buffer_unref_backend(tdm_buffer_get(dst));
@@ -64,7 +64,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
     tdm_func_display *func_display;
     tdm_func_pp *func_pp;
     tdm_private_pp *private_pp = NULL;
-    tdm_pp *pp = NULL;
+    tdm_pp *pp_backend = NULL;
     tdm_error ret = TDM_ERROR_NONE;
 
     func_display = &private_display->func_display;
@@ -78,7 +78,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
         return NULL;
     }
 
-    pp = func_display->display_create_pp(private_display->bdata, &ret);
+    pp_backend = func_display->display_create_pp(private_display->bdata, &ret);
     if (ret != TDM_ERROR_NONE)
     {
         if (error)
@@ -90,17 +90,17 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
     if (!private_pp)
     {
         TDM_ERR("failed: alloc memory");
-        func_pp->pp_destroy(pp);
+        func_pp->pp_destroy(pp_backend);
         if (error)
             *error = TDM_ERROR_OUT_OF_MEMORY;
         return NULL;
     }
 
-    ret = func_pp->pp_set_done_handler(pp, _tdm_pp_cb_done, private_pp);
+    ret = func_pp->pp_set_done_handler(pp_backend, _tdm_pp_cb_done, private_pp);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("set pp_done_handler failed");
-        func_pp->pp_destroy(pp);
+        func_pp->pp_destroy(pp_backend);
         if (error)
             *error = ret;
         return NULL;
@@ -109,7 +109,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
     LIST_ADD(&private_pp->link, &private_display->pp_list);
     private_pp->func_pp = func_pp;
     private_pp->private_display = private_display;
-    private_pp->pp = pp;
+    private_pp->pp_backend = pp_backend;
 
     if (error)
         *error = TDM_ERROR_NONE;
@@ -129,7 +129,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 
     LIST_DEL(&private_pp->link);
 
-    func_pp->pp_destroy(private_pp->pp);
+    func_pp->pp_destroy(private_pp->pp_backend);
 
     free(private_pp);
 }
@@ -137,13 +137,12 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 EXTERN void
 tdm_pp_destroy(tdm_pp *pp)
 {
+    tdm_private_pp *private_pp = pp;
     tdm_private_display *private_display;
-    tdm_private_pp *private_pp;
 
-    if (!pp)
+    if (!private_pp)
         return;
 
-    private_pp = (tdm_private_pp*)pp;
     private_display = private_pp->private_display;
 
     pthread_mutex_lock(&private_display->lock);
@@ -166,7 +165,7 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_pp->pp_set_info(private_pp->pp, info);
+    ret = func_pp->pp_set_info(private_pp->pp_backend, info);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -191,7 +190,7 @@ tdm_pp_attach(tdm_pp *pp, tdm_buffer *src, tdm_buffer *dst)
 
     tdm_buffer_ref_backend(src);
     tdm_buffer_ref_backend(dst);
-    ret = func_pp->pp_attach(private_pp->pp,
+    ret = func_pp->pp_attach(private_pp->pp_backend,
                              tdm_buffer_get_surface(src),
                              tdm_buffer_get_surface(dst));
 
@@ -213,7 +212,7 @@ tdm_pp_commit(tdm_pp *pp)
         return TDM_ERROR_NONE;
     }
 
-    ret = func_pp->pp_commit(private_pp->pp);
+    ret = func_pp->pp_commit(private_pp->pp_backend);
 
     pthread_mutex_unlock(&private_display->lock);
 

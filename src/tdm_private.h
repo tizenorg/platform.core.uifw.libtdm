@@ -180,7 +180,7 @@ struct _tdm_private_output
     tdm_private_display *private_display;
 
     tdm_caps_output caps;
-    tdm_output *output;
+    tdm_output *output_backend;
 
     unsigned int pipe;
 
@@ -204,7 +204,7 @@ struct _tdm_private_layer
     tdm_private_output *private_output;
 
     tdm_caps_layer caps;
-    tdm_layer *layer;
+    tdm_layer *layer_backend;
 
     tdm_buffer *current_buffer;
 
@@ -220,7 +220,7 @@ struct _tdm_private_pp
     tdm_func_pp *func_pp;
     tdm_private_display *private_display;
 
-    tdm_pp *pp;
+    tdm_pp *pp_backend;
 };
 
 struct _tdm_private_capture
@@ -234,7 +234,7 @@ struct _tdm_private_capture
     tdm_private_output *private_output;
     tdm_private_layer *private_layer;
 
-    tdm_capture *capture;
+    tdm_capture *capture_backend;
 };
 
 struct _tdm_private_vblank_handler
