@@ -136,6 +136,7 @@ tdm_error    tdm_capture_commit(tdm_capture *capture);
 
 typedef void (*tdm_buffer_release_handler)(tdm_buffer *buffer, void *user_data);
 
+/* not pthread safe */
 tdm_buffer *tdm_buffer_create(tbm_surface_h buffer, tdm_error *error);
 tdm_buffer *tdm_buffer_ref(tdm_buffer *buffer, tdm_error *error);
 void        tdm_buffer_unref(tdm_buffer *buffer);
