@@ -572,13 +572,13 @@ _tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
 
     private_display = vblank_handler->private_output->private_display;
 
-    pthread_mutex_unlock(&private_display->lock);
-
     if (vblank_handler->func)
+    {
+        pthread_mutex_unlock(&private_display->lock);
         vblank_handler->func(vblank_handler->private_output, sequence,
                              tv_sec, tv_usec, vblank_handler->user_data);
-
-    pthread_mutex_lock(&private_display->lock);
+        pthread_mutex_lock(&private_display->lock);
+    }
 
     LIST_DEL(&vblank_handler->link);
     free(vblank_handler);
@@ -590,18 +590,37 @@ _tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 {
     tdm_private_commit_handler *commit_handler = user_data;
     tdm_private_display *private_display;
+    tdm_private_output *private_output;
+    tdm_private_layer *private_layer;
 
     TDM_RETURN_IF_FAIL(commit_handler);
 
-    private_display = commit_handler->private_output->private_display;
-
-    pthread_mutex_unlock(&private_display->lock);
+    private_output = commit_handler->private_output;
+    private_display = private_output->private_display;
 
     if (commit_handler->func)
-        commit_handler->func(commit_handler->private_output, sequence,
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        commit_handler->func(private_output, sequence,
                              tv_sec, tv_usec, commit_handler->user_data);
+        pthread_mutex_lock(&private_display->lock);
+    }
 
-    pthread_mutex_lock(&private_display->lock);
+    LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link)
+    {
+        if (!private_layer->waiting_buffer)
+            continue;
+
+        if (private_layer->showing_buffer)
+        {
+            pthread_mutex_unlock(&private_display->lock);
+            tdm_buffer_unref_backend(private_layer->showing_buffer);
+            pthread_mutex_lock(&private_display->lock);
+        }
+
+        private_layer->showing_buffer = private_layer->waiting_buffer;
+        private_layer->waiting_buffer = NULL;
+    }
 
     LIST_DEL(&commit_handler->link);
     free(commit_handler);
@@ -1012,15 +1031,14 @@ tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer)
         return TDM_ERROR_NONE;
     }
 
-    if (private_layer->current_buffer)
+    if (private_layer->waiting_buffer)
     {
-        /* TODO: need to unref after next buffer is showing on screen */
-        tdm_buffer_unref_backend(private_layer->current_buffer);
-        tdm_buffer_unref(private_layer->current_buffer);
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->waiting_buffer);
+        pthread_mutex_lock(&private_display->lock);
     }
 
-    private_layer->current_buffer = tdm_buffer_ref(buffer, NULL);
-    tdm_buffer_ref_backend(buffer);
+    private_layer->waiting_buffer = tdm_buffer_ref_backend(buffer);
 
     ret = func_display->layer_set_buffer(private_layer->layer_backend,
                                          tdm_buffer_get_surface(buffer));
@@ -1040,11 +1058,20 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 
     func_display = &private_display->func_display;
 
-    if (private_layer->current_buffer)
+    if (private_layer->waiting_buffer)
     {
-        tdm_buffer_unref(private_layer->current_buffer);
-        tdm_buffer_unref_backend(private_layer->current_buffer);
-        private_layer->current_buffer = NULL;
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->waiting_buffer);
+        pthread_mutex_lock(&private_display->lock);
+        private_layer->waiting_buffer = NULL;
+    }
+
+    if (private_layer->showing_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->showing_buffer);
+        pthread_mutex_lock(&private_display->lock);
+        private_layer->showing_buffer = NULL;
     }
 
     private_layer->usable = 1;
