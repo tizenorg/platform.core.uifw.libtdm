@@ -54,8 +54,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 static void
 _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst, void *user_data)
 {
+    tdm_private_pp *private_pp = user_data;
+    tdm_private_display *private_display = private_pp->private_display;
+
+    pthread_mutex_unlock(&private_display->lock);
+
     tdm_buffer_unref_backend(tdm_buffer_get(src));
     tdm_buffer_unref_backend(tdm_buffer_get(dst));
+
+    pthread_mutex_lock(&private_display->lock);
 }
 
 INTERN tdm_private_pp*
