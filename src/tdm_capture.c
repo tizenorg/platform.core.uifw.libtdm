@@ -54,7 +54,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 static void
 _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer, void *user_data)
 {
+    tdm_private_capture *private_capture = user_data;
+    tdm_private_display *private_display = private_capture->private_display;
+    int lock_after_cb_done = 0;
+
+    if (pthread_mutex_trylock(&private_display->lock))
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        lock_after_cb_done = 1;
+    }
+
     tdm_buffer_unref_backend(tdm_buffer_get(buffer));
+
+    if (lock_after_cb_done)
+        pthread_mutex_lock(&private_display->lock);
 }
 
 INTERN tdm_private_capture*
