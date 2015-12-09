@@ -59,7 +59,7 @@ typedef struct _tdm_caps_output
     unsigned int type_id;
 
     unsigned int mode_count;
-    tdm_output_mode **modes;
+    tdm_output_mode *modes;
 
     unsigned int prop_count;
     tdm_prop *props;

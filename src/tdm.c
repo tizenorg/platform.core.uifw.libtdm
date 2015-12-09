@@ -308,8 +308,8 @@ _tdm_display_update_caps_output(tdm_private_display *private_display,
         TDM_DBG("output props: %d, %s", caps->props[i].id, caps->props[i].name);
     for (i = 0; i < caps->mode_count; i++)
         TDM_DBG("output modes: name(%s), size(%dx%d), refresh(%d), flags(%d), type(%d)",
-                 caps->modes[i]->name, caps->modes[i]->width, caps->modes[i]->height,
-                 caps->modes[i]->refresh, caps->modes[i]->flags, caps->modes[i]->type);
+                 caps->modes[i].name, caps->modes[i].width, caps->modes[i].height,
+                 caps->modes[i].refresh, caps->modes[i].flags, caps->modes[i].type);
     TDM_DBG("output min  : %dx%d", caps->min_w, caps->min_h);
     TDM_DBG("output max  : %dx%d", caps->max_w, caps->max_h);
     TDM_DBG("output align: %d", caps->preferred_align);
