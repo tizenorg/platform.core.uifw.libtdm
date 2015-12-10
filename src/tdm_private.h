@@ -256,11 +256,6 @@ struct _tdm_private_commit_handler
     void *user_data;
 };
 
-tdm_buffer*   tdm_buffer_ref_backend(tdm_buffer *buffer);
-void          tdm_buffer_unref_backend(tdm_buffer *buffer);
-tbm_surface_h tdm_buffer_get_surface(tdm_buffer *buffer);
-tdm_buffer*   tdm_buffer_get(tbm_surface_h buffer);
-
 tdm_private_pp* tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);
 void tdm_pp_destroy_internal(tdm_private_pp *private_pp);
 
