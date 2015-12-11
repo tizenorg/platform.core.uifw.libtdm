@@ -1040,8 +1040,7 @@ tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer)
 
     private_layer->waiting_buffer = tdm_buffer_ref_backend(buffer);
 
-    ret = func_display->layer_set_buffer(private_layer->layer_backend,
-                                         tdm_buffer_get_surface(buffer));
+    ret = func_display->layer_set_buffer(private_layer->layer_backend, buffer);
 
     pthread_mutex_unlock(&private_display->lock);
 

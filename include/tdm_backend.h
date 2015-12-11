@@ -147,7 +147,7 @@ typedef struct _tdm_func_display
     tdm_error    (*layer_get_property)(tdm_layer *layer, unsigned int id, tdm_value *value);
     tdm_error    (*layer_set_info)(tdm_layer *layer, tdm_info_layer *info);
     tdm_error    (*layer_get_info)(tdm_layer *layer, tdm_info_layer *info);
-    tdm_error    (*layer_set_buffer)(tdm_layer *layer, tbm_surface_h buffer);
+    tdm_error    (*layer_set_buffer)(tdm_layer *layer, tdm_buffer *buffer);
     tdm_error    (*layer_unset_buffer)(tdm_layer *layer);
     tdm_capture *(*layer_create_capture)(tdm_layer *layer, tdm_error *error);
 } tdm_func_display;
@@ -163,13 +163,13 @@ typedef struct _tdm_func_pp
     tdm_error    (*pp_set_done_handler)(tdm_pp *pp, tdm_pp_done_handler func, void *user_data);
 } tdm_func_pp;
 
-typedef void (*tdm_capture_done_handler)(tdm_capture *capture, tbm_surface_h buffer, void *user_data);
+typedef void (*tdm_capture_done_handler)(tdm_capture *capture, tdm_buffer *buffer, void *user_data);
 
 typedef struct _tdm_func_capture
 {
     void         (*capture_destroy)(tdm_capture *capture); /* init */
     tdm_error    (*capture_set_info)(tdm_capture *capture, tdm_info_capture *info);
-    tdm_error    (*capture_attach)(tdm_capture *capture, tbm_surface_h buffer);
+    tdm_error    (*capture_attach)(tdm_capture *capture, tdm_buffer *buffer);
     tdm_error    (*capture_commit)(tdm_capture *capture); /* init */
     tdm_error    (*capture_set_done_handler)(tdm_capture *capture, tdm_capture_done_handler func, void *user_data);
 } tdm_func_capture;
@@ -197,6 +197,16 @@ typedef struct _tdm_backend_module
 tdm_error tdm_backend_register_func_display(tdm_display *dpy, tdm_func_display *func_display);
 tdm_error tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp);
 tdm_error tdm_backend_register_func_capture(tdm_display *dpy, tdm_func_capture *func_capture);
+
+typedef void (*tdm_buffer_destroy_handler)(tdm_buffer *buffer, void *user_data);
+
+tdm_buffer*   tdm_buffer_ref_backend(tdm_buffer *buffer);
+void          tdm_buffer_unref_backend(tdm_buffer *buffer);
+tbm_surface_h tdm_buffer_get_surface(tdm_buffer *buffer);
+tdm_buffer*   tdm_buffer_get(tbm_surface_h buffer);
+tdm_error     tdm_buffer_add_destroy_handler(tdm_buffer *buffer, tdm_buffer_destroy_handler func, void *user_data);
+void          tdm_buffer_remove_destroy_handler(tdm_buffer *buffer, tdm_buffer_destroy_handler func, void *user_data);
+
 
 #ifdef __cplusplus
 }
