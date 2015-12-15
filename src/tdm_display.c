@@ -1104,6 +1104,35 @@ tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable)
     return ret;
 }
 
+EXTERN tdm_error
+tdm_layer_set_video_pos(tdm_layer *layer, int zpos)
+{
+    tdm_func_display *func_display;
+    LAYER_FUNC_ENTRY();
+
+    pthread_mutex_lock(&private_display->lock);
+
+    func_display = &private_display->func_display;
+
+    if (!(private_layer->caps.capabilities & TDM_LAYER_CAPABILITY_VIDEO))
+    {
+        TDM_ERR("layer is not video layer");
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_INVALID_PARAMETER;
+    }
+
+    if (!func_display->layer_set_video_pos)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NONE;
+    }
+
+    ret = func_display->layer_set_video_pos(private_layer->layer_backend, zpos);
+
+    pthread_mutex_unlock(&private_display->lock);
+
+    return ret;
+}
 
 EXTERN tdm_capture*
 tdm_layer_create_capture(tdm_layer *layer, tdm_error *error)

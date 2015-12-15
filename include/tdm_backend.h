@@ -149,6 +149,7 @@ typedef struct _tdm_func_display
     tdm_error    (*layer_get_info)(tdm_layer *layer, tdm_info_layer *info);
     tdm_error    (*layer_set_buffer)(tdm_layer *layer, tdm_buffer *buffer);
     tdm_error    (*layer_unset_buffer)(tdm_layer *layer);
+    tdm_error    (*layer_set_video_pos)(tdm_layer *layer, int zpos);
     tdm_capture *(*layer_create_capture)(tdm_layer *layer, tdm_error *error);
 } tdm_func_display;
 

@@ -115,6 +115,7 @@ tdm_error   tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info);
 tdm_error   tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer); // layer has only one buffer
 tdm_error   tdm_layer_unset_buffer(tdm_layer *layer);
 tdm_error   tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable);
+tdm_error   tdm_layer_set_video_pos(tdm_layer *layer, int zpos);
 
 tdm_capture *tdm_layer_create_capture(tdm_layer *layer, tdm_error *error);
 
