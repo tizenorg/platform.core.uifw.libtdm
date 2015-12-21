@@ -57,8 +57,12 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst, void *
     tdm_private_pp *private_pp = user_data;
     tdm_private_display *private_display = private_pp->private_display;
     int lock_after_cb_done = 0;
+    int ret;
 
-    if (pthread_mutex_trylock(&private_display->lock))
+    ret = pthread_mutex_trylock(&private_display->lock);
+    if (ret == 0)
+        pthread_mutex_unlock(&private_display->lock);
+    else  if (ret == EBUSY)
     {
         pthread_mutex_unlock(&private_display->lock);
         lock_after_cb_done = 1;

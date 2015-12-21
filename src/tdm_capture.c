@@ -57,8 +57,12 @@ _tdm_caputre_cb_done(tdm_capture *capture_backend, tdm_buffer *buffer, void *use
     tdm_private_capture *private_capture = user_data;
     tdm_private_display *private_display = private_capture->private_display;
     int lock_after_cb_done = 0;
+    int ret;
 
-    if (pthread_mutex_trylock(&private_display->lock))
+    ret = pthread_mutex_trylock(&private_display->lock);
+    if (ret == 0)
+        pthread_mutex_unlock(&private_display->lock);
+    else  if (ret == EBUSY)
     {
         pthread_mutex_unlock(&private_display->lock);
         lock_after_cb_done = 1;
