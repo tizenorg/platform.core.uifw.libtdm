@@ -1012,7 +1012,7 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 }
 
 EXTERN tdm_error
-tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer)
+tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 {
     tdm_func_display *func_display;
     LAYER_FUNC_ENTRY();

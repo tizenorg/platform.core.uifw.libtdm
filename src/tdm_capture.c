@@ -52,7 +52,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     func_capture = private_capture->func_capture
 
 static void
-_tdm_caputre_cb_done(tdm_capture *capture_backend, tdm_buffer *buffer, void *user_data)
+_tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer, void *user_data)
 {
     tdm_private_capture *private_capture = user_data;
     tdm_private_display *private_display = private_capture->private_display;
@@ -245,7 +245,7 @@ tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info)
 }
 
 EXTERN tdm_error
-tdm_capture_attach(tdm_capture *capture, tdm_buffer *buffer)
+tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer)
 {
     CAPTURE_FUNC_ENTRY();
 
@@ -260,8 +260,7 @@ tdm_capture_attach(tdm_capture *capture, tdm_buffer *buffer)
     }
 
     tdm_buffer_ref_backend(buffer);
-    ret = func_capture->capture_attach(private_capture->capture_backend,
-                                       tdm_buffer_get_surface(buffer));
+    ret = func_capture->capture_attach(private_capture->capture_backend, buffer);
 
     pthread_mutex_unlock(&private_display->lock);
 

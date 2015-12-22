@@ -242,7 +242,6 @@ typedef struct _tdm_info_capture
 typedef void tdm_display;
 typedef void tdm_output;
 typedef void tdm_layer;
-typedef void tdm_buffer;
 typedef void tdm_capture;
 typedef void tdm_pp;
 

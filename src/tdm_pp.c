@@ -68,8 +68,8 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst, void *
         lock_after_cb_done = 1;
     }
 
-    tdm_buffer_unref_backend(tdm_buffer_get(src));
-    tdm_buffer_unref_backend(tdm_buffer_get(dst));
+    tdm_buffer_unref_backend(src);
+    tdm_buffer_unref_backend(dst);
 
     if (lock_after_cb_done)
         pthread_mutex_lock(&private_display->lock);
@@ -190,7 +190,7 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 }
 
 EXTERN tdm_error
-tdm_pp_attach(tdm_pp *pp, tdm_buffer *src, tdm_buffer *dst)
+tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 {
     PP_FUNC_ENTRY();
 
@@ -207,9 +207,7 @@ tdm_pp_attach(tdm_pp *pp, tdm_buffer *src, tdm_buffer *dst)
 
     tdm_buffer_ref_backend(src);
     tdm_buffer_ref_backend(dst);
-    ret = func_pp->pp_attach(private_pp->pp_backend,
-                             tdm_buffer_get_surface(src),
-                             tdm_buffer_get_surface(dst));
+    ret = func_pp->pp_attach(private_pp->pp_backend, src, dst);
 
     pthread_mutex_unlock(&private_display->lock);
 

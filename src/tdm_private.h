@@ -206,8 +206,8 @@ struct _tdm_private_layer
     tdm_caps_layer caps;
     tdm_layer *layer_backend;
 
-    tdm_buffer *waiting_buffer;
-    tdm_buffer *showing_buffer;
+    tbm_surface_h waiting_buffer;
+    tbm_surface_h showing_buffer;
 
     struct list_head capture_list;
 

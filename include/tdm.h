@@ -112,7 +112,7 @@ tdm_error   tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value 
 tdm_error   tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value);
 tdm_error   tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info);
 tdm_error   tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info);
-tdm_error   tdm_layer_set_buffer(tdm_layer *layer, tdm_buffer *buffer); // layer has only one buffer
+tdm_error   tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer); // layer has only one buffer
 tdm_error   tdm_layer_unset_buffer(tdm_layer *layer);
 tdm_error   tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable);
 tdm_error   tdm_layer_set_video_pos(tdm_layer *layer, int zpos);
@@ -123,26 +123,23 @@ tdm_capture *tdm_layer_create_capture(tdm_layer *layer, tdm_error *error);
 
 void         tdm_pp_destroy(tdm_pp *pp);
 tdm_error    tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info);
-tdm_error    tdm_pp_attach(tdm_pp *pp, tdm_buffer *src, tdm_buffer *dst);
+tdm_error    tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
 tdm_error    tdm_pp_commit(tdm_pp *pp);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 void         tdm_capture_destroy(tdm_capture *capture);
 tdm_error    tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info);
-tdm_error    tdm_capture_attach(tdm_capture *capture, tdm_buffer *buffer);
+tdm_error    tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer);
 tdm_error    tdm_capture_commit(tdm_capture *capture);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef void (*tdm_buffer_release_handler)(tdm_buffer *buffer, void *user_data);
+typedef void (*tdm_buffer_release_handler)(tbm_surface_h buffer, void *user_data);
 
 /* not pthread safe */
-tdm_buffer *tdm_buffer_create(tbm_surface_h buffer, tdm_error *error);
-tdm_buffer *tdm_buffer_ref(tdm_buffer *buffer, tdm_error *error);
-void        tdm_buffer_unref(tdm_buffer *buffer);
-tdm_error   tdm_buffer_add_release_handler(tdm_buffer *buffer, tdm_buffer_release_handler func, void *user_data);
-void        tdm_buffer_remove_release_handler(tdm_buffer *buffer, tdm_buffer_release_handler func, void *user_data);
+tdm_error   tdm_buffer_add_release_handler(tbm_surface_h buffer, tdm_buffer_release_handler func, void *user_data);
+void        tdm_buffer_remove_release_handler(tbm_surface_h buffer, tdm_buffer_release_handler func, void *user_data);
 
 #ifdef __cplusplus
 }
