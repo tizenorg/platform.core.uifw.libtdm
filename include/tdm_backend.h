@@ -138,7 +138,7 @@ typedef struct _tdm_func_display
     tdm_error    (*output_set_commit_handler)(tdm_output *output, tdm_output_commit_handler func);
     tdm_error    (*output_set_dpms)(tdm_output *output, tdm_output_dpms dpms_value);
     tdm_error    (*output_get_dpms)(tdm_output *output, tdm_output_dpms *dpms_value);
-    tdm_error    (*output_set_mode)(tdm_output *output, tdm_output_mode *mode);
+    tdm_error    (*output_set_mode)(tdm_output *output, const tdm_output_mode *mode);
     tdm_error    (*output_get_mode)(tdm_output *output, const tdm_output_mode **mode);
     tdm_capture *(*output_create_capture)(tdm_output *output, tdm_error *error);
 

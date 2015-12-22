@@ -71,7 +71,7 @@ tdm_error    tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int
 tdm_error    tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *capabilities);
 tdm_error    tdm_display_get_catpure_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
 tdm_error    tdm_display_get_output_count(tdm_display *dpy, int *count);
-const tdm_output* tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error);
+tdm_output*  tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error);
 
 tdm_pp*      tdm_display_create_pp(tdm_display *dpy, tdm_error *error);
 
@@ -80,7 +80,7 @@ tdm_pp*      tdm_display_create_pp(tdm_display *dpy, tdm_error *error);
 tdm_error   tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status);
 tdm_error   tdm_output_get_output_type(tdm_output *output, tdm_output_type *type);
 tdm_error   tdm_output_get_layer_count(tdm_output *output, int *count);
-const tdm_layer* tdm_output_get_layer(tdm_output *output, int index, tdm_error *error);
+tdm_layer*  tdm_output_get_layer(tdm_output *output, int index, tdm_error *error);
 tdm_error   tdm_output_get_available_properties(tdm_output *output, const tdm_prop **props, int *count);
 tdm_error   tdm_output_get_available_modes(tdm_output *output, const tdm_output_mode **modes, int *count);
 tdm_error   tdm_output_get_available_size(tdm_output *output, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align);
@@ -93,7 +93,7 @@ tdm_error   tdm_output_get_property(tdm_output *output, unsigned int id, tdm_val
 tdm_error   tdm_output_wait_vblank(tdm_output *output, int interval, int sync, tdm_output_vblank_handler func, void *user_data);
 tdm_error   tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, void *user_data);
 
-tdm_error   tdm_output_set_mode(tdm_output *output, tdm_output_mode *mode);
+tdm_error   tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode);
 tdm_error   tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode);
 
 tdm_error   tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value);

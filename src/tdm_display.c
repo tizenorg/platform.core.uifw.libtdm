@@ -226,7 +226,7 @@ tdm_display_get_output_count(tdm_display *dpy, int *count)
 }
 
 
-EXTERN const tdm_output*
+EXTERN tdm_output*
 tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error)
 {
     tdm_private_output *private_output = NULL;
@@ -245,7 +245,7 @@ tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error)
         if (i == index)
         {
             pthread_mutex_unlock(&private_display->lock);
-            return (const tdm_output*)private_output;
+            return private_output;
         }
         i++;
     }
@@ -377,7 +377,7 @@ tdm_output_get_layer_count(tdm_output *output, int *count)
 }
 
 
-EXTERN const tdm_layer*
+EXTERN tdm_layer*
 tdm_output_get_layer(tdm_output *output, int index, tdm_error *error)
 {
     tdm_private_layer *private_layer = NULL;
@@ -727,7 +727,7 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
 }
 
 EXTERN tdm_error
-tdm_output_set_mode(tdm_output *output, tdm_output_mode *mode)
+tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode)
 {
     tdm_func_display *func_display;
     OUTPUT_FUNC_ENTRY();
