@@ -105,7 +105,7 @@ _tdm_buffer_get_info(tbm_surface_h buffer)
     if (!buf_info)
     {
         buf_info = calloc(1, sizeof(tdm_buffer_info));
-        TDM_RETURN_VAL_IF_FAIL(buffer != NULL, NULL);
+        TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
 
         buf_info->buffer = buffer;
 

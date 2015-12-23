@@ -591,7 +591,7 @@ _tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
     tdm_private_commit_handler *commit_handler = user_data;
     tdm_private_display *private_display;
     tdm_private_output *private_output;
-    tdm_private_layer *private_layer;
+    tdm_private_layer *private_layer = NULL;
 
     TDM_RETURN_IF_FAIL(commit_handler);
 
