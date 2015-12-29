@@ -92,7 +92,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
     {
         TDM_ERR("no capture capability");
         if (error)
-            *error = TDM_ERROR_BAD_REQUEST;
+            *error = TDM_ERROR_NO_CAPABILITY;
         return NULL;
     }
 
@@ -158,7 +158,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
     {
         TDM_ERR("no capture capability");
         if (error)
-            *error = TDM_ERROR_BAD_REQUEST;
+            *error = TDM_ERROR_NO_CAPABILITY;
         return NULL;
     }
 

@@ -42,6 +42,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif
 
+/**
+ * @file tdm_helper.h
+ * @brief The header file to help a vendor to implement a backend module
+ * @remark
+ * tdm_helper_drm_fd is external drm_fd which is opened by ecore_drm.
+ * This is very @b TRICKY!! But we have no choice at this time because ecore_drm
+ * doesn't use tdm yet. When we make ecore_drm use tdm, tdm_helper_drm_fd will
+ * be removed.
+ * @warning
+ * If tdm_helper_drm_fd is more than -1, a tdm backend module @b SHOULDN't call
+ * drmWaitVBlank by itself. Moreover, drm events will be handled by ecore_drm.
+ * @todo
+ */
 extern int tdm_helper_drm_fd;
 
 #ifdef __cplusplus

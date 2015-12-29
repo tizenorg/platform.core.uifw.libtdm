@@ -44,101 +44,164 @@ extern "C" {
 
 #define TDM_NAME_LEN        64
 
+/**
+ * @file tdm_types.h
+ * @brief The header file which defines Enumerations and Structures for frontend and backend.
+ * @details
+ * Both frontend(#tdm.h) and backend(#tdm_backend.h) header files
+ * include #tdm_types.h
+ * @par Example
+ * @code
+   #include <tdm.h>    //for a frontend user
+ * @endcode
+ * @code
+   #include <tdm_backend.h>  //for a vendor to implement a backend module
+ * @endcode
+ */
+
+/**
+ * @brief The error enumeration
+ */
 typedef enum
 {
-    TDM_ERROR_NONE                  = 0,
-    TDM_ERROR_BAD_REQUEST           = -1, //bad request
-    TDM_ERROR_OPERATION_FAILED      = -2, //operaion failed
-    TDM_ERROR_INVALID_PARAMETER     = -3, //wrong input parameter
-    TDM_ERROR_PERMISSION_DENIED     = -4, //access denied
-    TDM_ERROR_BUSY                  = -5, //hardware resource busy
-    TDM_ERROR_OUT_OF_MEMORY         = -6, //no free memory
-    TDM_ERROR_BAD_MODULE            = -7, //bad backend module
-    TDM_ERROR_NOT_IMPLEMENTED       = -8, //not implemented
+    TDM_ERROR_NONE                  = 0,  /**< none */
+    TDM_ERROR_BAD_REQUEST           = -1, /**< bad request */
+    TDM_ERROR_OPERATION_FAILED      = -2, /**< operaion failed */
+    TDM_ERROR_INVALID_PARAMETER     = -3, /**< wrong input parameter */
+    TDM_ERROR_PERMISSION_DENIED     = -4, /**< access denied */
+    TDM_ERROR_BUSY                  = -5, /**< hardware resource busy */
+    TDM_ERROR_OUT_OF_MEMORY         = -6, /**< no free memory */
+    TDM_ERROR_BAD_MODULE            = -7, /**< bad backend module */
+    TDM_ERROR_NOT_IMPLEMENTED       = -8, /**< not implemented */
+    TDM_ERROR_NO_CAPABILITY         = -9, /**< no capability */
 } tdm_error;
 
+/**
+ * @brief The transform enumeration(rotate, flip)
+ */
 typedef enum
 {
-    TDM_TRANSFORM_NORMAL            = 0,
-    TDM_TRANSFORM_90                = 1,
-    TDM_TRANSFORM_180               = 2,
-    TDM_TRANSFORM_270               = 3,
-    TDM_TRANSFORM_FLIPPED           = 4,
-    TDM_TRANSFORM_FLIPPED_90        = 5,
-    TDM_TRANSFORM_FLIPPED_180       = 6,
-    TDM_TRANSFORM_FLIPPED_270       = 7,
-    TDM_TRANSFORM_MAX               = 8
+    TDM_TRANSFORM_NORMAL            = 0, /**< no transform */
+    TDM_TRANSFORM_90                = 1, /**< rotate 90 */
+    TDM_TRANSFORM_180               = 2, /**< rotate 180 */
+    TDM_TRANSFORM_270               = 3, /**< rotate 270 */
+    TDM_TRANSFORM_FLIPPED           = 4, /**< no rotate and horizontal flip */
+    TDM_TRANSFORM_FLIPPED_90        = 5, /**< rotate 90 and horizontal flip */
+    TDM_TRANSFORM_FLIPPED_180       = 6, /**< rotate 180 and horizontal flip */
+    TDM_TRANSFORM_FLIPPED_270       = 7, /**< rotate 270 and horizontal flip */
 } tdm_transform;
 
+/**
+ * @brief The output connection status enumeration
+ */
 typedef enum
 {
-    TDM_OUTPUT_CONN_STATUS_DISCONNECTED,
-    TDM_OUTPUT_CONN_STATUS_CONNECTED,
-    TDM_OUTPUT_CONN_STATUS_MODE_SETTED,
-    TDM_OUTPUT_CONN_STATUS_MAX,
+    TDM_OUTPUT_CONN_STATUS_DISCONNECTED, /**< output disconnected */
+    TDM_OUTPUT_CONN_STATUS_CONNECTED,    /**< output connected */
+    TDM_OUTPUT_CONN_STATUS_MODE_SETTED,  /**< output connected and setted a mode */
 } tdm_output_conn_status;
 
-/* bit compatible with the libdrm definitions. */
+/**
+ * @brief The output connection status enumeration
+ * @detail bit compatible with the libdrm definitions.
+ */
 typedef enum
 {
-    TDM_OUTPUT_TYPE_Unknown,
-    TDM_OUTPUT_TYPE_VGA,
-    TDM_OUTPUT_TYPE_DVII,
-    TDM_OUTPUT_TYPE_DVID,
-    TDM_OUTPUT_TYPE_DVIA,
-    TDM_OUTPUT_TYPE_Composite,
-    TDM_OUTPUT_TYPE_SVIDEO,
-    TDM_OUTPUT_TYPE_LVDS,
-    TDM_OUTPUT_TYPE_Component,
-    TDM_OUTPUT_TYPE_9PinDIN,
-    TDM_OUTPUT_TYPE_DisplayPort,
-    TDM_OUTPUT_TYPE_HDMIA,
-    TDM_OUTPUT_TYPE_HDMIB,
-    TDM_OUTPUT_TYPE_TV,
-    TDM_OUTPUT_TYPE_eDP,
-    TDM_OUTPUT_TYPE_VIRTUAL,
-    TDM_OUTPUT_TYPE_DSI,
-    TDM_OUTPUT_TYPE_MAX,
+    TDM_OUTPUT_TYPE_Unknown,        /**< unknown */
+    TDM_OUTPUT_TYPE_VGA,            /**< VGA connection */
+    TDM_OUTPUT_TYPE_DVII,           /**< DVII connection */
+    TDM_OUTPUT_TYPE_DVID,           /**< DVID connection */
+    TDM_OUTPUT_TYPE_DVIA,           /**< DVIA connection */
+    TDM_OUTPUT_TYPE_Composite,      /**< Composite connection */
+    TDM_OUTPUT_TYPE_SVIDEO,         /**< SVIDEO connection */
+    TDM_OUTPUT_TYPE_LVDS,           /**< LVDS connection */
+    TDM_OUTPUT_TYPE_Component,      /**< Component connection */
+    TDM_OUTPUT_TYPE_9PinDIN,        /**< 9PinDIN connection */
+    TDM_OUTPUT_TYPE_DisplayPort,    /**< DisplayPort connection */
+    TDM_OUTPUT_TYPE_HDMIA,          /**< HDMIA connection */
+    TDM_OUTPUT_TYPE_HDMIB,          /**< HDMIB connection */
+    TDM_OUTPUT_TYPE_TV,             /**< TV connection */
+    TDM_OUTPUT_TYPE_eDP,            /**< eDP connection */
+    TDM_OUTPUT_TYPE_VIRTUAL,        /**< Virtual connection for WiFi Display */
+    TDM_OUTPUT_TYPE_DSI,            /**< DSI connection */
 } tdm_output_type;
 
-/* bit compatible with the drm definitions. */
+/**
+ * @brief The DPMS enumeration
+ * @detail bit compatible with the libdrm definitions.
+ */
 typedef enum
 {
-    TDM_OUTPUT_DPMS_ON,
-    TDM_OUTPUT_DPMS_STANDBY,
-    TDM_OUTPUT_DPMS_SUSPEND,
-    TDM_OUTPUT_DPMS_OFF,
-    TDM_OUTPUT_DPMS_MAX,
+    TDM_OUTPUT_DPMS_ON,         /**< On */
+    TDM_OUTPUT_DPMS_STANDBY,    /**< StandBy */
+    TDM_OUTPUT_DPMS_SUSPEND,    /**< Suspend */
+    TDM_OUTPUT_DPMS_OFF,        /**< Off */
 } tdm_output_dpms;
 
+/**
+ * @brief The layer capability enumeration
+ * @details
+ * A layer can have one of CURSOR, PRIMARY and OVERLAY capability. And a layer
+ * also can have one of GRAPHIC and VIDEO capability. And a layer also can have
+ * SCALE and TRANSFORM capability.\n
+ * @par Example
+ * @code
+   //For example
+   capabilities = TDM_LAYER_CAPABILITY_PRIMARY | TDM_LAYER_CAPABILITY_GRAPHIC;
+   capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_GRAPHIC | TDM_LAYER_CAPABILITY_SCALE;
+   capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_GRAPHIC | TDM_LAYER_CAPABILITY_SCALE | TDM_LAYER_CAPABILITY_TRANSFORM;
+   capabilities = TDM_LAYER_CAPABILITY_CURSOR | TDM_LAYER_CAPABILITY_GRAPHIC;
+   capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_VIDEO;
+ * @endcode
+ * @remark
+ * - When a video plays, in most of cases, video buffers will be displayed to
+ * a GRAPHIC layer after converting RGB buffers via PP. In this case, a backend
+ * module doesn't need to offer VIDEO layer.
+ * - But in case that s vendor wants to handle a video by their own way,
+ * a backend module offer VIDEO layers. And a display server will pass a video
+ * buffer to a VIDEO layer without converting.
+ * - GRAPHIC layers have fixed zpos. But the zpos of VIDEO layer will be decided
+ * by a backend module side.
+ * - The frontend only can set the relative zpos to
+ * VIDEO layers via layer_set_video_pos() function of #tdm_func_display
+ */
 typedef enum
 {
-    TDM_LAYER_CAPABILITY_CURSOR         = (1<<0),
-    TDM_LAYER_CAPABILITY_PRIMARY        = (1<<1),
-    TDM_LAYER_CAPABILITY_OVERLAY        = (1<<2),
-    TDM_LAYER_CAPABILITY_SCALE          = (1<<4),
-    TDM_LAYER_CAPABILITY_TRANSFORM      = (1<<5),
-    TDM_LAYER_CAPABILITY_GRAPHIC        = (1<<8),
-    TDM_LAYER_CAPABILITY_VIDEO          = (1<<9),
+    TDM_LAYER_CAPABILITY_CURSOR         = (1<<0),   /**< cursor */
+    TDM_LAYER_CAPABILITY_PRIMARY        = (1<<1),   /**< primary */
+    TDM_LAYER_CAPABILITY_OVERLAY        = (1<<2),   /**< overlay */
+    TDM_LAYER_CAPABILITY_GRAPHIC        = (1<<4),   /**< graphic */
+    TDM_LAYER_CAPABILITY_VIDEO          = (1<<5),   /**< video */
+    TDM_LAYER_CAPABILITY_SCALE          = (1<<8),   /**< if a layer has scale capability  */
+    TDM_LAYER_CAPABILITY_TRANSFORM      = (1<<9),   /**< if a layer has transform capability  */
 } tdm_layer_capability;
 
+/**
+ * @brief The pp capability enumeration
+ */
 typedef enum
 {
-    TDM_PP_CAPABILITY_SYNC           = (1<<0),
-    TDM_PP_CAPABILITY_ASYNC          = (1<<1),
-    TDM_PP_CAPABILITY_SCALE          = (1<<4),
-    TDM_PP_CAPABILITY_TRANSFORM      = (1<<5),
+    TDM_PP_CAPABILITY_SYNC           = (1<<0),  /**< The pp device supports synchronous operation */
+    TDM_PP_CAPABILITY_ASYNC          = (1<<1),  /**< The pp device supports asynchronous operation */
+    TDM_PP_CAPABILITY_SCALE          = (1<<4),  /**< The pp device supports scale operation */
+    TDM_PP_CAPABILITY_TRANSFORM      = (1<<5),  /**< The pp device supports transform operation */
 } tdm_pp_capability;
 
+/**
+ * @brief The capture capability enumeration
+ */
 typedef enum
 {
-    TDM_CAPTURE_CAPABILITY_OUTPUT    = (1<<0),
-    TDM_CAPTURE_CAPABILITY_LAYER     = (1<<1),
-    TDM_CAPTURE_CAPABILITY_SCALE     = (1<<4),
-    TDM_CAPTURE_CAPABILITY_TRANSFORM = (1<<5),
+    TDM_CAPTURE_CAPABILITY_OUTPUT    = (1<<0),  /**< The capture device supports to dump a output */
+    TDM_CAPTURE_CAPABILITY_LAYER     = (1<<1),  /**< The capture device supports to dump a layer */
+    TDM_CAPTURE_CAPABILITY_SCALE     = (1<<4),  /**< The capture device supports scale operation */
+    TDM_CAPTURE_CAPABILITY_TRANSFORM = (1<<5),  /**< The capture device supports transform operation */
 } tdm_capture_capability;
 
-/* bit compatible with the drm definitions. */
+/**
+ * @brief The output mode type enumeration
+ * @detail bit compatible with the libdrm definitions.
+ */
 typedef enum
 {
     TDM_OUTPUT_MODE_TYPE_BUILTIN    = (1<<0),
@@ -150,7 +213,10 @@ typedef enum
     TDM_OUTPUT_MODE_TYPE_DRIVER     = (1<<6),
 } tdm_output_mode_type;
 
-/* bit compatible with the drm definitions. */
+/**
+ * @brief The output mode flag enumeration
+ * @detail bit compatible with the libdrm definitions.
+ */
 typedef enum
 {
     TDM_OUTPUT_MODE_FLAG_PHSYNC     = (1<<0),
@@ -169,6 +235,9 @@ typedef enum
     TDM_OUTPUT_MODE_FLAG_CLKDIV2    = (1<<13),
 } tdm_output_mode_flag;
 
+/**
+ * @brief The output mode structure
+ */
 typedef struct _tdm_output_mode
 {
     unsigned int width;
@@ -179,17 +248,26 @@ typedef struct _tdm_output_mode
     char name[TDM_NAME_LEN];
 } tdm_output_mode;
 
+/**
+ * @brief The property structure
+ */
 typedef struct _tdm_prop
 {
     unsigned int id;
     char name[TDM_NAME_LEN];
 } tdm_prop;
 
+/**
+ * @brief The size structure
+ */
 typedef struct _tdm_size {
-    unsigned int h;
-    unsigned int v;
+    unsigned int h;     /**< width */
+    unsigned int v;     /**< height */
 } tdm_size;
 
+/**
+ * @brief The pos structure
+ */
 typedef struct _tdm_pos
 {
     unsigned int x;
@@ -198,6 +276,9 @@ typedef struct _tdm_pos
     unsigned int h;
 } tdm_pos;
 
+/**
+ * @brief The value union
+ */
 typedef union
 {
     void	 *ptr;
@@ -207,6 +288,9 @@ typedef union
     uint64_t u64;
 } tdm_value;
 
+/**
+ * @brief The info config structure
+ */
 typedef struct _tdm_info_config
 {
     tdm_size size;
@@ -214,6 +298,9 @@ typedef struct _tdm_info_config
     tbm_format format;
 } tdm_info_config;
 
+/**
+ * @brief The layer info structre
+ */
 typedef struct _tdm_info_layer
 {
     tdm_info_config src_config;
@@ -221,6 +308,9 @@ typedef struct _tdm_info_layer
     tdm_transform transform;
 } tdm_info_layer;
 
+/**
+ * @brief The pp info structre
+ */
 typedef struct _tdm_info_pp
 {
     tdm_info_config src_config;
@@ -230,6 +320,9 @@ typedef struct _tdm_info_pp
     int flags;
 } tdm_info_pp;
 
+/**
+ * @brief The capture info structre
+ */
 typedef struct _tdm_info_capture
 {
     tdm_info_config dst_config;
@@ -239,14 +332,42 @@ typedef struct _tdm_info_capture
     int flags;
 } tdm_info_capture;
 
+/**
+ * @brief The tdm display object
+ */
 typedef void tdm_display;
+
+/**
+ * @brief The tdm output object
+ */
 typedef void tdm_output;
+
+/**
+ * @brief The tdm layer object
+ */
 typedef void tdm_layer;
+
+/**
+ * @brief The tdm capture object
+ */
 typedef void tdm_capture;
+
+/**
+ * @brief The tdm pp object
+ */
 typedef void tdm_pp;
 
+/**
+ * @brief The vblank handler
+ * @see output_set_vblank_handler() function of #tdm_func_display
+ */
 typedef void (*tdm_output_vblank_handler)(tdm_output *output, unsigned int sequence,
                                           unsigned int tv_sec, unsigned int tv_usec, void *user_data);
+
+/**
+ * @brief The commit handler
+ * @see output_set_commit_handler() function of #tdm_func_display
+ */
 typedef void (*tdm_output_commit_handler)(tdm_output *output, unsigned int sequence,
                                           unsigned int tv_sec, unsigned int tv_usec, void *user_data);
 

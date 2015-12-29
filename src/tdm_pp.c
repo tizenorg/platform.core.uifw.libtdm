@@ -91,7 +91,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
     {
         TDM_ERR("no pp capability");
         if (error)
-            *error = TDM_ERROR_BAD_REQUEST;
+            *error = TDM_ERROR_NO_CAPABILITY;
         return NULL;
     }
 

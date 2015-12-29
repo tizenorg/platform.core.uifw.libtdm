@@ -41,6 +41,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif
 
+/**
+ * @file tdm_log.h
+ * @brief The header file to print logs in frontend and backend modules
+ * @details
+ * The TDM debug log can be enable by setting "TDM_DEBUG" enviroment
+ * @par Example
+ * @code
+   $ export TDM_DEBUG=1
+ * @endcode
+ */
 extern int tdm_debug;
 
 //#define TDM_CONFIG_DLOG

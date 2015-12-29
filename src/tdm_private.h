@@ -57,6 +57,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif
 
+/**
+ * @file tdm_private.h
+ * @brief The private header file for a frontend library
+ */
+
 #undef EXTERN
 #undef DEPRECATED
 #undef INTERN

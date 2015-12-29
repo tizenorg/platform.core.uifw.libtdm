@@ -116,6 +116,13 @@ tdm_display_get_pp_capabilities(tdm_display *dpy, tdm_pp_capability *capabilitie
 
     pthread_mutex_lock(&private_display->lock);
 
+    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP))
+    {
+        TDM_ERR("no pp capability");
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NO_CAPABILITY;
+    }
+
     *capabilities = private_display->caps_pp.capabilities;
 
     pthread_mutex_unlock(&private_display->lock);
@@ -133,6 +140,13 @@ tdm_display_get_pp_available_formats(tdm_display *dpy, const tbm_format **format
 
     pthread_mutex_lock(&private_display->lock);
 
+    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP))
+    {
+        TDM_ERR("no pp capability");
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NO_CAPABILITY;
+    }
+
     *formats = (const tbm_format*)private_display->caps_pp.formats;
     *count = private_display->caps_pp.format_count;
 
@@ -148,6 +162,13 @@ tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h,
     DISPLAY_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
+
+    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP))
+    {
+        TDM_ERR("no pp capability");
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NO_CAPABILITY;
+    }
 
     if (min_w)
         *min_w = private_display->caps_pp.min_w;
@@ -174,6 +195,13 @@ tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *c
 
     pthread_mutex_lock(&private_display->lock);
 
+    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
+    {
+        TDM_ERR("no capture capability");
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NO_CAPABILITY;
+    }
+
     *capabilities = private_display->caps_capture.capabilities;
 
     pthread_mutex_unlock(&private_display->lock);
@@ -190,6 +218,13 @@ tdm_display_get_catpure_available_formats(tdm_display *dpy, const tbm_format **f
     TDM_RETURN_VAL_IF_FAIL(count != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
+
+    if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
+    {
+        TDM_ERR("no capture capability");
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NO_CAPABILITY;
+    }
 
     *formats = (const tbm_format*)private_display->caps_capture.formats;
     *count = private_display->caps_capture.format_count;
@@ -782,8 +817,10 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
     tdm_func_display *func_display;
     OUTPUT_FUNC_ENTRY();
 
-    TDM_RETURN_VAL_IF_FAIL(dpms_value >= TDM_OUTPUT_DPMS_ON, TDM_ERROR_INVALID_PARAMETER);
-    TDM_RETURN_VAL_IF_FAIL(dpms_value < TDM_OUTPUT_DPMS_MAX, TDM_ERROR_INVALID_PARAMETER);
+    if (dpms_value < TDM_OUTPUT_DPMS_ON)
+        dpms_value = TDM_OUTPUT_DPMS_ON;
+    else if (dpms_value > TDM_OUTPUT_DPMS_OFF)
+        dpms_value = TDM_OUTPUT_DPMS_OFF;
 
     pthread_mutex_lock(&private_display->lock);
 
