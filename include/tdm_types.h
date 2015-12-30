@@ -160,10 +160,6 @@ typedef enum
  * - But in case that s vendor wants to handle a video by their own way,
  * a backend module offer VIDEO layers. And a display server will pass a video
  * buffer to a VIDEO layer without converting.
- * - GRAPHIC layers have fixed zpos. But the zpos of VIDEO layer will be decided
- * by a backend module side.
- * - The frontend only can set the relative zpos to
- * VIDEO layers via layer_set_video_pos() function of #tdm_func_display
  */
 typedef enum
 {

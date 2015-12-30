@@ -53,27 +53,6 @@ extern "C" {
  * @code
    #include <tdm.h>    //for a frontend user
  * @endcode
- * @details
- * TDM stands for Tizen Display Manager. It's the display HAL layer for tizen
- * display server. It offers the frontend APIs(@ref tdm.h) for a frontend user
- * and the abstraction interface(@ref tdm_backend.h) for a hardware vendor.\n
- * \n
- * TDM consists of display/output/layer/pp/capture objects. A frontend user can
- * get the output/layer/pp/capture hardware information with each object.
- * Basically, TDM supposes that all hardware devices have fixed outputs and
- * layers. A frontend user can get these outputs and layers with
- * #tdm_display_get_output_count, #tdm_display_get_output, #tdm_output_get_layer_count
- * and #tdm_output_get_layer. To get a pp/capture object, however, a frontend
- * user need to create a object with #tdm_display_create_pp, #tdm_output_create_capture
- * and #tdm_layer_create_capture if available.\n
- * \n
- * All changes of output/layer/pp/capture objects are applied when commiting.
- * See #tdm_output_commit, #tdm_pp_commit and #tdm_capture_commit.\n
- * \n
- * TDM has its own buffer release mechanism to let an user know when a TDM buffer
- * becomes available for a next job. A frontend user can add a user release handler
- * to a TDM buffer with #tdm_buffer_add_release_handler, and this handler will be
- * called when it's disappered from screen or when pp/capture operation is done.
  */
 
 /**
@@ -420,7 +399,7 @@ tdm_error    tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop
  * - But the zpos of VIDEO layers will be decided by a backend module side.
  * - A frontend user only can set the relative zpos to VIDEO layers via #tdm_layer_set_video_pos
  * - The zpos of video layers is less than GRAPHIC layers or more than GRAPHIC
- * layers. ie, -1, -2, 4, 5 (if 0 <= GRAPHIC layer's zpos < 4).
+ * layers. ie, ..., -2, -1, 4, 5, ... (if 0 <= GRAPHIC layer's zpos < 4).
  * @param[in] layer A layer object
  * @param[out] zpos The zpos
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.

@@ -98,6 +98,7 @@ WARN_LOGFILE           =
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
 INPUT                  = \
+    doc/tdm_doc.h \
     include/tdm.h \
     include/tdm_backend.h \
     include/tdm_list.h \
