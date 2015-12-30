@@ -1,0 +1,22 @@
+libtdm - Tizen Display Manager
+
+It's the display HAL layer for tizen display server. It offers the frontend
+APIs(tdm.h) for a frontend user and the abstraction interface(tdm_backend.h)
+for a hardware vendor.
+
+TDM consists of display/output/layer/pp/capture objects. A frontend user can
+get the output/layer/pp/capture hardware information with each object.
+Basically, TDM supposes that all hardware devices have fixed outputs and layers.
+
+All changes of output/layer/pp/capture objects are applied when committed.
+
+TDM has its own buffer release mechanism to let an user know when a TDM buffer
+becomes available for a next job.
+
+Doxygen document
+----------------
+- The doxygen document is created in the "doc/html" directory.
+- How to create the doxygen document
+  $ doxygen doc/Doxyfile
+- How to view the doxygen document
+  $ firefox doc/html/index.html
