@@ -448,7 +448,7 @@ typedef struct _tdm_func_display
      * @param[in] layer A layer object
      * @param[in] zpos z-order
      * @return #TDM_ERROR_NONE if success. Otherwise, error value.
-     * @see @tdm_layer_capability
+     * @see tdm_layer_capability
      */
     tdm_error    (*layer_set_video_pos)(tdm_layer *layer, int zpos);
 

@@ -48,8 +48,8 @@ extern "C" {
  * @file tdm_types.h
  * @brief The header file which defines Enumerations and Structures for frontend and backend.
  * @details
- * Both frontend(#tdm.h) and backend(#tdm_backend.h) header files
- * include #tdm_types.h
+ * Both frontend(@ref tdm.h) and backend(@ref tdm_backend.h) header files
+ * include @ref tdm_types.h
  * @par Example
  * @code
    #include <tdm.h>    //for a frontend user
@@ -103,7 +103,7 @@ typedef enum
 
 /**
  * @brief The output connection status enumeration
- * @detail bit compatible with the libdrm definitions.
+ * @details bit compatible with the libdrm definitions.
  */
 typedef enum
 {
@@ -128,7 +128,7 @@ typedef enum
 
 /**
  * @brief The DPMS enumeration
- * @detail bit compatible with the libdrm definitions.
+ * @details bit compatible with the libdrm definitions.
  */
 typedef enum
 {
@@ -200,7 +200,7 @@ typedef enum
 
 /**
  * @brief The output mode type enumeration
- * @detail bit compatible with the libdrm definitions.
+ * @details bit compatible with the libdrm definitions.
  */
 typedef enum
 {
@@ -215,7 +215,7 @@ typedef enum
 
 /**
  * @brief The output mode flag enumeration
- * @detail bit compatible with the libdrm definitions.
+ * @details bit compatible with the libdrm definitions.
  */
 typedef enum
 {

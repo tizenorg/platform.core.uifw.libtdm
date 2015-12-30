@@ -327,6 +327,7 @@ tdm_error    tdm_output_get_property(tdm_output *output, unsigned int id, tdm_va
  * @param[in] output A output object
  * @param[in] interval vblank interval
  * @param[in] sync 0: asynchronous, 1:synchronous
+ * @param[in] func A user vblank handler
  * @param[in] user_data The user data
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see #tdm_output_vblank_handler
@@ -339,6 +340,7 @@ tdm_error    tdm_output_wait_vblank(tdm_output *output, int interval, int sync, 
  * will be called.
  * @param[in] output A output object
  * @param[in] sync 0: asynchronous, 1:synchronous
+ * @param[in] func A user commit handler
  * @param[in] user_data The user data
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
@@ -507,7 +509,7 @@ tdm_error    tdm_layer_set_video_pos(tdm_layer *layer, int zpos);
 
 /**
  * @brief Create a capture object of a layer object
- * @param[in] output A output object
+ * @param[in] layer A layer object
  * @param[out] error #TDM_ERROR_NONE if success. Otherwise, error value.
  * @return A capture object
  * @see tdm_capture_destroy
