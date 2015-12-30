@@ -22,4 +22,5 @@ stamp-h1
 *.la
 *.lo
 *~
-
+html/
+latex/
