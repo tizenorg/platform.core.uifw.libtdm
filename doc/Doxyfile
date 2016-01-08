@@ -101,6 +101,7 @@ INPUT                  = \
     doc/tdm_doc.h \
     include/tdm.h \
     include/tdm_backend.h \
+    include/tdm_helper.h \
     include/tdm_list.h \
     include/tdm_log.h \
     include/tdm_types.h

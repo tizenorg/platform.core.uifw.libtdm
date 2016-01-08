@@ -52,7 +52,50 @@ extern "C" {
  * be removed.
  * @warning
  * If tdm_helper_drm_fd is more than -1, a tdm backend module @b SHOULDN't call
- * drmWaitVBlank by itself. Moreover, drm events will be handled by ecore_drm.
+ * drmWaitVBlank by itself because a DRM vblank event will be handled in ecore_drm
+ * internally. In this case, a tdm backend module NEVER get a DRM vblank event.
+ * If a tdm backend module need to handle a vendor specific DRM event,
+ * drmAddUserHandler() of libdrm makes possible that a tdm backend module handle
+ * it.
+ * @par Example
+ * @code
+    static int
+    _tdm_drm_user_handler(struct drm_event *event)
+    {
+        if (event->type != DRM_VENDOR_XXX_EVENT)
+            return -1;
+
+        //handling a vendor event
+
+        return 0;
+    }
+
+    ...
+
+    drm_data->drm_fd = -1;
+    if (tdm_helper_drm_fd >= 0)
+    {
+        drm_data->drm_fd = tdm_helper_drm_fd;
+        drmAddUserHandler(tdm_helper_drm_fd, _tdm_drm_user_handler);
+    }
+
+    if (drm_data->drm_fd < 0)
+        drm_data->drm_fd = _tdm_drm_open_drm();
+
+    ...
+
+    drmRemoveUserHandler(tdm_helper_drm_fd, _tdm_drm_user_handler);
+ * @endcode
+ * @code
+    if (tdm_helper_drm_fd == -1)
+    {
+        ...
+        if (drmWaitVBlank(fd, &vbl))
+            return TDM_ERROR_OPERATION_FAILED;
+        ...
+    }
+ * @endcode
+ * @endcode
  * @todo
  */
 extern int tdm_helper_drm_fd;
