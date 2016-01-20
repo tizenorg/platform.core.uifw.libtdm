@@ -37,6 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define _TDM_HELPER_H_
 
 #include "tdm_types.h"
+#include <tbm_surface.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,6 +100,8 @@ extern "C" {
  * @todo
  */
 extern int tdm_helper_drm_fd;
+
+void tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
 
 #ifdef __cplusplus
 }

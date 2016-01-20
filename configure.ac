@@ -23,7 +23,7 @@ LT_INIT([disable-static])
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-PKG_CHECK_MODULES(TDM, libtbm pthread-stubs)
+PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng)
 AC_SUBST(TDM_CFLAGS)
 AC_SUBST(TDM_LIBS)
 
