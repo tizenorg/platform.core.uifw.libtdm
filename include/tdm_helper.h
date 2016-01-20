@@ -37,6 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define _TDM_HELPER_H_
 
 #include "tdm_types.h"
+#include <tbm_surface.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,6 +100,25 @@ extern "C" {
  * @todo
  */
 extern int tdm_helper_drm_fd;
+
+/**
+ * @brief Dump a buffer
+ * @details
+ * This function supports only if a buffer has below formats.
+ * - TBM_FORMAT_ARGB8888
+ * - TBM_FORMAT_XRGB8888
+ * - TBM_FORMAT_YVU420
+ * - TBM_FORMAT_YUV420
+ * - TBM_FORMAT_NV12
+ * - TBM_FORMAT_NV21
+ * - TBM_FORMAT_YUYV
+ * - TBM_FORMAT_UYVY
+ * The filename extension should be "png" for TBM_FORMAT_ARGB8888 and TBM_FORMAT_XRGB8888
+ * or "yuv" for YUV formats.
+ * @param[in] buffer A TDM buffer
+ * @param[in] file The path of file.
+ */
+void tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
 
 #ifdef __cplusplus
 }
