@@ -7,7 +7,7 @@ AM_CFLAGS = \
 libtdm_la_LTLIBRARIES = libtdm.la
 libtdm_ladir = $(libdir)
 libtdm_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-libtdm_la_LIBADD = $(TDM_LIBS) -ldl
+libtdm_la_LIBADD = $(TDM_LIBS) -ldl -lpthread
 
 libtdm_la_SOURCES = \
 	tdm_backend.c \
