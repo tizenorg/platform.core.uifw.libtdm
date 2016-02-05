@@ -49,6 +49,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <dlfcn.h>
 #include <dirent.h>
 
+#include <tbm_bufmgr.h>
+#include <tbm_surface_queue.h>
+
 #include "tdm_backend.h"
 #include "tdm_log.h"
 #include "tdm_list.h"
@@ -213,6 +216,7 @@ struct _tdm_private_layer
 
     tbm_surface_h waiting_buffer;
     tbm_surface_h showing_buffer;
+    tbm_surface_queue_h buffer_queue;
 
     struct list_head capture_list;
 

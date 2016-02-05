@@ -91,6 +91,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     private_output = private_layer->private_output; \
     private_display = private_output->private_display
 
+#define LAYER_FUNC_ENTRY_VOID_RETURN() \
+    tdm_private_display *private_display; \
+    tdm_private_output *private_output; \
+    tdm_private_layer *private_layer; \
+    tdm_error ret = TDM_ERROR_NONE; /* default TDM_ERROR_NONE */\
+    TDM_RETURN_IF_FAIL(layer != NULL); \
+    private_layer = (tdm_private_layer*)layer; \
+    private_output = private_layer->private_output; \
+    private_display = private_output->private_display
+
 EXTERN tdm_error
 tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capability *capabilities)
 {
@@ -633,14 +643,6 @@ _tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
     private_output = commit_handler->private_output;
     private_display = private_output->private_display;
 
-    if (commit_handler->func)
-    {
-        pthread_mutex_unlock(&private_display->lock);
-        commit_handler->func(private_output, sequence,
-                             tv_sec, tv_usec, commit_handler->user_data);
-        pthread_mutex_lock(&private_display->lock);
-    }
-
     LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link)
     {
         if (!private_layer->waiting_buffer)
@@ -651,10 +653,24 @@ _tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
             pthread_mutex_unlock(&private_display->lock);
             tdm_buffer_unref_backend(private_layer->showing_buffer);
             pthread_mutex_lock(&private_display->lock);
+
+            if (private_layer->buffer_queue)
+            {
+                tbm_surface_queue_release(private_layer->buffer_queue,
+                                        private_layer->showing_buffer);
+            }
         }
 
         private_layer->showing_buffer = private_layer->waiting_buffer;
         private_layer->waiting_buffer = NULL;
+    }
+
+    if (commit_handler->func)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        commit_handler->func(private_output, sequence,
+                             tv_sec, tv_usec, commit_handler->user_data);
+        pthread_mutex_lock(&private_display->lock);
     }
 
     LIST_DEL(&commit_handler->link);
@@ -712,20 +728,17 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
     return ret;
 }
 
-EXTERN tdm_error
-tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, void *user_data)
+static tdm_error
+_tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, void *user_data)
 {
     tdm_func_display *func_display;
     tdm_private_commit_handler *commit_handler;
     OUTPUT_FUNC_ENTRY();
 
-    pthread_mutex_lock(&private_display->lock);
-
     func_display = &private_display->func_display;
 
     if (!func_display->output_commit)
     {
-        pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
@@ -733,7 +746,6 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
     if (!commit_handler)
     {
         TDM_ERR("failed: alloc memory");
-        pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_OUT_OF_MEMORY;
     }
 
@@ -745,7 +757,6 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
     ret = func_display->output_commit(private_output->output_backend, sync, commit_handler);
     if (ret != TDM_ERROR_NONE)
     {
-        pthread_mutex_unlock(&private_display->lock);
         return ret;
     }
 
@@ -755,6 +766,18 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
         ret = func_display->output_set_commit_handler(private_output->output_backend,
                                                       _tdm_output_cb_commit);
     }
+
+    return ret;
+}
+
+EXTERN tdm_error
+tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, void *user_data)
+{
+    OUTPUT_FUNC_ENTRY();
+
+    pthread_mutex_lock(&private_display->lock);
+
+    ret = _tdm_output_commit(output, sync, func, user_data);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1110,6 +1133,167 @@ tdm_layer_unset_buffer(tdm_layer *layer)
         private_layer->showing_buffer = NULL;
     }
 
+    private_layer->usable = 1;
+
+    if (!func_display->layer_unset_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NONE;
+    }
+
+    ret = func_display->layer_unset_buffer(private_layer->layer_backend);
+
+    pthread_mutex_unlock(&private_display->lock);
+
+    return ret;
+}
+
+static void
+_tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
+{
+    TDM_RETURN_IF_FAIL(data != NULL);
+    tdm_layer *layer = data;
+    tdm_func_display *func_display;
+    tbm_surface_h surface = NULL;
+    LAYER_FUNC_ENTRY_VOID_RETURN();
+
+    pthread_mutex_lock(&private_display->lock);
+
+    func_display = &private_display->func_display;
+    if (!func_display->layer_set_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        return;
+    }
+
+    if (TBM_SURFACE_QUEUE_ERROR_NONE != tbm_surface_queue_acquire(private_layer->buffer_queue, &surface) ||
+        surface == NULL)
+    {
+        TDM_ERR("tbm_surface_queue_acquire() failed surface:%p", surface);
+        pthread_mutex_unlock(&private_display->lock);
+        return;
+    }
+
+    if (private_layer->waiting_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->waiting_buffer);
+        tbm_surface_queue_release(private_layer->buffer_queue, private_layer->waiting_buffer);
+        pthread_mutex_lock(&private_display->lock);
+    }
+
+    private_layer->waiting_buffer = tdm_buffer_ref_backend(surface);
+
+    func_display->layer_set_buffer(private_layer->layer_backend, surface);
+
+    ret = _tdm_output_commit(private_layer->private_output, 0, NULL, NULL);
+    if (ret != TDM_ERROR_NONE)
+        TDM_ERR("_tdm_output_commit() is fail");
+
+    pthread_mutex_unlock(&private_display->lock);
+}
+
+static void
+_tbm_layer_queue_destroy_cb(tbm_surface_queue_h surface_queue, void *data)
+{
+    TDM_RETURN_IF_FAIL(data != NULL);
+    tdm_layer *layer = data;
+    LAYER_FUNC_ENTRY_VOID_RETURN();
+    TDM_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+
+    pthread_mutex_lock(&private_display->lock);
+
+    if (private_layer->waiting_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->waiting_buffer);
+        tbm_surface_queue_release(private_layer->buffer_queue, private_layer->waiting_buffer);
+	pthread_mutex_lock(&private_display->lock);
+    }
+
+    private_layer->buffer_queue = NULL;
+
+    pthread_mutex_unlock(&private_display->lock);
+}
+
+EXTERN tdm_error
+tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
+{
+    tdm_func_display *func_display;
+    LAYER_FUNC_ENTRY();
+
+    TDM_RETURN_VAL_IF_FAIL(buffer_queue != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    pthread_mutex_lock(&private_display->lock);
+
+    func_display = &private_display->func_display;
+
+    private_layer->usable = 0;
+
+    if (!func_display->layer_set_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NONE;
+    }
+
+    if (buffer_queue == private_layer->buffer_queue)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        return TDM_ERROR_NONE;
+    }
+
+    if (private_layer->waiting_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->waiting_buffer);
+        tbm_surface_queue_release(private_layer->buffer_queue, private_layer->waiting_buffer);
+	private_layer->waiting_buffer = NULL;
+	pthread_mutex_lock(&private_display->lock);
+    }
+
+    private_layer->buffer_queue = buffer_queue;
+    tbm_surface_queue_set_acquirable_cb(private_layer->buffer_queue,
+                            _tbm_layer_queue_acquirable_cb,
+                            layer);
+    tbm_surface_queue_set_destroy_cb(private_layer->buffer_queue,
+                            _tbm_layer_queue_destroy_cb,
+                            layer);
+    pthread_mutex_unlock(&private_display->lock);
+
+    return ret;
+}
+
+EXTERN tdm_error
+tdm_layer_unset_buffer_queue(tdm_layer *layer)
+{
+    tdm_func_display *func_display;
+    LAYER_FUNC_ENTRY();
+
+    pthread_mutex_lock(&private_display->lock);
+
+    func_display = &private_display->func_display;
+
+    if (private_layer->waiting_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->waiting_buffer);
+        tbm_surface_queue_release(private_layer->buffer_queue, private_layer->waiting_buffer);
+	private_layer->waiting_buffer = NULL;
+	pthread_mutex_lock(&private_display->lock);
+    }
+
+    if (private_layer->showing_buffer)
+    {
+        pthread_mutex_unlock(&private_display->lock);
+        tdm_buffer_unref_backend(private_layer->showing_buffer);
+	tbm_surface_queue_release(private_layer->buffer_queue, private_layer->showing_buffer);
+        pthread_mutex_lock(&private_display->lock);
+        private_layer->showing_buffer = NULL;
+    }
+
+    tbm_surface_queue_set_acquirable_cb(private_layer->buffer_queue, NULL, NULL);
+    tbm_surface_queue_set_destroy_cb(private_layer->buffer_queue, NULL, NULL);
+    private_layer->buffer_queue = NULL;
     private_layer->usable = 1;
 
     if (!func_display->layer_unset_buffer)
