@@ -38,6 +38,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 #include <tbm_surface.h>
+#include <tbm_surface_queue.h>
 #include <tbm_surface_internal.h>
 
 #include "tdm_types.h"
@@ -463,6 +464,26 @@ tdm_error    tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
 tdm_error    tdm_layer_unset_buffer(tdm_layer *layer);
+
+/**
+ * @brief Set a TBM surface_queue to a layer object
+ * @details A TBM surface_queue will be applied when the output object
+ * of a layer object is committed. and TDM layer will be automatically updated
+ * @param[in] layer A layer object
+ * @param[in] buffer_queue A TBM surface_queue
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ * @see tdm_output_commit
+ */
+tdm_error    tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue);
+
+/**
+ * @brief Unset a TBM surface_queue from a layer object
+ * @details When this function is called, a current surface_queue will be
+ * disappeared from screen. Then nothing is showing on a layer object.
+ * @param[in] layer A layer object
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error    tdm_layer_unset_buffer_queue(tdm_layer *layer);
 
 /**
  * @brief Check wheter a layer object is available for a frontend user to use.
