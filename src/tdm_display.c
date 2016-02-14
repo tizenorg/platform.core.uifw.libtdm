@@ -561,20 +561,20 @@ tdm_output_get_pipe(tdm_output *output, unsigned int *pipe)
 EXTERN tdm_error
 tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     OUTPUT_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_set_property)
+    if (!func_output->output_set_property)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_set_property(private_output->output_backend, id, value);
+    ret = func_output->output_set_property(private_output->output_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -584,22 +584,22 @@ tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
 EXTERN tdm_error
 tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     OUTPUT_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(value != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_get_property)
+    if (!func_output->output_get_property)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_get_property(private_output->output_backend, id, value);
+    ret = func_output->output_get_property(private_output->output_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -683,15 +683,15 @@ EXTERN tdm_error
 tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
                        tdm_output_vblank_handler func, void *user_data)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     tdm_private_vblank_handler *vblank_handler;
     OUTPUT_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_wait_vblank)
+    if (!func_output->output_wait_vblank)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
@@ -710,7 +710,7 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
     vblank_handler->func = func;
     vblank_handler->user_data = user_data;
 
-    ret = func_display->output_wait_vblank(private_output->output_backend, interval,
+    ret = func_output->output_wait_vblank(private_output->output_backend, interval,
                                            sync, vblank_handler);
     if (ret != TDM_ERROR_NONE)
     {
@@ -721,7 +721,7 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
     if (!private_output->regist_vblank_cb)
     {
         private_output->regist_vblank_cb = 1;
-        ret = func_display->output_set_vblank_handler(private_output->output_backend,
+        ret = func_output->output_set_vblank_handler(private_output->output_backend,
                                                       _tdm_output_cb_vblank);
     }
 
@@ -733,13 +733,13 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 static tdm_error
 _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, void *user_data)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     tdm_private_commit_handler *commit_handler;
     OUTPUT_FUNC_ENTRY();
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_commit)
+    if (!func_output->output_commit)
     {
         return TDM_ERROR_NONE;
     }
@@ -756,7 +756,7 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
     commit_handler->func = func;
     commit_handler->user_data = user_data;
 
-    ret = func_display->output_commit(private_output->output_backend, sync, commit_handler);
+    ret = func_output->output_commit(private_output->output_backend, sync, commit_handler);
     if (ret != TDM_ERROR_NONE)
     {
         return ret;
@@ -765,7 +765,7 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
     if (!private_output->regist_commit_cb)
     {
         private_output->regist_commit_cb = 1;
-        ret = func_display->output_set_commit_handler(private_output->output_backend,
+        ret = func_output->output_set_commit_handler(private_output->output_backend,
                                                       _tdm_output_cb_commit);
     }
 
@@ -789,22 +789,22 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, 
 EXTERN tdm_error
 tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     OUTPUT_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(mode != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_set_mode)
+    if (!func_output->output_set_mode)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_set_mode(private_output->output_backend, mode);
+    ret = func_output->output_set_mode(private_output->output_backend, mode);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -814,22 +814,22 @@ tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode)
 EXTERN tdm_error
 tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     OUTPUT_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(mode != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_get_mode)
+    if (!func_output->output_get_mode)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_get_mode(private_output->output_backend, mode);
+    ret = func_output->output_get_mode(private_output->output_backend, mode);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -839,7 +839,7 @@ tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
 EXTERN tdm_error
 tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     OUTPUT_FUNC_ENTRY();
 
     if (dpms_value < TDM_OUTPUT_DPMS_ON)
@@ -849,15 +849,15 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_set_dpms)
+    if (!func_output->output_set_dpms)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_set_dpms(private_output->output_backend, dpms_value);
+    ret = func_output->output_set_dpms(private_output->output_backend, dpms_value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -867,22 +867,22 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 EXTERN tdm_error
 tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value)
 {
-    tdm_func_display *func_display;
+    tdm_func_output *func_output;
     OUTPUT_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(dpms_value != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_output = &private_display->func_output;
 
-    if (!func_display->output_get_dpms)
+    if (!func_output->output_get_dpms)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->output_get_dpms(private_output->output_backend, dpms_value);
+    ret = func_output->output_get_dpms(private_output->output_backend, dpms_value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -976,20 +976,20 @@ tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos)
 EXTERN tdm_error
 tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
-    if (!func_display->layer_set_property)
+    if (!func_layer->layer_set_property)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_set_property(private_layer->layer_backend, id, value);
+    ret = func_layer->layer_set_property(private_layer->layer_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -999,22 +999,22 @@ tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value)
 EXTERN tdm_error
 tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(value != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
-    if (!func_display->layer_get_property)
+    if (!func_layer->layer_get_property)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_get_property(private_layer->layer_backend, id, value);
+    ret = func_layer->layer_get_property(private_layer->layer_backend, id, value);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1024,24 +1024,24 @@ tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value)
 EXTERN tdm_error
 tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(info != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
     private_layer->usable = 0;
 
-    if (!func_display->layer_set_info)
+    if (!func_layer->layer_set_info)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_set_info(private_layer->layer_backend, info);
+    ret = func_layer->layer_set_info(private_layer->layer_backend, info);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1051,22 +1051,22 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 EXTERN tdm_error
 tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(info != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
-    if (!func_display->layer_get_info)
+    if (!func_layer->layer_get_info)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_get_info(private_layer->layer_backend, info);
+    ret = func_layer->layer_get_info(private_layer->layer_backend, info);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1076,18 +1076,18 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 EXTERN tdm_error
 tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(buffer != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
     private_layer->usable = 0;
 
-    if (!func_display->layer_set_buffer)
+    if (!func_layer->layer_set_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
@@ -1102,7 +1102,7 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 
     private_layer->waiting_buffer = tdm_buffer_ref_backend(buffer);
 
-    ret = func_display->layer_set_buffer(private_layer->layer_backend, buffer);
+    ret = func_layer->layer_set_buffer(private_layer->layer_backend, buffer);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1112,12 +1112,12 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 EXTERN tdm_error
 tdm_layer_unset_buffer(tdm_layer *layer)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
     if (private_layer->waiting_buffer)
     {
@@ -1137,13 +1137,13 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 
     private_layer->usable = 1;
 
-    if (!func_display->layer_unset_buffer)
+    if (!func_layer->layer_unset_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_unset_buffer(private_layer->layer_backend);
+    ret = func_layer->layer_unset_buffer(private_layer->layer_backend);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1155,14 +1155,14 @@ _tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
 {
     TDM_RETURN_IF_FAIL(data != NULL);
     tdm_layer *layer = data;
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     tbm_surface_h surface = NULL;
     LAYER_FUNC_ENTRY_VOID_RETURN();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
-    if (!func_display->layer_set_buffer)
+    func_layer = &private_display->func_layer;
+    if (!func_layer->layer_set_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
         return;
@@ -1186,7 +1186,7 @@ _tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
 
     private_layer->waiting_buffer = tdm_buffer_ref_backend(surface);
 
-    func_display->layer_set_buffer(private_layer->layer_backend, surface);
+    func_layer->layer_set_buffer(private_layer->layer_backend, surface);
 
     ret = _tdm_output_commit(private_layer->private_output, 0, NULL, NULL);
     if (ret != TDM_ERROR_NONE)
@@ -1221,18 +1221,18 @@ _tbm_layer_queue_destroy_cb(tbm_surface_queue_h surface_queue, void *data)
 EXTERN tdm_error
 tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(buffer_queue != NULL, TDM_ERROR_INVALID_PARAMETER);
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
     private_layer->usable = 0;
 
-    if (!func_display->layer_set_buffer)
+    if (!func_layer->layer_set_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
@@ -1268,12 +1268,12 @@ tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 EXTERN tdm_error
 tdm_layer_unset_buffer_queue(tdm_layer *layer)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
     if (private_layer->waiting_buffer)
     {
@@ -1298,13 +1298,13 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
     private_layer->buffer_queue = NULL;
     private_layer->usable = 1;
 
-    if (!func_display->layer_unset_buffer)
+    if (!func_layer->layer_unset_buffer)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_unset_buffer(private_layer->layer_backend);
+    ret = func_layer->layer_unset_buffer(private_layer->layer_backend);
 
     pthread_mutex_unlock(&private_display->lock);
 
@@ -1330,12 +1330,12 @@ tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable)
 EXTERN tdm_error
 tdm_layer_set_video_pos(tdm_layer *layer, int zpos)
 {
-    tdm_func_display *func_display;
+    tdm_func_layer *func_layer;
     LAYER_FUNC_ENTRY();
 
     pthread_mutex_lock(&private_display->lock);
 
-    func_display = &private_display->func_display;
+    func_layer = &private_display->func_layer;
 
     if (!(private_layer->caps.capabilities & TDM_LAYER_CAPABILITY_VIDEO))
     {
@@ -1344,13 +1344,13 @@ tdm_layer_set_video_pos(tdm_layer *layer, int zpos)
         return TDM_ERROR_INVALID_PARAMETER;
     }
 
-    if (!func_display->layer_set_video_pos)
+    if (!func_layer->layer_set_video_pos)
     {
         pthread_mutex_unlock(&private_display->lock);
         return TDM_ERROR_NONE;
     }
 
-    ret = func_display->layer_set_video_pos(private_layer->layer_backend, zpos);
+    ret = func_layer->layer_set_video_pos(private_layer->layer_backend, zpos);
 
     pthread_mutex_unlock(&private_display->lock);
 

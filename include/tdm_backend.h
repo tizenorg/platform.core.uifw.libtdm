@@ -300,6 +300,21 @@ typedef struct _tdm_func_display
      */
     tdm_pp*      (*display_create_pp)(tdm_backend_data *bdata, tdm_error *error);
 
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
+    void (*reserved7)(void);
+    void (*reserved8)(void);
+} tdm_func_display;
+
+/**
+ * @brief The output functions for a backend module.
+ */
+typedef struct _tdm_func_output
+{
     /**
      * @brief Get the capabilities of a output object
      * @param[in] output A output object
@@ -433,6 +448,21 @@ typedef struct _tdm_func_display
      */
     tdm_capture *(*output_create_capture)(tdm_output *output, tdm_error *error);
 
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
+    void (*reserved7)(void);
+    void (*reserved8)(void);
+} tdm_func_output;
+
+/**
+ * @brief The layer functions for a backend module.
+ */
+typedef struct _tdm_func_layer
+{
     /**
      * @brief Get the capabilities of a layer object
      * @param[in] layer A layer object
@@ -539,7 +569,16 @@ typedef struct _tdm_func_display
      * doesn't have the capture device.
      */
     tdm_capture *(*layer_create_capture)(tdm_layer *layer, tdm_error *error);
-} tdm_func_display;
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
+    void (*reserved7)(void);
+    void (*reserved8)(void);
+} tdm_func_layer;
 
 /**
  * @brief The done handler of a pp object
@@ -603,6 +642,15 @@ typedef struct _tdm_func_pp
      * A backend module @b SHOULD call #tdm_pp_done_handler when converintg a image is done.
      */
     tdm_error    (*pp_set_done_handler)(tdm_pp *pp, tdm_pp_done_handler func, void *user_data);
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
+    void (*reserved7)(void);
+    void (*reserved8)(void);
 } tdm_func_pp;
 
 /**
@@ -669,6 +717,15 @@ typedef struct _tdm_func_capture
      * A backend module @b SHOULD call #tdm_capture_done_handler when capture operation is done.
      */
     tdm_error    (*capture_set_done_handler)(tdm_capture *capture, tdm_capture_done_handler func, void *user_data);
+
+    void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
+    void (*reserved4)(void);
+    void (*reserved5)(void);
+    void (*reserved6)(void);
+    void (*reserved7)(void);
+    void (*reserved8)(void);
 } tdm_func_capture;
 
 /*
@@ -724,11 +781,33 @@ typedef struct _tdm_backend_module
  * @param[in] dpy A display object
  * @param[in] func_display display functions
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
- * @see tdm_backend_register_func_pp, tdm_backend_register_func_capture
+ * @see tdm_backend_register_func_output, tdm_backend_register_func_layer
  * @remarks
  * A backend module @b SHOULD set the backend display functions at least.
  */
 tdm_error tdm_backend_register_func_display(tdm_display *dpy, tdm_func_display *func_display);
+
+/**
+ * @brief Register the backend output functions to a display
+ * @param[in] dpy A display object
+ * @param[in] func_output output functions
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ * @see tdm_backend_register_func_display, tdm_backend_register_func_layer
+ * @remarks
+ * A backend module @b SHOULD set the backend output functions at least.
+ */
+tdm_error tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output);
+
+/**
+ * @brief Register the backend layer functions to a display
+ * @param[in] dpy A display object
+ * @param[in] func_layer layer functions
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ * @see tdm_backend_register_func_display, tdm_backend_register_func_output
+ * @remarks
+ * A backend module @b SHOULD set the backend layer functions at least.
+ */
+tdm_error tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer);
 
 /**
  * @brief Register the backend pp functions to a display

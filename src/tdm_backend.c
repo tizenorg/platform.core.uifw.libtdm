@@ -61,6 +61,34 @@ tdm_backend_register_func_display(tdm_display *dpy, tdm_func_display *func_displ
 }
 
 EXTERN tdm_error
+tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
+{
+    BACKEND_FUNC_ENTRY();
+
+    TDM_RETURN_VAL_IF_FAIL(func_output != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    pthread_mutex_lock(&private_display->lock);
+    private_display->func_output = *func_output;
+    pthread_mutex_unlock(&private_display->lock);
+
+    return TDM_ERROR_NONE;
+}
+
+EXTERN tdm_error
+tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
+{
+    BACKEND_FUNC_ENTRY();
+
+    TDM_RETURN_VAL_IF_FAIL(func_layer != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    pthread_mutex_lock(&private_display->lock);
+    private_display->func_layer = *func_layer;
+    pthread_mutex_unlock(&private_display->lock);
+
+    return TDM_ERROR_NONE;
+}
+
+EXTERN tdm_error
 tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp)
 {
     BACKEND_FUNC_ENTRY();

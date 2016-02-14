@@ -248,7 +248,7 @@ static tdm_error
 _tdm_display_update_caps_layer(tdm_private_display *private_display,
                                tdm_layer *layer_backend, tdm_caps_layer *caps)
 {
-    tdm_func_display *func_display = &private_display->func_display;
+    tdm_func_layer *func_layer = &private_display->func_layer;
     char buf[1024];
     int bufsize = sizeof(buf);
     char *str_buf = buf;
@@ -256,13 +256,13 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display,
     int i;
     tdm_error ret;
 
-    if (!func_display->layer_get_capability)
+    if (!func_layer->layer_get_capability)
     {
         TDM_ERR("no layer_get_capability()");
         return TDM_ERROR_BAD_MODULE;
     }
 
-    ret = func_display->layer_get_capability(layer_backend, caps);
+    ret = func_layer->layer_get_capability(layer_backend, caps);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("layer_get_capability() failed");
@@ -285,17 +285,17 @@ static tdm_error
 _tdm_display_update_caps_output(tdm_private_display *private_display,
                                 tdm_output *output_backend, tdm_caps_output *caps)
 {
-    tdm_func_display *func_display = &private_display->func_display;
+    tdm_func_output *func_output = &private_display->func_output;
     int i;
     tdm_error ret;
 
-    if (!func_display->output_get_capability)
+    if (!func_output->output_get_capability)
     {
         TDM_ERR("no output_get_capability()");
         return TDM_ERROR_BAD_MODULE;
     }
 
-    ret = func_display->output_get_capability(output_backend, caps);
+    ret = func_output->output_get_capability(output_backend, caps);
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("output_get_capability() failed");
@@ -332,7 +332,6 @@ _tdm_display_update_layer(tdm_private_display *private_display,
         TDM_RETURN_VAL_IF_FAIL(private_layer != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
         LIST_ADD(&private_layer->link, &private_output->layer_list);
-        private_layer->func_display = &private_display->func_display;
         private_layer->private_display = private_display;
         private_layer->private_output = private_output;
         private_layer->layer_backend = layer_backend;
@@ -358,7 +357,7 @@ static tdm_error
 _tdm_display_update_output(tdm_private_display *private_display,
                            tdm_output *output_backend, int pipe)
 {
-    tdm_func_display *func_display = &private_display->func_display;
+    tdm_func_output *func_output = &private_display->func_output;
     tdm_private_output *private_output = NULL;
     tdm_layer **layers = NULL;
     int layer_count = 0, i;
@@ -371,7 +370,6 @@ _tdm_display_update_output(tdm_private_display *private_display,
         TDM_RETURN_VAL_IF_FAIL(private_output != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
         LIST_ADD(&private_output->link, &private_display->output_list);
-        private_output->func_display = func_display;
         private_output->private_display = private_display;
         private_output->output_backend = output_backend;
         private_output->pipe = pipe;
@@ -388,7 +386,7 @@ _tdm_display_update_output(tdm_private_display *private_display,
     if (ret != TDM_ERROR_NONE)
         return ret;
 
-    layers = func_display->output_get_layers(output_backend, &layer_count, &ret);
+    layers = func_output->output_get_layers(output_backend, &layer_count, &ret);
     if (ret != TDM_ERROR_NONE)
         goto failed_update;
 
@@ -531,6 +529,8 @@ static tdm_error
 _tdm_display_check_backend_functions(tdm_private_display *private_display)
 {
     tdm_func_display *func_display = &private_display->func_display;
+    tdm_func_output *func_output = &private_display->func_output;
+    tdm_func_layer *func_layer = &private_display->func_layer;
     tdm_error ret;
 
     /* below functions should be implemented in backend side */
@@ -538,9 +538,9 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
     TDM_RETURN_VAL_IF_FAIL(func_display != NULL, TDM_ERROR_BAD_MODULE);
     TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capabilitiy, TDM_ERROR_BAD_MODULE);
     TDM_RETURN_VAL_IF_FAIL(func_display->display_get_outputs, TDM_ERROR_BAD_MODULE);
-    TDM_RETURN_VAL_IF_FAIL(func_display->output_get_capability, TDM_ERROR_BAD_MODULE);
-    TDM_RETURN_VAL_IF_FAIL(func_display->output_get_layers, TDM_ERROR_BAD_MODULE);
-    TDM_RETURN_VAL_IF_FAIL(func_display->layer_get_capability, TDM_ERROR_BAD_MODULE);
+    TDM_RETURN_VAL_IF_FAIL(func_output->output_get_capability, TDM_ERROR_BAD_MODULE);
+    TDM_RETURN_VAL_IF_FAIL(func_output->output_get_layers, TDM_ERROR_BAD_MODULE);
+    TDM_RETURN_VAL_IF_FAIL(func_layer->layer_get_capability, TDM_ERROR_BAD_MODULE);
 
     ret = func_display->display_get_capabilitiy(private_display->bdata,
                                                 &private_display->caps_display);
@@ -564,8 +564,8 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
     {
         tdm_func_capture *func_capture = &private_display->func_capture;
         TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capture_capability, TDM_ERROR_BAD_MODULE);
-        TDM_RETURN_VAL_IF_FAIL(func_display->output_create_capture, TDM_ERROR_BAD_MODULE);
-        TDM_RETURN_VAL_IF_FAIL(func_display->layer_create_capture, TDM_ERROR_BAD_MODULE);
+        TDM_RETURN_VAL_IF_FAIL(func_output->output_create_capture, TDM_ERROR_BAD_MODULE);
+        TDM_RETURN_VAL_IF_FAIL(func_layer->layer_create_capture, TDM_ERROR_BAD_MODULE);
         TDM_RETURN_VAL_IF_FAIL(func_capture->capture_destroy, TDM_ERROR_BAD_MODULE);
         TDM_RETURN_VAL_IF_FAIL(func_capture->capture_commit, TDM_ERROR_BAD_MODULE);
         TDM_RETURN_VAL_IF_FAIL(func_capture->capture_set_done_handler, TDM_ERROR_BAD_MODULE);

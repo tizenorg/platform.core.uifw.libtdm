@@ -49,7 +49,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     TDM_RETURN_VAL_IF_FAIL(pp != NULL, TDM_ERROR_INVALID_PARAMETER); \
     private_pp = (tdm_private_pp*)pp; \
     private_display = private_pp->private_display; \
-    func_pp = private_pp->func_pp
+    func_pp = &private_display->func_pp
 
 static void
 _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst, void *user_data)
@@ -124,7 +124,6 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
     }
 
     LIST_ADD(&private_pp->link, &private_display->pp_list);
-    private_pp->func_pp = func_pp;
     private_pp->private_display = private_display;
     private_pp->pp_backend = pp_backend;
 
@@ -142,7 +141,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
     if (!private_pp)
         return;
 
-    func_pp = private_pp->func_pp;
+    func_pp = &private_pp->private_display->func_pp;
 
     LIST_DEL(&private_pp->link);
 

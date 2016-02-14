@@ -49,7 +49,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     TDM_RETURN_VAL_IF_FAIL(capture != NULL, TDM_ERROR_INVALID_PARAMETER); \
     private_capture = (tdm_private_capture*)capture; \
     private_display = private_capture->private_display; \
-    func_capture = private_capture->func_capture
+    func_capture = &private_display->func_capture
 
 static void
 _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer, void *user_data)
@@ -77,16 +77,12 @@ _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer, void *u
 INTERN tdm_private_capture*
 tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error *error)
 {
-    tdm_private_display *private_display;
-    tdm_func_display *func_display;
-    tdm_func_capture *func_capture;
+    tdm_private_display *private_display = private_output->private_display;
+    tdm_func_output *func_output = &private_display->func_output;
+    tdm_func_capture *func_capture = &private_display->func_capture;
     tdm_private_capture *private_capture = NULL;
     tdm_capture *capture_backend = NULL;
     tdm_error ret = TDM_ERROR_NONE;
-
-    private_display = private_output->private_display;
-    func_display = &private_display->func_display;
-    func_capture = &private_display->func_capture;
 
     if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
     {
@@ -96,7 +92,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
         return NULL;
     }
 
-    capture_backend = func_display->output_create_capture(private_output->output_backend, &ret);
+    capture_backend = func_output->output_create_capture(private_output->output_backend, &ret);
     if (ret != TDM_ERROR_NONE)
     {
         if (error)
@@ -125,7 +121,6 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
     }
 
     LIST_ADD(&private_capture->link, &private_output->capture_list);
-    private_capture->func_capture = func_capture;
     private_capture->target = TDM_CAPTURE_TARGET_OUTPUT;
     private_capture->private_display = private_display;
     private_capture->private_output = private_output;
@@ -141,18 +136,13 @@ tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error
 INTERN tdm_private_capture*
 tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *error)
 {
-    tdm_private_display *private_display;
-    tdm_private_output *private_output;
-    tdm_func_display *func_display;
-    tdm_func_capture *func_capture;
+    tdm_private_output *private_output = private_layer->private_output;
+    tdm_private_display *private_display = private_output->private_display;
+    tdm_func_layer *func_layer = &private_display->func_layer;
+    tdm_func_capture *func_capture = &private_display->func_capture;
     tdm_private_capture *private_capture = NULL;
     tdm_capture *capture_backend = NULL;
     tdm_error ret = TDM_ERROR_NONE;
-
-    private_output = private_layer->private_output;
-    private_display = private_output->private_display;
-    func_display = &private_display->func_display;
-    func_capture = &private_display->func_capture;
 
     if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
     {
@@ -162,7 +152,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
         return NULL;
     }
 
-    capture_backend = func_display->layer_create_capture(private_layer->layer_backend, &ret);
+    capture_backend = func_layer->layer_create_capture(private_layer->layer_backend, &ret);
     if (ret != TDM_ERROR_NONE)
         return NULL;
 
@@ -178,7 +168,6 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *e
 
     LIST_ADD(&private_capture->link, &private_output->capture_list);
     private_capture->target = TDM_CAPTURE_TARGET_LAYER;
-    private_capture->func_capture = func_capture;
     private_capture->private_display = private_display;
     private_capture->private_output = private_output;
     private_capture->private_layer = private_layer;
@@ -200,7 +189,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 
     LIST_DEL(&private_capture->link);
 
-    func_capture = private_capture->func_capture;
+    func_capture = &private_capture->private_display->func_capture;
     func_capture->capture_destroy(private_capture->capture_backend);
 
     free(private_capture);

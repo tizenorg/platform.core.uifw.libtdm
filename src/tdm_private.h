@@ -165,6 +165,8 @@ struct _tdm_private_display
     /* backend function */
     tdm_display_capability capabilities;
     tdm_func_display func_display;
+    tdm_func_output func_output;
+    tdm_func_layer func_layer;
     tdm_func_pp func_pp;
     tdm_func_capture func_capture;
 
@@ -184,7 +186,6 @@ struct _tdm_private_output
 {
     struct list_head link;
 
-    tdm_func_display *func_display;
     tdm_private_display *private_display;
 
     tdm_caps_output caps;
@@ -207,7 +208,6 @@ struct _tdm_private_layer
 {
     struct list_head link;
 
-    tdm_func_display *func_display;
     tdm_private_display *private_display;
     tdm_private_output *private_output;
 
@@ -227,7 +227,6 @@ struct _tdm_private_pp
 {
     struct list_head link;
 
-    tdm_func_pp *func_pp;
     tdm_private_display *private_display;
 
     tdm_pp *pp_backend;
@@ -239,7 +238,6 @@ struct _tdm_private_capture
 
     tdm_capture_target target;
 
-    tdm_func_capture *func_capture;
     tdm_private_display *private_display;
     tdm_private_output *private_output;
     tdm_private_layer *private_layer;
