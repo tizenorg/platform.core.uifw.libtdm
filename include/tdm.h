@@ -193,6 +193,16 @@ tdm_output*  tdm_display_get_output(tdm_display *dpy, int index, tdm_error *erro
 tdm_pp*      tdm_display_create_pp(tdm_display *dpy, tdm_error *error);
 
 /**
+ * @brief Get the model information of a output object.
+ * @param[in] output A output object
+ * @param[out] maker The output maker.
+ * @param[out] model The output model.
+ * @param[out] name The output name.
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error    tdm_output_get_model_info(tdm_output *output, const char **maker, const char **model, const char **name);
+
+/**
  * @brief Get the connection status of a output object.
  * @param[in] output A output object
  * @param[out] status The connection status.

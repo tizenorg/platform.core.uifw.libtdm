@@ -365,6 +365,25 @@ tdm_display_create_pp(tdm_display *dpy, tdm_error *error)
 }
 
 EXTERN tdm_error
+tdm_output_get_model_info(tdm_output *output, const char **maker, const char **model, const char **name)
+{
+    OUTPUT_FUNC_ENTRY();
+
+    pthread_mutex_lock(&private_display->lock);
+
+    if (maker)
+        *maker = private_output->caps.maker;
+    if (model)
+        *model = private_output->caps.model;
+    if (name)
+        *name = private_output->caps.name;
+
+    pthread_mutex_unlock(&private_display->lock);
+
+    return ret;
+}
+
+EXTERN tdm_error
 tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status)
 {
     OUTPUT_FUNC_ENTRY();

@@ -77,6 +77,10 @@ typedef struct _tdm_caps_display
  */
 typedef struct _tdm_caps_output
 {
+    char maker[TDM_NAME_LEN];       /**< The output maker */
+    char model[TDM_NAME_LEN];       /**< The output model */
+    char name[TDM_NAME_LEN];        /**< The output name */
+
     tdm_output_conn_status status;  /**< The connection status */
     tdm_output_type type;           /**< The connection type */
     unsigned int type_id;           /**< The connection type id */

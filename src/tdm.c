@@ -302,6 +302,9 @@ _tdm_display_update_caps_output(tdm_private_display *private_display,
         return TDM_ERROR_BAD_MODULE;
     }
 
+    TDM_DBG("output maker: %s", caps->maker);
+    TDM_DBG("output model: %s", caps->model);
+    TDM_DBG("output name: %s", caps->name);
     TDM_DBG("output status: %d", caps->status);
     TDM_DBG("output type : %d", caps->type);
     for (i = 0; i < caps->prop_count; i++)
