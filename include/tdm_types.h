@@ -237,9 +237,10 @@ typedef enum
  */
 typedef struct _tdm_output_mode
 {
-    unsigned int width;
-    unsigned int height;
-    unsigned int refresh;
+    unsigned int clock;
+    unsigned int hdisplay, hsync_start, hsync_end, htotal, hskew;
+    unsigned int vdisplay, vsync_start, vsync_end, vtotal, vscan;
+    unsigned int vrefresh;
     unsigned int flags;
     unsigned int type;
     char name[TDM_NAME_LEN];
