@@ -13,8 +13,6 @@
 
 #define PNG_DEPTH 8
 
-int tdm_helper_drm_fd = -1;
-
 static const char *dump_prefix[2] = {"png", "yuv"};
 
 static void

@@ -46,60 +46,7 @@ extern "C" {
 /**
  * @file tdm_helper.h
  * @brief The header file to help a vendor to implement a backend module
- * @remark
- * tdm_helper_drm_fd is external drm_fd which is opened by ecore_drm.
- * This is very @b TRICKY!! But we have no choice at this time because ecore_drm
- * doesn't use tdm yet. When we make ecore_drm use tdm, tdm_helper_drm_fd will
- * be removed.
- * @warning
- * If tdm_helper_drm_fd is more than -1, a tdm backend module @b SHOULDN't call
- * drmWaitVBlank by itself because a DRM vblank event will be handled in ecore_drm
- * internally. In this case, a tdm backend module NEVER get a DRM vblank event.
- * If a tdm backend module need to handle a vendor specific DRM event,
- * drmAddUserHandler() of libdrm makes possible that a tdm backend module handle
- * it.
- * @par Example
- * @code
-    static int
-    _tdm_drm_user_handler(struct drm_event *event)
-    {
-        if (event->type != DRM_VENDOR_XXX_EVENT)
-            return -1;
-
-        //handling a vendor event
-
-        return 0;
-    }
-
-    ...
-
-    drm_data->drm_fd = -1;
-    if (tdm_helper_drm_fd >= 0)
-    {
-        drm_data->drm_fd = tdm_helper_drm_fd;
-        drmAddUserHandler(tdm_helper_drm_fd, _tdm_drm_user_handler);
-    }
-
-    if (drm_data->drm_fd < 0)
-        drm_data->drm_fd = _tdm_drm_open_drm();
-
-    ...
-
-    drmRemoveUserHandler(tdm_helper_drm_fd, _tdm_drm_user_handler);
- * @endcode
- * @code
-    if (tdm_helper_drm_fd == -1)
-    {
-        ...
-        if (drmWaitVBlank(fd, &vbl))
-            return TDM_ERROR_OPERATION_FAILED;
-        ...
-    }
- * @endcode
- * @endcode
- * @todo
  */
-extern int tdm_helper_drm_fd;
 
 /**
  * @brief Dump a buffer
