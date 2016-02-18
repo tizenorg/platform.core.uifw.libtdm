@@ -639,6 +639,9 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display, const c
         goto failed_load;
     }
 
+    private_display->module_data = module_data;
+    private_display->module = module;
+
     /* check if version, init() and deinit() are valid or not */
     ret = _tdm_display_check_module(module_data);
     if (ret != TDM_ERROR_NONE)
@@ -660,14 +663,13 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display, const c
         goto failed_load;
     }
 
-    private_display->module_data = module_data;
-    private_display->module = module;
-
     TDM_INFO("Success to load module(%s)", file);
 
     return TDM_ERROR_NONE;
 failed_load:
     dlclose(module);
+    private_display->module_data = NULL;
+    private_display->module = NULL;
     return ret;
 }
 

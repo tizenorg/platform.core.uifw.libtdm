@@ -46,12 +46,36 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     TDM_RETURN_VAL_IF_FAIL(dpy != NULL, TDM_ERROR_INVALID_PARAMETER); \
     private_display = (tdm_private_display*)dpy;
 
+static int
+_check_abi_version(tdm_backend_module *module, int abimaj, int abimin)
+{
+    int major = TDM_BACKEND_GET_ABI_MAJOR(module->abi_version);
+    int minor = TDM_BACKEND_GET_ABI_MINOR(module->abi_version);
+
+    if (major < abimaj) goto failed;
+    if (major > abimaj) return 1;
+    if (minor < abimin) goto failed;
+    return 1;
+failed:
+    TDM_ERR("The ABI version(%d.%d) of '%s' is less than %d.%d",
+            major, minor, module->name ? module->name : "unknown",
+            abimaj, abimin);
+    return 0;
+}
+
 EXTERN tdm_error
 tdm_backend_register_func_display(tdm_display *dpy, tdm_func_display *func_display)
 {
+    tdm_backend_module *module;
+
     BACKEND_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(func_display != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    /* the ABI version of backend module should be more than 1.1 */
+    module = private_display->module_data;
+    if (_check_abi_version(module, 1, 1) < 0)
+        return TDM_ERROR_BAD_MODULE;
 
     pthread_mutex_lock(&private_display->lock);
     private_display->func_display = *func_display;
@@ -63,9 +87,16 @@ tdm_backend_register_func_display(tdm_display *dpy, tdm_func_display *func_displ
 EXTERN tdm_error
 tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
 {
+    tdm_backend_module *module;
+
     BACKEND_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(func_output != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    /* the ABI version of backend module should be more than 1.1 */
+    module = private_display->module_data;
+    if (_check_abi_version(module, 1, 1) < 0)
+        return TDM_ERROR_BAD_MODULE;
 
     pthread_mutex_lock(&private_display->lock);
     private_display->func_output = *func_output;
@@ -77,9 +108,16 @@ tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
 EXTERN tdm_error
 tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
 {
+    tdm_backend_module *module;
+
     BACKEND_FUNC_ENTRY();
 
     TDM_RETURN_VAL_IF_FAIL(func_layer != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+    /* the ABI version of backend module should be more than 1.1 */
+    module = private_display->module_data;
+    if (_check_abi_version(module, 1, 1) < 0)
+        return TDM_ERROR_BAD_MODULE;
 
     pthread_mutex_lock(&private_display->lock);
     private_display->func_layer = *func_layer;
