@@ -1,6 +1,6 @@
 AC_PREREQ([2.60])
 AC_INIT([libtdm],
-        [1.0.0],
+        [1.1.0],
         [https://www.tizen.org],
         [libtdm])
 
