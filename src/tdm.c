@@ -827,6 +827,7 @@ tdm_display_deinit(tdm_display *dpy)
 
     pthread_mutex_destroy(&private_display->lock);
     free(private_display);
+    g_private_display = NULL;
     tdm_debug = 0;
 
     pthread_mutex_unlock(&gLock);
