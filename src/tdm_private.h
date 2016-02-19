@@ -180,6 +180,8 @@ struct _tdm_private_display
     struct list_head pp_list;
 
     void **outputs_ptr;
+
+    tbm_bufmgr bufmgr;
 };
 
 struct _tdm_private_output

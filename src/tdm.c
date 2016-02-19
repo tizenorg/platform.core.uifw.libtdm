@@ -460,6 +460,35 @@ failed_update:
     return ret;
 }
 
+static tdm_error
+_tdm_display_init_bufmgr(tdm_private_display *private_display)
+{
+    tdm_func_display *func_display = &private_display->func_display;
+    int buffer_fd = -1;
+    tdm_error ret;
+
+    if (func_display->display_get_buffer_fd)
+    {
+        ret = func_display->display_get_buffer_fd(private_display->bdata, &buffer_fd);
+        if (ret != TDM_ERROR_NONE)
+        {
+            TDM_ERR("failed to get buffer fd");
+            return ret;
+        }
+    }
+
+    private_display->bufmgr = tbm_bufmgr_init(buffer_fd);
+    if (!private_display->bufmgr)
+    {
+        TDM_ERR("failed to init TBM bufmgr: fd(%d)", buffer_fd);
+        return TDM_ERROR_OUT_OF_MEMORY;
+    }
+
+    TDM_INFO("init TBM bufmgr: fd(%d)", buffer_fd);
+
+    return TDM_ERROR_NONE;
+}
+
 
 EXTERN tdm_error
 tdm_display_update(tdm_display *dpy)
@@ -738,6 +767,10 @@ tdm_display_init(tdm_error *error)
     if (ret != TDM_ERROR_NONE)
         goto failed_update;
 
+    ret = _tdm_display_init_bufmgr(private_display);
+    if (ret != TDM_ERROR_NONE)
+        goto failed_update;
+
     private_display->init_count = 1;
 
     g_private_display = private_display;
@@ -781,6 +814,9 @@ tdm_display_deinit(tdm_display *dpy)
     }
 
     pthread_mutex_lock(&private_display->lock);
+
+    if (private_display->bufmgr)
+        tbm_bufmgr_deinit(private_display->bufmgr);
 
     _tdm_display_destroy_private_display(private_display);
     _tdm_display_unload_module(private_display);
