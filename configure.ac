@@ -34,6 +34,13 @@ AC_ARG_WITH(tdm-module-path, AS_HELP_STRING([--with-tdm-module-path=PATH], [tdm 
 				[ TDM_MODULE_PATH="${DEFAULT_TDM_MODULE_PATH}" ])
 AC_DEFINE_UNQUOTED(TDM_MODULE_PATH, "${TDM_MODULE_PATH}", [Directory for the modules of tdm])
 
+PKG_CHECK_MODULES(TTRACE,
+		[ttrace],
+		[have_ttrace="yes"], [have_ttrace="no"])
+if test "x$have_ttrace" = "xyes"; then
+	AC_DEFINE(HAVE_TTRACE, 1, [ttrace available])
+fi
+
 # For enumerating devices in test case
 AC_SUBST(WARN_CFLAGS)
 AC_OUTPUT([

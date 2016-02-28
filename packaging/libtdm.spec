@@ -9,6 +9,7 @@ Source1001:	    %{name}.manifest
 BuildRequires:  pkgconfig(pthread-stubs)
 BuildRequires:  pkgconfig(libtbm)
 BuildRequires:  pkgconfig(libpng)
+BuildRequires:  pkgconfig(ttrace)
 
 %description
 Common user library of Tizen Display Manager : libtdm front-end library

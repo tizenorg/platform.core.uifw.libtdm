@@ -120,6 +120,15 @@ extern "C" {
     }\
 }
 
+#ifdef HAVE_TTRACE
+#include <ttrace.h>
+#define TDM_TRACE_BEGIN(NAME) traceBegin(TTRACE_TAG_GRAPHICS, "TDM:"#NAME)
+#define TDM_TRACE_END() traceEnd(TTRACE_TAG_GRAPHICS)
+#else
+#define TDM_TRACE_BEGIN(NAME)
+#define TDM_TRACE_END()
+#endif
+
 #define TDM_NEVER_GET_HERE() TDM_ERR("** NEVER GET HERE **")
 
 #define TDM_SNPRINTF(p, len, fmt, ARG...)  \

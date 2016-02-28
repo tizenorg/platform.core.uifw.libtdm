@@ -624,10 +624,13 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display, const c
 
     snprintf(path, sizeof(path), TDM_MODULE_PATH "/%s", file);
 
+    TDM_TRACE_BEGIN(Load_Backend);
+
     module = dlopen(path, RTLD_LAZY);
     if (!module)
     {
         TDM_ERR("failed to load module: %s(%s)", dlerror(), file);
+        TDM_TRACE_END();
         return TDM_ERROR_BAD_MODULE;
     }
 
@@ -636,6 +639,7 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display, const c
     {
         TDM_ERR("'%s' doesn't have data object", file);
         ret = TDM_ERROR_BAD_MODULE;
+        TDM_TRACE_END();
         goto failed_load;
     }
 
@@ -647,8 +651,12 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display, const c
     if (ret != TDM_ERROR_NONE)
         goto failed_load;
 
+    TDM_TRACE_END();
+
     /* We don't care if backend_data is NULL or not. It's up to backend. */
+    TDM_TRACE_BEGIN(Init_Backend);
     private_display->bdata = module_data->init((tdm_display*)private_display, &ret);
+    TDM_TRACE_END();
     if (ret != TDM_ERROR_NONE)
     {
         TDM_ERR("'%s' init failed", file);
@@ -765,11 +773,15 @@ tdm_display_init(tdm_error *error)
     if (ret != TDM_ERROR_NONE)
         goto failed_load;
 
+    TDM_TRACE_BEGIN(Update_Display);
     ret = _tdm_display_update_internal(private_display, 0);
+    TDM_TRACE_END();
     if (ret != TDM_ERROR_NONE)
         goto failed_update;
 
+    TDM_TRACE_BEGIN(Bufmgr_Init);
     ret = _tdm_display_init_bufmgr(private_display);
+    TDM_TRACE_END();
     if (ret != TDM_ERROR_NONE)
         goto failed_update;
 
