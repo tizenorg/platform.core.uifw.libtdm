@@ -1042,6 +1042,15 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 		return TDM_ERROR_NONE;
 	}
 
+	TDM_INFO("layer info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%d,%d %dx%d) trans(%d)",
+	         info->src_config.size.h, info->src_config.size.v,
+	         info->src_config.pos.x, info->src_config.pos.y,
+	         info->src_config.pos.w, info->src_config.pos.h,
+	         FOURCC_STR(info->src_config.format),
+	         info->dst_pos.x, info->dst_pos.y,
+	         info->dst_pos.w, info->dst_pos.h,
+	         info->transform);
+
 	ret = func_layer->layer_set_info(private_layer->layer_backend, info);
 
 	pthread_mutex_unlock(&private_display->lock);

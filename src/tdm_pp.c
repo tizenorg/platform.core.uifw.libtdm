@@ -176,6 +176,17 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 		return TDM_ERROR_NONE;
 	}
 
+	TDM_INFO("pp info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%dx%d %d,%d %dx%d %c%c%c%c) trans(%d) sync(%d) flags(%x)",
+	         info->src_config.size.h, info->src_config.size.v,
+	         info->src_config.pos.x, info->src_config.pos.y,
+	         info->src_config.pos.w, info->src_config.pos.h,
+	         FOURCC_STR(info->src_config.format),
+	         info->dst_config.size.h, info->dst_config.size.v,
+	         info->dst_config.pos.x, info->dst_config.pos.y,
+	         info->dst_config.pos.w, info->dst_config.pos.h,
+	         FOURCC_STR(info->dst_config.format),
+	         info->transform, info->sync, info->flags);
+
 	ret = func_pp->pp_set_info(private_pp->pp_backend, info);
 
 	pthread_mutex_unlock(&private_display->lock);
