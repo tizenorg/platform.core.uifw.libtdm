@@ -38,54 +38,53 @@
 
 #include <stddef.h>
 
-struct list_head
-{
-    struct list_head *prev;
-    struct list_head *next;
+struct list_head {
+	struct list_head *prev;
+	struct list_head *next;
 };
 
 static inline void list_inithead(struct list_head *item)
 {
-    item->prev = item;
-    item->next = item;
+	item->prev = item;
+	item->next = item;
 }
 
 static inline void list_add(struct list_head *item, struct list_head *list)
 {
-    item->prev = list;
-    item->next = list->next;
-    list->next->prev = item;
-    list->next = item;
+	item->prev = list;
+	item->next = list->next;
+	list->next->prev = item;
+	list->next = item;
 }
 
 static inline void list_addtail(struct list_head *item, struct list_head *list)
 {
-    item->next = list;
-    item->prev = list->prev;
-    list->prev->next = item;
-    list->prev = item;
+	item->next = list;
+	item->prev = list->prev;
+	list->prev->next = item;
+	list->prev = item;
 }
 
 static inline void list_replace(struct list_head *from, struct list_head *to)
 {
-    to->prev = from->prev;
-    to->next = from->next;
-    from->next->prev = to;
-    from->prev->next = to;
+	to->prev = from->prev;
+	to->next = from->next;
+	from->next->prev = to;
+	from->prev->next = to;
 }
 
 static inline void list_del(struct list_head *item)
 {
-    item->prev->next = item->next;
-    item->next->prev = item->prev;
+	item->prev->next = item->next;
+	item->next->prev = item->prev;
 }
 
 static inline void list_delinit(struct list_head *item)
 {
-    item->prev->next = item->next;
-    item->next->prev = item->prev;
-    item->next = item;
-    item->prev = item;
+	item->prev->next = item->next;
+	item->next->prev = item->prev;
+	item->next = item;
+	item->prev = item;
 }
 
 #define LIST_INITHEAD(__item) list_inithead(__item)

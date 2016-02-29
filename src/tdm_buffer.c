@@ -44,212 +44,207 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 static int tdm_buffer_key;
 #define TDM_BUFFER_KEY ((unsigned long)&tdm_buffer_key)
 
-typedef struct _tdm_buffer_func_info
-{
-    tdm_buffer_release_handler release_func;
-    tdm_buffer_destroy_handler destroy_func;
-    void *user_data;
+typedef struct _tdm_buffer_func_info {
+	tdm_buffer_release_handler release_func;
+	tdm_buffer_destroy_handler destroy_func;
+	void *user_data;
 
-    struct list_head link;
+	struct list_head link;
 } tdm_buffer_func_info;
 
-typedef struct _tdm_buffer_info
-{
-    tbm_surface_h buffer;
+typedef struct _tdm_buffer_info {
+	tbm_surface_h buffer;
 
-    /* ref_count for backend */
-    int backend_ref_count;
+	/* ref_count for backend */
+	int backend_ref_count;
 
-    struct list_head release_funcs;
-    struct list_head destroy_funcs;
+	struct list_head release_funcs;
+	struct list_head destroy_funcs;
 } tdm_buffer_info;
 
 static void
 _tdm_buffer_destroy_info(void *user_data)
 {
-    tdm_buffer_info *buf_info = (tdm_buffer_info*)user_data;
-    tdm_buffer_func_info *func_info = NULL, *next = NULL;
+	tdm_buffer_info *buf_info = (tdm_buffer_info *)user_data;
+	tdm_buffer_func_info *func_info = NULL, *next = NULL;
 
-    if (buf_info->backend_ref_count > 0)
-        TDM_NEVER_GET_HERE();
+	if (buf_info->backend_ref_count > 0)
+		TDM_NEVER_GET_HERE();
 
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link)
-    {
-        LIST_DEL(&func_info->link);
-        free(func_info);
-    }
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link) {
+		LIST_DEL(&func_info->link);
+		free(func_info);
+	}
 
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->destroy_funcs, link)
-        func_info->destroy_func(buf_info->buffer, func_info->user_data);
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->destroy_funcs, link)
+	func_info->destroy_func(buf_info->buffer, func_info->user_data);
 
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->destroy_funcs, link)
-    {
-        LIST_DEL(&func_info->link);
-        free(func_info);
-    }
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->destroy_funcs, link) {
+		LIST_DEL(&func_info->link);
+		free(func_info);
+	}
 
-    free(buf_info);
+	free(buf_info);
 }
 
-static tdm_buffer_info*
+static tdm_buffer_info *
 _tdm_buffer_get_info(tbm_surface_h buffer)
 {
-    tdm_buffer_info *buf_info = NULL;
-    tbm_bo bo;
+	tdm_buffer_info *buf_info = NULL;
+	tbm_bo bo;
 
-    bo = tbm_surface_internal_get_bo(buffer, 0);
-    TDM_RETURN_VAL_IF_FAIL(bo != NULL, NULL);
+	bo = tbm_surface_internal_get_bo(buffer, 0);
+	TDM_RETURN_VAL_IF_FAIL(bo != NULL, NULL);
 
-    tbm_bo_get_user_data(bo, TDM_BUFFER_KEY, (void**)&buf_info);
+	tbm_bo_get_user_data(bo, TDM_BUFFER_KEY, (void **)&buf_info);
 
-    if (!buf_info)
-    {
-        buf_info = calloc(1, sizeof(tdm_buffer_info));
-        TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
+	if (!buf_info) {
+		buf_info = calloc(1, sizeof(tdm_buffer_info));
+		TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
 
-        buf_info->buffer = buffer;
+		buf_info->buffer = buffer;
 
-        LIST_INITHEAD(&buf_info->release_funcs);
-        LIST_INITHEAD(&buf_info->destroy_funcs);
+		LIST_INITHEAD(&buf_info->release_funcs);
+		LIST_INITHEAD(&buf_info->destroy_funcs);
 
-        tbm_bo_add_user_data(bo, TDM_BUFFER_KEY, _tdm_buffer_destroy_info);
-        tbm_bo_set_user_data(bo, TDM_BUFFER_KEY, buf_info);
-    }
+		tbm_bo_add_user_data(bo, TDM_BUFFER_KEY, _tdm_buffer_destroy_info);
+		tbm_bo_set_user_data(bo, TDM_BUFFER_KEY, buf_info);
+	}
 
-    return buf_info;
+	return buf_info;
 }
 
 EXTERN tdm_error
 tdm_buffer_add_release_handler(tbm_surface_h buffer,
                                tdm_buffer_release_handler func, void *user_data)
 {
-    tdm_buffer_info *buf_info;
-    tdm_buffer_func_info *func_info;
+	tdm_buffer_info *buf_info;
+	tdm_buffer_func_info *func_info;
 
-    TDM_RETURN_VAL_IF_FAIL(buffer != NULL, TDM_ERROR_INVALID_PARAMETER);
-    TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(buffer != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-    buf_info = _tdm_buffer_get_info(buffer);
-    TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
-    func_info = calloc(1, sizeof(tdm_buffer_func_info));
-    TDM_RETURN_VAL_IF_FAIL(func_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
+	func_info = calloc(1, sizeof(tdm_buffer_func_info));
+	TDM_RETURN_VAL_IF_FAIL(func_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
-    func_info->release_func = func;
-    func_info->user_data = user_data;
+	func_info->release_func = func;
+	func_info->user_data = user_data;
 
-    LIST_ADD(&func_info->link, &buf_info->release_funcs);
+	LIST_ADD(&func_info->link, &buf_info->release_funcs);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 
 EXTERN void
-tdm_buffer_remove_release_handler(tbm_surface_h buffer, tdm_buffer_release_handler func, void *user_data)
+tdm_buffer_remove_release_handler(tbm_surface_h buffer,
+                                  tdm_buffer_release_handler func, void *user_data)
 {
-    tdm_buffer_info *buf_info;
-    tdm_buffer_func_info *func_info = NULL, *next = NULL;
+	tdm_buffer_info *buf_info;
+	tdm_buffer_func_info *func_info = NULL, *next = NULL;
 
-    TDM_RETURN_IF_FAIL(buffer != NULL);
-    TDM_RETURN_IF_FAIL(func != NULL);
+	TDM_RETURN_IF_FAIL(buffer != NULL);
+	TDM_RETURN_IF_FAIL(func != NULL);
 
-    buf_info = _tdm_buffer_get_info(buffer);
-    TDM_RETURN_IF_FAIL(buf_info != NULL);
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_IF_FAIL(buf_info != NULL);
 
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link)
-    {
-        if (func_info->release_func != func || func_info->user_data != user_data)
-            continue;
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link) {
+		if (func_info->release_func != func || func_info->user_data != user_data)
+			continue;
 
-        LIST_DEL(&func_info->link);
-        free(func_info);
+		LIST_DEL(&func_info->link);
+		free(func_info);
 
-        return;
-    }
+		return;
+	}
 }
 
 
 EXTERN tbm_surface_h
 tdm_buffer_ref_backend(tbm_surface_h buffer)
 {
-    tdm_buffer_info *buf_info;
+	tdm_buffer_info *buf_info;
 
-    TDM_RETURN_VAL_IF_FAIL(buffer != NULL, NULL);
+	TDM_RETURN_VAL_IF_FAIL(buffer != NULL, NULL);
 
-    buf_info = _tdm_buffer_get_info(buffer);
-    TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
 
-    buf_info->backend_ref_count++;
+	buf_info->backend_ref_count++;
 
-    return buffer;
+	return buffer;
 }
 
 EXTERN void
 tdm_buffer_unref_backend(tbm_surface_h buffer)
 {
-    tdm_buffer_info *buf_info;
-    tdm_buffer_func_info *func_info = NULL, *next = NULL;
+	tdm_buffer_info *buf_info;
+	tdm_buffer_func_info *func_info = NULL, *next = NULL;
 
-    TDM_RETURN_IF_FAIL(buffer != NULL);
+	TDM_RETURN_IF_FAIL(buffer != NULL);
 
-    buf_info = _tdm_buffer_get_info(buffer);
-    TDM_RETURN_IF_FAIL(buf_info != NULL);
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_IF_FAIL(buf_info != NULL);
 
-    buf_info->backend_ref_count--;
+	buf_info->backend_ref_count--;
 
-    if (buf_info->backend_ref_count > 0)
-        return;
+	if (buf_info->backend_ref_count > 0)
+		return;
 
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link)
-    {
-        tbm_surface_internal_ref(buffer);
-        func_info->release_func(buffer, func_info->user_data);
-        tbm_surface_internal_unref(buffer);
-    }
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link) {
+		tbm_surface_internal_ref(buffer);
+		func_info->release_func(buffer, func_info->user_data);
+		tbm_surface_internal_unref(buffer);
+	}
 }
 
 EXTERN tdm_error
-tdm_buffer_add_destroy_handler(tbm_surface_h buffer, tdm_buffer_destroy_handler func, void *user_data)
+tdm_buffer_add_destroy_handler(tbm_surface_h buffer,
+                               tdm_buffer_destroy_handler func, void *user_data)
 {
-    tdm_buffer_info *buf_info;
-    tdm_buffer_func_info *func_info;
+	tdm_buffer_info *buf_info;
+	tdm_buffer_func_info *func_info;
 
-    TDM_RETURN_VAL_IF_FAIL(buffer != NULL, TDM_ERROR_INVALID_PARAMETER);
-    TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(buffer != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-    buf_info = _tdm_buffer_get_info(buffer);
-    TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
-    func_info = calloc(1, sizeof(tdm_buffer_func_info));
-    TDM_RETURN_VAL_IF_FAIL(func_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
+	func_info = calloc(1, sizeof(tdm_buffer_func_info));
+	TDM_RETURN_VAL_IF_FAIL(func_info != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
-    func_info->destroy_func = func;
-    func_info->user_data = user_data;
+	func_info->destroy_func = func;
+	func_info->user_data = user_data;
 
-    LIST_ADD(&func_info->link, &buf_info->destroy_funcs);
+	LIST_ADD(&func_info->link, &buf_info->destroy_funcs);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 
 EXTERN void
-tdm_buffer_remove_destroy_handler(tbm_surface_h buffer, tdm_buffer_destroy_handler func, void *user_data)
+tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
+                                  tdm_buffer_destroy_handler func, void *user_data)
 {
-    tdm_buffer_info *buf_info;
-    tdm_buffer_func_info *func_info = NULL, *next = NULL;
+	tdm_buffer_info *buf_info;
+	tdm_buffer_func_info *func_info = NULL, *next = NULL;
 
-    TDM_RETURN_IF_FAIL(buffer != NULL);
-    TDM_RETURN_IF_FAIL(func != NULL);
+	TDM_RETURN_IF_FAIL(buffer != NULL);
+	TDM_RETURN_IF_FAIL(func != NULL);
 
-    buf_info = _tdm_buffer_get_info(buffer);
-    TDM_RETURN_IF_FAIL(buf_info != NULL);
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_IF_FAIL(buf_info != NULL);
 
-    LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->destroy_funcs, link)
-    {
-        if (func_info->destroy_func != func || func_info->user_data != user_data)
-            continue;
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->destroy_funcs, link) {
+		if (func_info->destroy_func != func || func_info->user_data != user_data)
+			continue;
 
-        LIST_DEL(&func_info->link);
-        free(func_info);
+		LIST_DEL(&func_info->link);
+		free(func_info);
 
-        return;
-    }
+		return;
+	}
 }

@@ -49,112 +49,114 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 static int
 _check_abi_version(tdm_backend_module *module, int abimaj, int abimin)
 {
-    int major = TDM_BACKEND_GET_ABI_MAJOR(module->abi_version);
-    int minor = TDM_BACKEND_GET_ABI_MINOR(module->abi_version);
+	int major = TDM_BACKEND_GET_ABI_MAJOR(module->abi_version);
+	int minor = TDM_BACKEND_GET_ABI_MINOR(module->abi_version);
 
-    if (major < abimaj) goto failed;
-    if (major > abimaj) return 1;
-    if (minor < abimin) goto failed;
-    return 1;
+	if (major < abimaj) goto failed;
+	if (major > abimaj) return 1;
+	if (minor < abimin) goto failed;
+	return 1;
 failed:
-    TDM_ERR("The ABI version(%d.%d) of '%s' is less than %d.%d",
-            major, minor, module->name ? module->name : "unknown",
-            abimaj, abimin);
-    return 0;
+	TDM_ERR("The ABI version(%d.%d) of '%s' is less than %d.%d",
+	        major, minor, module->name ? module->name : "unknown",
+	        abimaj, abimin);
+	return 0;
 }
 
 EXTERN tdm_error
-tdm_backend_register_func_display(tdm_display *dpy, tdm_func_display *func_display)
+tdm_backend_register_func_display(tdm_display *dpy,
+                                  tdm_func_display *func_display)
 {
-    tdm_backend_module *module;
+	tdm_backend_module *module;
 
-    BACKEND_FUNC_ENTRY();
+	BACKEND_FUNC_ENTRY();
 
-    TDM_RETURN_VAL_IF_FAIL(func_display != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(func_display != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-    /* the ABI version of backend module should be more than 1.1 */
-    module = private_display->module_data;
-    if (_check_abi_version(module, 1, 1) < 0)
-        return TDM_ERROR_BAD_MODULE;
+	/* the ABI version of backend module should be more than 1.1 */
+	module = private_display->module_data;
+	if (_check_abi_version(module, 1, 1) < 0)
+		return TDM_ERROR_BAD_MODULE;
 
-    pthread_mutex_lock(&private_display->lock);
-    private_display->func_display = *func_display;
-    pthread_mutex_unlock(&private_display->lock);
+	pthread_mutex_lock(&private_display->lock);
+	private_display->func_display = *func_display;
+	pthread_mutex_unlock(&private_display->lock);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 
 EXTERN tdm_error
 tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
 {
-    tdm_backend_module *module;
+	tdm_backend_module *module;
 
-    BACKEND_FUNC_ENTRY();
+	BACKEND_FUNC_ENTRY();
 
-    TDM_RETURN_VAL_IF_FAIL(func_output != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(func_output != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-    /* the ABI version of backend module should be more than 1.1 */
-    module = private_display->module_data;
-    if (_check_abi_version(module, 1, 1) < 0)
-        return TDM_ERROR_BAD_MODULE;
+	/* the ABI version of backend module should be more than 1.1 */
+	module = private_display->module_data;
+	if (_check_abi_version(module, 1, 1) < 0)
+		return TDM_ERROR_BAD_MODULE;
 
-    pthread_mutex_lock(&private_display->lock);
-    private_display->func_output = *func_output;
-    pthread_mutex_unlock(&private_display->lock);
+	pthread_mutex_lock(&private_display->lock);
+	private_display->func_output = *func_output;
+	pthread_mutex_unlock(&private_display->lock);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 
 EXTERN tdm_error
 tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
 {
-    tdm_backend_module *module;
+	tdm_backend_module *module;
 
-    BACKEND_FUNC_ENTRY();
+	BACKEND_FUNC_ENTRY();
 
-    TDM_RETURN_VAL_IF_FAIL(func_layer != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(func_layer != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-    /* the ABI version of backend module should be more than 1.1 */
-    module = private_display->module_data;
-    if (_check_abi_version(module, 1, 1) < 0)
-        return TDM_ERROR_BAD_MODULE;
+	/* the ABI version of backend module should be more than 1.1 */
+	module = private_display->module_data;
+	if (_check_abi_version(module, 1, 1) < 0)
+		return TDM_ERROR_BAD_MODULE;
 
-    pthread_mutex_lock(&private_display->lock);
-    private_display->func_layer = *func_layer;
-    pthread_mutex_unlock(&private_display->lock);
+	pthread_mutex_lock(&private_display->lock);
+	private_display->func_layer = *func_layer;
+	pthread_mutex_unlock(&private_display->lock);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 
 EXTERN tdm_error
 tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp)
 {
-    BACKEND_FUNC_ENTRY();
+	BACKEND_FUNC_ENTRY();
 
-    if (!func_pp)
-        return TDM_ERROR_NONE;
+	if (!func_pp)
+		return TDM_ERROR_NONE;
 
-    pthread_mutex_lock(&private_display->lock);
-    private_display->capabilities |= TDM_DISPLAY_CAPABILITY_PP;
-    private_display->func_pp = *func_pp;
-    pthread_mutex_unlock(&private_display->lock);
+	pthread_mutex_lock(&private_display->lock);
+	private_display->capabilities |= TDM_DISPLAY_CAPABILITY_PP;
+	private_display->func_pp = *func_pp;
+	pthread_mutex_unlock(&private_display->lock);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 
 EXTERN tdm_error
-tdm_backend_register_func_capture(tdm_display *dpy, tdm_func_capture *func_capture)
+tdm_backend_register_func_capture(tdm_display *dpy,
+                                  tdm_func_capture *func_capture)
 {
-    BACKEND_FUNC_ENTRY();
+	BACKEND_FUNC_ENTRY();
 
-    if (!func_capture)
-        return TDM_ERROR_NONE;
+	if (!func_capture)
+		return TDM_ERROR_NONE;
 
-    pthread_mutex_lock(&private_display->lock);
-    private_display->capabilities |= TDM_DISPLAY_CAPABILITY_CAPTURE;
-    private_display->func_capture = *func_capture;
-    pthread_mutex_unlock(&private_display->lock);
+	pthread_mutex_lock(&private_display->lock);
+	private_display->capabilities |= TDM_DISPLAY_CAPABILITY_CAPTURE;
+	private_display->func_capture = *func_capture;
+	pthread_mutex_unlock(&private_display->lock);
 
-    return TDM_ERROR_NONE;
+	return TDM_ERROR_NONE;
 }
 

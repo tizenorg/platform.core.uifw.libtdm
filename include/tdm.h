@@ -61,8 +61,8 @@ extern "C" {
  */
 typedef enum
 {
-    TDM_DISPLAY_CAPABILITY_PP       = (1<<0),   /**< if hardware supports pp operation */
-    TDM_DISPLAY_CAPABILITY_CAPTURE  = (1<<1),   /**< if hardware supports capture operation */
+	TDM_DISPLAY_CAPABILITY_PP       = (1<<0),   /**< if hardware supports pp operation */
+	TDM_DISPLAY_CAPABILITY_CAPTURE  = (1<<1),   /**< if hardware supports capture operation */
 } tdm_display_capability;
 
 /**
@@ -71,14 +71,16 @@ typedef enum
  * @return A display object
  * @see tdm_display_deinit
  */
-tdm_display* tdm_display_init(tdm_error *error);
+tdm_display *
+tdm_display_init(tdm_error *error);
 
 /**
  * @brief Deinitialize a display object
  * @param[in] dpy A display object
  * @see tdm_display_init
  */
-void         tdm_display_deinit(tdm_display *dpy);
+void
+tdm_display_deinit(tdm_display *dpy);
 
 /**
  * @brief Update a display object
@@ -88,7 +90,8 @@ void         tdm_display_deinit(tdm_display *dpy);
  * @param[in] dpy A display object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_update(tdm_display *dpy);
+tdm_error
+tdm_display_update(tdm_display *dpy);
 
 /**
  * @brief Get the file descriptor
@@ -98,7 +101,8 @@ tdm_error    tdm_display_update(tdm_display *dpy);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_display_handle_events
  */
-tdm_error    tdm_display_get_fd(tdm_display *dpy, int *fd);
+tdm_error
+tdm_display_get_fd(tdm_display *dpy, int *fd);
 
 /**
  * @brief Handle the events
@@ -106,7 +110,8 @@ tdm_error    tdm_display_get_fd(tdm_display *dpy, int *fd);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_display_get_fd
  */
-tdm_error    tdm_display_handle_events(tdm_display *dpy);
+tdm_error
+tdm_display_handle_events(tdm_display *dpy);
 
 /**
  * @brief Get the capabilities of a display object.
@@ -115,7 +120,9 @@ tdm_error    tdm_display_handle_events(tdm_display *dpy);
  * @param[out] capabilities The capabilities of a display object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capability *capabilities);
+tdm_error
+tdm_display_get_capabilities(tdm_display *dpy,
+                             tdm_display_capability *capabilities);
 
 /**
  * @brief Get the pp capabilities of a display object.
@@ -123,7 +130,9 @@ tdm_error    tdm_display_get_capabilities(tdm_display *dpy, tdm_display_capabili
  * @param[out] capabilities The pp capabilities
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_get_pp_capabilities(tdm_display *dpy, tdm_pp_capability *capabilities);
+tdm_error
+tdm_display_get_pp_capabilities(tdm_display *dpy,
+                                tdm_pp_capability *capabilities);
 
 /**
  * @brief Get the pp available format array of a display object.
@@ -132,7 +141,9 @@ tdm_error    tdm_display_get_pp_capabilities(tdm_display *dpy, tdm_pp_capability
  * @param[out] count The count of formats
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_get_pp_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
+tdm_error
+tdm_display_get_pp_available_formats(tdm_display *dpy,
+                                     const tbm_format **formats, int *count);
 
 /**
  * @brief Get the pp available size of a display object.
@@ -145,7 +156,9 @@ tdm_error    tdm_display_get_pp_available_formats(tdm_display *dpy, const tbm_fo
  * @param[out] preferred_align The preferred align width which TDM can handle
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align);
+tdm_error
+tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int *min_h,
+                                  int *max_w, int *max_h, int *preferred_align);
 
 /**
  * @brief Get the capture capabilities of a display object.
@@ -153,7 +166,9 @@ tdm_error    tdm_display_get_pp_available_size(tdm_display *dpy, int *min_w, int
  * @param[out] capabilities The capture capabilities
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_capability *capabilities);
+tdm_error
+tdm_display_get_capture_capabilities(tdm_display *dpy,
+                                     tdm_capture_capability *capabilities);
 
 /**
  * @brief Get the capture available format array of a display object.
@@ -162,7 +177,9 @@ tdm_error    tdm_display_get_capture_capabilities(tdm_display *dpy, tdm_capture_
  * @param[out] count The count of formats
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_display_get_catpure_available_formats(tdm_display *dpy, const tbm_format **formats, int *count);
+tdm_error
+tdm_display_get_catpure_available_formats(tdm_display *dpy,
+                const tbm_format **formats, int *count);
 
 /**
  * @brief Get the output counts which a display object has.
@@ -171,7 +188,8 @@ tdm_error    tdm_display_get_catpure_available_formats(tdm_display *dpy, const t
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_display_get_output
  */
-tdm_error    tdm_display_get_output_count(tdm_display *dpy, int *count);
+tdm_error
+tdm_display_get_output_count(tdm_display *dpy, int *count);
 
 /**
  * @brief Get a output object which has the given index.
@@ -181,7 +199,8 @@ tdm_error    tdm_display_get_output_count(tdm_display *dpy, int *count);
  * @return A output object if success. Otherwise, NULL.
  * @see tdm_display_get_output_count
  */
-tdm_output*  tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error);
+tdm_output *
+tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error);
 
 /**
  * @brief Create a pp object.
@@ -190,7 +209,8 @@ tdm_output*  tdm_display_get_output(tdm_display *dpy, int index, tdm_error *erro
  * @return A pp object if success. Otherwise, NULL.
  * @see tdm_pp_destroy
  */
-tdm_pp*      tdm_display_create_pp(tdm_display *dpy, tdm_error *error);
+tdm_pp *
+tdm_display_create_pp(tdm_display *dpy, tdm_error *error);
 
 /**
  * @brief Get the model information of a output object.
@@ -200,7 +220,9 @@ tdm_pp*      tdm_display_create_pp(tdm_display *dpy, tdm_error *error);
  * @param[out] name The output name.
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_model_info(tdm_output *output, const char **maker, const char **model, const char **name);
+tdm_error
+tdm_output_get_model_info(tdm_output *output, const char **maker,
+                          const char **model, const char **name);
 
 /**
  * @brief Get the connection status of a output object.
@@ -208,7 +230,8 @@ tdm_error    tdm_output_get_model_info(tdm_output *output, const char **maker, c
  * @param[out] status The connection status.
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status);
+tdm_error
+tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status);
 
 /**
  * @brief Get the connection type of a output object.
@@ -216,7 +239,8 @@ tdm_error    tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_stat
  * @param[out] type The connection type.
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_output_type(tdm_output *output, tdm_output_type *type);
+tdm_error
+tdm_output_get_output_type(tdm_output *output, tdm_output_type *type);
 
 /**
  * @brief Get the layer counts which a output object has.
@@ -225,7 +249,8 @@ tdm_error    tdm_output_get_output_type(tdm_output *output, tdm_output_type *typ
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_output_get_layer
  */
-tdm_error    tdm_output_get_layer_count(tdm_output *output, int *count);
+tdm_error
+tdm_output_get_layer_count(tdm_output *output, int *count);
 
 /**
  * @brief Get a layer object which has the given index.
@@ -235,7 +260,8 @@ tdm_error    tdm_output_get_layer_count(tdm_output *output, int *count);
  * @return A layer object if success. Otherwise, NULL.
  * @see tdm_output_get_layer_count
  */
-tdm_layer*   tdm_output_get_layer(tdm_output *output, int index, tdm_error *error);
+tdm_layer *
+tdm_output_get_layer(tdm_output *output, int index, tdm_error *error);
 
 /**
  * @brief Get the available property array of a output object.
@@ -244,7 +270,9 @@ tdm_layer*   tdm_output_get_layer(tdm_output *output, int index, tdm_error *erro
  * @param[out] count The count of properties
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_available_properties(tdm_output *output, const tdm_prop **props, int *count);
+tdm_error
+tdm_output_get_available_properties(tdm_output *output, const tdm_prop **props,
+                                    int *count);
 
 /**
  * @brief Get the available mode array of a output object.
@@ -253,7 +281,9 @@ tdm_error    tdm_output_get_available_properties(tdm_output *output, const tdm_p
  * @param[out] count The count of modes
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_available_modes(tdm_output *output, const tdm_output_mode **modes, int *count);
+tdm_error
+tdm_output_get_available_modes(tdm_output *output,
+                               const tdm_output_mode **modes, int *count);
 
 /**
  * @brief Get the available size of a output object.
@@ -266,7 +296,9 @@ tdm_error    tdm_output_get_available_modes(tdm_output *output, const tdm_output
  * @param[out] preferred_align The preferred align width which TDM can handle
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_available_size(tdm_output *output, int *min_w, int *min_h, int *max_w, int *max_h, int *preferred_align);
+tdm_error
+tdm_output_get_available_size(tdm_output *output, int *min_w, int *min_h,
+                              int *max_w, int *max_h, int *preferred_align);
 
 /**
  * @brief Get the physical size of a output object.
@@ -275,7 +307,9 @@ tdm_error    tdm_output_get_available_size(tdm_output *output, int *min_w, int *
  * @param[out] mmHeight The milimeter height
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_physical_size(tdm_output *output, unsigned int *mmWidth, unsigned int *mmHeight);
+tdm_error
+tdm_output_get_physical_size(tdm_output *output, unsigned int *mmWidth,
+                             unsigned int *mmHeight);
 
 /**
  * @brief Get the subpixel of a output object.
@@ -283,7 +317,8 @@ tdm_error    tdm_output_get_physical_size(tdm_output *output, unsigned int *mmWi
  * @param[out] subpixel The subpixel
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_subpixel(tdm_output *output, unsigned int *subpixel);
+tdm_error
+tdm_output_get_subpixel(tdm_output *output, unsigned int *subpixel);
 
 /**
  * @brief Get the pipe of a output object.
@@ -291,7 +326,8 @@ tdm_error    tdm_output_get_subpixel(tdm_output *output, unsigned int *subpixel)
  * @param[out] pipe The pipe
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_pipe(tdm_output *output, unsigned int *pipe);
+tdm_error
+tdm_output_get_pipe(tdm_output *output, unsigned int *pipe);
 
 /**
  * @brief Set the property which has a given id.
@@ -300,7 +336,8 @@ tdm_error    tdm_output_get_pipe(tdm_output *output, unsigned int *pipe);
  * @param[in] value The value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value);
+tdm_error
+tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value);
 
 /**
  * @brief Get the property which has a given id
@@ -309,7 +346,8 @@ tdm_error    tdm_output_set_property(tdm_output *output, unsigned int id, tdm_va
  * @param[out] value The value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value);
+tdm_error
+tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value);
 
 /**
  * @brief Wait for VBLANK
@@ -322,7 +360,9 @@ tdm_error    tdm_output_get_property(tdm_output *output, unsigned int id, tdm_va
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see #tdm_output_vblank_handler
  */
-tdm_error    tdm_output_wait_vblank(tdm_output *output, int interval, int sync, tdm_output_vblank_handler func, void *user_data);
+tdm_error
+tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
+                       tdm_output_vblank_handler func, void *user_data);
 
 /**
  * @brief Commit changes for a output object
@@ -334,7 +374,9 @@ tdm_error    tdm_output_wait_vblank(tdm_output *output, int interval, int sync, 
  * @param[in] user_data The user data
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func, void *user_data);
+tdm_error
+tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
+                  void *user_data);
 
 /**
  * @brief Set one of available modes of a output object
@@ -342,7 +384,8 @@ tdm_error    tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_h
  * @param[in] mode A output mode
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode);
+tdm_error
+tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode);
 
 /**
  * @brief Get the mode of a output object
@@ -350,7 +393,8 @@ tdm_error    tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode
  * @param[out] mode A output mode
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode);
+tdm_error
+tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode);
 
 /**
  * @brief Set DPMS of a output object
@@ -358,7 +402,8 @@ tdm_error    tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mod
  * @param[in] dpms_value DPMS value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value);
+tdm_error
+tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value);
 
 /**
  * @brief Get DPMS of a output object
@@ -366,7 +411,8 @@ tdm_error    tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
  * @param[out] dpms_value DPMS value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value);
+tdm_error
+tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value);
 
 /**
  * @brief Create a capture object of a output object
@@ -375,7 +421,8 @@ tdm_error    tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value
  * @return A capture object
  * @see tdm_capture_destroy
  */
-tdm_capture *tdm_output_create_capture(tdm_output *output, tdm_error *error);
+tdm_capture *
+tdm_output_create_capture(tdm_output *output, tdm_error *error);
 
 /**
  * @brief Get the capabilities of a layer object.
@@ -383,7 +430,9 @@ tdm_capture *tdm_output_create_capture(tdm_output *output, tdm_error *error);
  * @param[out] capabilities The capabilities of a layer object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_get_capabilities(tdm_layer *layer, tdm_layer_capability *capabilities);
+tdm_error
+tdm_layer_get_capabilities(tdm_layer *layer,
+                           tdm_layer_capability *capabilities);
 
 /**
  * @brief Get the available format array of a layer object.
@@ -392,7 +441,9 @@ tdm_error    tdm_layer_get_capabilities(tdm_layer *layer, tdm_layer_capability *
  * @param[out] count The count of formats
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_get_available_formats(tdm_layer *layer, const tbm_format **formats, int *count);
+tdm_error
+tdm_layer_get_available_formats(tdm_layer *layer, const tbm_format **formats,
+                                int *count);
 
 /**
  * @brief Get the available property array of a layer object.
@@ -401,7 +452,9 @@ tdm_error    tdm_layer_get_available_formats(tdm_layer *layer, const tbm_format 
  * @param[out] count The count of properties
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props, int *count);
+tdm_error
+tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props,
+                                   int *count);
 
 /**
  * @brief Get the zpos of a layer object.
@@ -416,7 +469,8 @@ tdm_error    tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_layer_set_video_pos, tdm_layer_capability
  */
-tdm_error    tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos);
+tdm_error
+tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos);
 
 /**
  * @brief Set the property which has a given id.
@@ -425,7 +479,8 @@ tdm_error    tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos);
  * @param[in] value The value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value);
+tdm_error
+tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value);
 
 /**
  * @brief Get the property which has a given id.
@@ -434,7 +489,8 @@ tdm_error    tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value
  * @param[out] value The value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value);
+tdm_error
+tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value);
 
 /**
  * @brief Set the geometry information to a layer object
@@ -445,7 +501,8 @@ tdm_error    tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_output_commit
  */
-tdm_error    tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info);
+tdm_error
+tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info);
 
 /**
  * @brief Get the geometry information to a layer object
@@ -453,7 +510,8 @@ tdm_error    tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info);
  * @param[out] info The geometry information
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info);
+tdm_error
+tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info);
 
 /**
  * @brief Set a TDM buffer to a layer object
@@ -464,7 +522,8 @@ tdm_error    tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_output_commit
  */
-tdm_error    tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer);
+tdm_error
+tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer);
 
 /**
  * @brief Unset a TDM buffer from a layer object
@@ -473,7 +532,8 @@ tdm_error    tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer);
  * @param[in] layer A layer object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_unset_buffer(tdm_layer *layer);
+tdm_error
+tdm_layer_unset_buffer(tdm_layer *layer);
 
 /**
  * @brief Set a TBM surface_queue to a layer object
@@ -484,7 +544,8 @@ tdm_error    tdm_layer_unset_buffer(tdm_layer *layer);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_output_commit
  */
-tdm_error    tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue);
+tdm_error
+tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue);
 
 /**
  * @brief Unset a TBM surface_queue from a layer object
@@ -493,7 +554,8 @@ tdm_error    tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h bu
  * @param[in] layer A layer object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_unset_buffer_queue(tdm_layer *layer);
+tdm_error
+tdm_layer_unset_buffer_queue(tdm_layer *layer);
 
 /**
  * @brief Check wheter a layer object is available for a frontend user to use.
@@ -504,7 +566,8 @@ tdm_error    tdm_layer_unset_buffer_queue(tdm_layer *layer);
  * @param[out] usable 1 if usable, 0 if not usable
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable);
+tdm_error
+tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable);
 
 /**
  * @brief Set the relative zpos to a VIDEO layer object
@@ -515,7 +578,8 @@ tdm_error    tdm_layer_is_usable(tdm_layer *layer, unsigned int *usable);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_layer_get_zpos, tdm_layer_capability
  */
-tdm_error    tdm_layer_set_video_pos(tdm_layer *layer, int zpos);
+tdm_error
+tdm_layer_set_video_pos(tdm_layer *layer, int zpos);
 
 /**
  * @brief Create a capture object of a layer object
@@ -524,14 +588,16 @@ tdm_error    tdm_layer_set_video_pos(tdm_layer *layer, int zpos);
  * @return A capture object
  * @see tdm_capture_destroy
  */
-tdm_capture *tdm_layer_create_capture(tdm_layer *layer, tdm_error *error);
+tdm_capture *
+tdm_layer_create_capture(tdm_layer *layer, tdm_error *error);
 
 /**
  * @brief Destroy a pp object
  * @param[in] pp A pp object
  * @see tdm_display_create_pp
  */
-void         tdm_pp_destroy(tdm_pp *pp);
+void
+tdm_pp_destroy(tdm_pp *pp);
 
 /**
  * @brief Set the geometry information to a pp object
@@ -540,7 +606,8 @@ void         tdm_pp_destroy(tdm_pp *pp);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_pp_commit
  */
-tdm_error    tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info);
+tdm_error
+tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info);
 
 /**
  * @brief Attach a source buffer and a destination buffer to a pp object
@@ -550,21 +617,24 @@ tdm_error    tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_pp_commit, tdm_buffer_add_release_handler, tdm_buffer_release_handler
  */
-tdm_error    tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
+tdm_error
+tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
 
 /**
  * @brief Commit changes for a pp object
  * @param[in] pp A pp object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_pp_commit(tdm_pp *pp);
+tdm_error
+tdm_pp_commit(tdm_pp *pp);
 
 /**
  * @brief Destroy a capture object
  * @param[in] capture A capture object
  * @see tdm_output_create_capture, tdm_layer_create_capture
  */
-void         tdm_capture_destroy(tdm_capture *capture);
+void
+tdm_capture_destroy(tdm_capture *capture);
 
 /**
  * @brief Set the geometry information to a capture object
@@ -573,7 +643,8 @@ void         tdm_capture_destroy(tdm_capture *capture);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_capture_commit
  */
-tdm_error    tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info);
+tdm_error
+tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info);
 
 /**
  * @brief Attach a TDM buffer to a capture object
@@ -582,14 +653,16 @@ tdm_error    tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info);
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_capture_commit, tdm_buffer_add_release_handler, tdm_buffer_release_handler
  */
-tdm_error    tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer);
+tdm_error
+tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer);
 
 /**
  * @brief Commit changes for a capture object
  * @param[in] capture A capture object
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
-tdm_error    tdm_capture_commit(tdm_capture *capture);
+tdm_error
+tdm_capture_commit(tdm_capture *capture);
 
 /**
  * @brief The release handler of a TDM buffer
@@ -597,7 +670,8 @@ tdm_error    tdm_capture_commit(tdm_capture *capture);
  * @param[in] user_data user data
  * @see tdm_buffer_add_release_handler, tdm_buffer_remove_release_handler
  */
-typedef void (*tdm_buffer_release_handler)(tbm_surface_h buffer, void *user_data);
+typedef void (*tdm_buffer_release_handler)(tbm_surface_h buffer,
+                void *user_data);
 
 /**
  * @brief Add a release handler to a TDM buffer
@@ -612,7 +686,9 @@ typedef void (*tdm_buffer_release_handler)(tbm_surface_h buffer, void *user_data
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see tdm_buffer_remove_release_handler
  */
-tdm_error    tdm_buffer_add_release_handler(tbm_surface_h buffer, tdm_buffer_release_handler func, void *user_data);
+tdm_error
+tdm_buffer_add_release_handler(tbm_surface_h buffer,
+                               tdm_buffer_release_handler func, void *user_data);
 
 /**
  * @brief Remove a release handler from a TDM buffer
@@ -621,7 +697,9 @@ tdm_error    tdm_buffer_add_release_handler(tbm_surface_h buffer, tdm_buffer_rel
  * @param[in] user_data user data
  * @see tdm_buffer_add_release_handler
  */
-void         tdm_buffer_remove_release_handler(tbm_surface_h buffer, tdm_buffer_release_handler func, void *user_data);
+void
+tdm_buffer_remove_release_handler(tbm_surface_h buffer,
+                                  tdm_buffer_release_handler func, void *user_data);
 
 #ifdef __cplusplus
 }

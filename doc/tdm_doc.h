@@ -85,7 +85,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         ...
         drm_layer_get_capability,
         ...
-    }; 
+    };
 
     static tdm_drm_data *drm_data;
 
@@ -111,7 +111,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     tdm_backend_module tdm_backend_module_data =
     {
-        "drm",  
+        "drm",
         "Samsung",
         TDM_BACKEND_ABI_VERSION,
         tdm_drm_init,

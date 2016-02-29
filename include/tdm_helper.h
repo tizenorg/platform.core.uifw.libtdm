@@ -65,7 +65,8 @@ extern "C" {
  * @param[in] buffer A TDM buffer
  * @param[in] file The path of file.
  */
-void tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
+void
+tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
 
 #ifdef __cplusplus
 }

@@ -147,10 +147,9 @@ extern "C" {
 #define FOURCC_STR(id)      C(id,0), C(id,8), C(id,16), C(id,24)
 #define FOURCC_ID(str)      FOURCC(((char*)str)[0],((char*)str)[1],((char*)str)[2],((char*)str)[3])
 
-typedef enum
-{
-    TDM_CAPTURE_TARGET_OUTPUT,
-    TDM_CAPTURE_TARGET_LAYER,
+typedef enum {
+        TDM_CAPTURE_TARGET_OUTPUT,
+        TDM_CAPTURE_TARGET_LAYER,
 } tdm_capture_target;
 
 typedef struct _tdm_private_display tdm_private_display;
@@ -161,125 +160,125 @@ typedef struct _tdm_private_capture tdm_private_capture;
 typedef struct _tdm_private_vblank_handler tdm_private_vblank_handler;
 typedef struct _tdm_private_commit_handler tdm_private_commit_handler;
 
-struct _tdm_private_display
-{
-    pthread_mutex_t lock;
-    unsigned int init_count;
+struct _tdm_private_display {
+	pthread_mutex_t lock;
+	unsigned int init_count;
 
-    /* backend module info */
-    void *module;
-    tdm_backend_module *module_data;
-    tdm_backend_data *bdata;
+	/* backend module info */
+	void *module;
+	tdm_backend_module *module_data;
+	tdm_backend_data *bdata;
 
-    /* backend function */
-    tdm_display_capability capabilities;
-    tdm_func_display func_display;
-    tdm_func_output func_output;
-    tdm_func_layer func_layer;
-    tdm_func_pp func_pp;
-    tdm_func_capture func_capture;
+	/* backend function */
+	tdm_display_capability capabilities;
+	tdm_func_display func_display;
+	tdm_func_output func_output;
+	tdm_func_layer func_layer;
+	tdm_func_pp func_pp;
+	tdm_func_capture func_capture;
 
-    /* backend capability */
-    tdm_caps_display caps_display;
-    tdm_caps_pp caps_pp;
-    tdm_caps_capture caps_capture;
+	/* backend capability */
+	tdm_caps_display caps_display;
+	tdm_caps_pp caps_pp;
+	tdm_caps_capture caps_capture;
 
-    /* output, pp list */
-    struct list_head output_list;
-    struct list_head pp_list;
+	/* output, pp list */
+	struct list_head output_list;
+	struct list_head pp_list;
 
-    void **outputs_ptr;
+	void **outputs_ptr;
 
-    tbm_bufmgr bufmgr;
+	tbm_bufmgr bufmgr;
 };
 
-struct _tdm_private_output
-{
-    struct list_head link;
+struct _tdm_private_output {
+	struct list_head link;
 
-    tdm_private_display *private_display;
+	tdm_private_display *private_display;
 
-    tdm_caps_output caps;
-    tdm_output *output_backend;
+	tdm_caps_output caps;
+	tdm_output *output_backend;
 
-    unsigned int pipe;
+	unsigned int pipe;
 
-    int regist_vblank_cb;
-    int regist_commit_cb;
+	int regist_vblank_cb;
+	int regist_commit_cb;
 
-    struct list_head layer_list;
-    struct list_head capture_list;
-    struct list_head vblank_handler_list;
-    struct list_head commit_handler_list;
+	struct list_head layer_list;
+	struct list_head capture_list;
+	struct list_head vblank_handler_list;
+	struct list_head commit_handler_list;
 
-    void **layers_ptr;
+	void **layers_ptr;
 };
 
-struct _tdm_private_layer
-{
-    struct list_head link;
+struct _tdm_private_layer {
+	struct list_head link;
 
-    tdm_private_display *private_display;
-    tdm_private_output *private_output;
+	tdm_private_display *private_display;
+	tdm_private_output *private_output;
 
-    tdm_caps_layer caps;
-    tdm_layer *layer_backend;
+	tdm_caps_layer caps;
+	tdm_layer *layer_backend;
 
-    tbm_surface_h waiting_buffer;
-    tbm_surface_h showing_buffer;
-    tbm_surface_queue_h buffer_queue;
+	tbm_surface_h waiting_buffer;
+	tbm_surface_h showing_buffer;
+	tbm_surface_queue_h buffer_queue;
 
-    struct list_head capture_list;
+	struct list_head capture_list;
 
-    unsigned int usable;
+	unsigned int usable;
 };
 
-struct _tdm_private_pp
-{
-    struct list_head link;
+struct _tdm_private_pp {
+	struct list_head link;
 
-    tdm_private_display *private_display;
+	tdm_private_display *private_display;
 
-    tdm_pp *pp_backend;
+	tdm_pp *pp_backend;
 };
 
-struct _tdm_private_capture
-{
-    struct list_head link;
+struct _tdm_private_capture {
+	struct list_head link;
 
-    tdm_capture_target target;
+	tdm_capture_target target;
 
-    tdm_private_display *private_display;
-    tdm_private_output *private_output;
-    tdm_private_layer *private_layer;
+	tdm_private_display *private_display;
+	tdm_private_output *private_output;
+	tdm_private_layer *private_layer;
 
-    tdm_capture *capture_backend;
+	tdm_capture *capture_backend;
 };
 
-struct _tdm_private_vblank_handler
-{
-    struct list_head link;
+struct _tdm_private_vblank_handler {
+	struct list_head link;
 
-    tdm_private_output *private_output;
-    tdm_output_vblank_handler func;
-    void *user_data;
+	tdm_private_output *private_output;
+	tdm_output_vblank_handler func;
+	void *user_data;
 };
 
-struct _tdm_private_commit_handler
-{
-    struct list_head link;
+struct _tdm_private_commit_handler {
+	struct list_head link;
 
-    tdm_private_output *private_output;
-    tdm_output_commit_handler func;
-    void *user_data;
+	tdm_private_output *private_output;
+	tdm_output_commit_handler func;
+	void *user_data;
 };
 
-tdm_private_pp* tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);
-void tdm_pp_destroy_internal(tdm_private_pp *private_pp);
+tdm_private_pp *
+tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);
+void
+tdm_pp_destroy_internal(tdm_private_pp *private_pp);
 
-tdm_private_capture* tdm_capture_create_output_internal(tdm_private_output *private_output, tdm_error *error);
-tdm_private_capture* tdm_capture_create_layer_internal(tdm_private_layer *private_layer, tdm_error *error);
-void tdm_capture_destroy_internal(tdm_private_capture *private_capture);
+tdm_private_capture *
+tdm_capture_create_output_internal(tdm_private_output *private_output,
+                                   tdm_error *error);
+tdm_private_capture *
+tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
+                                  tdm_error *error);
+void
+tdm_capture_destroy_internal(tdm_private_capture *private_capture);
 
 #ifdef __cplusplus
 }
