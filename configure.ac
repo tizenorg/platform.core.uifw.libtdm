@@ -50,7 +50,8 @@ AC_OUTPUT([
 	Makefile
 	libtdm.pc
 	include/Makefile
-	src/Makefile])
+	src/Makefile
+	tools/Makefile])
 
 echo ""
 echo "$PACKAGE_STRING will be compiled with:"

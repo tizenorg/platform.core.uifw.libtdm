@@ -23,6 +23,14 @@ Requires:       pkgconfig(libtbm)
 %description devel
 This supports frontend & backend library header and so
 
+%package tools
+Summary:        Tools for libtdm
+Group:          Development/Utilities
+Provides:       libtdm = %version
+
+%description tools
+This contains libtdm tools for fundamental testing
+
 %prep
 %setup -q
 cp %{SOURCE1001} .
@@ -52,5 +60,9 @@ make %{?_smp_mflags}
 %{_includedir}/*
 %{_libdir}/pkgconfig/*
 %{_libdir}/libtdm.so
+
+%files tools
+%manifest %{name}.manifest
+%{_bindir}/tdm-test
 
 %changelog
