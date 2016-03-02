@@ -548,13 +548,13 @@ usage(tdm_test_data *data)
 	printf("   -C\tset property for a capture object\n");
 	printf("     \t  <prop_name>:<value>\n");
 	printf("\n");
-	printf(" General option:\n");
-	printf("\n");
-	printf("   -G\tdrawing with gl\n");
-	printf("   -V\ttest with vsync\n");
-	printf("   -Q\tusing buffer queue with -V\n");
-	printf("\n");
-	printf(" Default is to query all info.\n\n");
+//	printf(" General option:\n");
+//	printf("\n");
+//	printf("   -G\tdrawing with gl\n");
+//	printf("   -V\ttest with vsync\n");
+//	printf("   -Q\tusing buffer queue with -V\n");
+//	printf("\n");
+	printf(" Default is to query all information.\n\n");
 
 	tdm_test_display_deinit(data);
 

@@ -15,4 +15,4 @@ tdm_test_SOURCES = \
 	tdm-test-output.c \
 	tdm-test-pp.c \
 	tdm-test-capture.c \
-	tdm-test-rendering.c
+	tdm-test-buffer.c
