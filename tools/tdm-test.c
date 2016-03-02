@@ -514,7 +514,7 @@ static void
 signal_handler(int signal)
 {
 	TDM_DBG("\t++ killed by signal(%d).", signal);
-	exit(1);
+	g_data.loop_running = 0;
 }
 
 static void
@@ -556,7 +556,7 @@ usage(tdm_test_data *data)
 //	printf("\n");
 	printf(" Default is to query all information.\n\n");
 
-	tdm_test_display_deinit(data);
+	tdm_test_deinit(data);
 
 	exit(0);
 }
@@ -583,9 +583,9 @@ main(int argc, char *argv[])
 	signal(SIGSEGV, signal_handler);
 
 	if (argc == 1) {
-		tdm_test_display_init(data);
-		tdm_test_display_print_infomation(data);
-		tdm_test_display_deinit(data);
+		tdm_test_init(data);
+		tdm_test_print_infomation(data);
+		tdm_test_deinit(data);
 		exit(0);
 	}
 
@@ -642,10 +642,12 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (!tdm_test_display_init(data))
+	if (!tdm_test_init(data))
 		return 0;
 
-	tdm_test_display_deinit(data);
+	tdm_test_run(data);
+
+	tdm_test_deinit(data);
 
 	return 0;
 }

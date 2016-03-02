@@ -17,6 +17,7 @@
 #define B(c,s)              (((unsigned int)(c)) & 0xff) << (s))
 #define FOURCC(a,b,c,d)     (B(d,24) | B(c,16) | B(b,8) | B(a,0))
 #define FOURCC_STR(id)      C(id,0), C(id,8), C(id,16), C(id,24)
+#define IS_RGB(f)           ((f) == TBM_FORMAT_XRGB8888 || (f) == TBM_FORMAT_ARGB8888)
 
 #define return_if_fail(cond) {\
     if (!(cond)) {\
@@ -63,6 +64,8 @@ typedef struct _capture_arg
 	char filename[TDM_NAME_LEN];
 	int has_filename;
 
+	tdm_capture *capture;
+
 	struct list_head prop_list;
 } capture_arg;
 
@@ -81,6 +84,8 @@ typedef struct _pp_arg
 	char filename[TDM_NAME_LEN];
 	int has_filename;
 
+	tdm_pp *pp;
+
 	struct list_head prop_list;
 } pp_arg;
 
@@ -94,6 +99,8 @@ typedef struct _layer_arg
 	char format[TDM_NAME_LEN];
 	struct list_head prop_list;
 
+	tdm_layer *layer;
+
 	struct list_head link;
 } layer_arg;
 
@@ -103,6 +110,8 @@ typedef struct _output_arg
 	char mode[TDM_NAME_LEN];
 	struct list_head prop_list;
 	struct list_head layer_list;
+
+	tdm_output *output;
 
 	struct list_head link;
 } output_arg;
@@ -123,14 +132,28 @@ typedef struct _tdm_test_data
 	} args;
 
 	tdm_display *display;
+	int loop_running;
 } tdm_test_data;
 
 int
-tdm_test_display_init(tdm_test_data *data);
+tdm_test_init(tdm_test_data *data);
 void
-tdm_test_display_deinit(tdm_test_data *data);
+tdm_test_deinit(tdm_test_data *data);
 void
-tdm_test_display_print_infomation(tdm_test_data *data);
+tdm_test_run(tdm_test_data *data);
+void
+tdm_test_print_infomation(tdm_test_data *data);
 
+int
+tdm_test_output_set(tdm_test_data *data, output_arg *arg_o);
+int
+tdm_test_layer_set(tdm_test_data *data, layer_arg *arg_l);
+int
+tdm_test_layer_show_buffer(tdm_test_data *data, output_arg *arg_o,
+                           layer_arg *arg_l, tbm_surface_h buffer,
+                           tdm_output_commit_handler func, void *user_data);
+
+void
+tdm_test_buffer_fill(tbm_surface_h buffer);
 
 #endif

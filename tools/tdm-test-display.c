@@ -349,7 +349,7 @@ _print_capability_info(tdm_display *display)
 }
 
 int
-tdm_test_display_init(tdm_test_data *data)
+tdm_test_init(tdm_test_data *data)
 {
 	tdm_error ret = TDM_ERROR_NONE;
 
@@ -360,7 +360,7 @@ tdm_test_display_init(tdm_test_data *data)
 }
 
 void
-tdm_test_display_deinit(tdm_test_data *data)
+tdm_test_deinit(tdm_test_data *data)
 {
 	if (data->display) {
 		tdm_display_deinit(data->display);
@@ -369,8 +369,181 @@ tdm_test_display_deinit(tdm_test_data *data)
 }
 
 void
-tdm_test_display_print_infomation(tdm_test_data *data)
+tdm_test_run(tdm_test_data *data)
+{
+	tdm_error ret = TDM_ERROR_NONE;
+	int fd = -1;
+
+	ret = tdm_display_get_fd(data->display, &fd);
+	return_if_fail(ret == TDM_ERROR_NONE);
+
+	data->loop_running = 1;
+	while (data->loop_running) {
+		struct timeval timeout = { .tv_sec = 3, .tv_usec = 0 };
+		fd_set fds;
+		int ret;
+
+		FD_ZERO(&fds);
+		FD_SET(0, &fds);
+		FD_SET(fd, &fds);
+		ret = select(fd + 1, &fds, NULL, NULL, &timeout);
+		if (ret <= 0) {
+			printf("select timed out or error (ret %d)\n", ret);
+			continue;
+		}  else if (FD_ISSET(0, &fds))
+			break;
+
+		ret = tdm_display_handle_events(data->display);
+		warning_if_fail(ret == TDM_ERROR_NONE);
+	}
+}
+
+void
+tdm_test_print_infomation(tdm_test_data *data)
 {
 	_print_capability_info(data->display);
 	_print_info(data->display);
+}
+
+int
+tdm_test_output_set(tdm_test_data *data, output_arg *arg_o)
+{
+	tdm_error ret = TDM_ERROR_NONE;
+	tdm_output *output;
+	const tdm_output_mode *modes;
+	prop_arg *prop = NULL;
+	int i, count;
+
+	output = tdm_display_get_output(data->display, arg_o->output_idx, &ret);
+	return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+	/* mode setting */
+	ret = tdm_output_get_available_modes(output, &modes, &count);
+	return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+	for (i = 0; i < count; i++) {
+		if (!strncmp(modes[i].name, arg_o->mode, TDM_NAME_LEN)) {
+			tdm_output_set_mode(output, &modes[i]);
+			break;
+		}
+	}
+
+	/* property setting */
+	LIST_FOR_EACH_ENTRY(prop, &arg_o->prop_list, link) {
+		const tdm_prop *props;
+		tdm_value value;
+
+		ret = tdm_output_get_available_properties(output, &props, &count);
+		return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+		for (i = 0; i < count; i++) {
+			if (!strncmp(props[i].name, prop->name, TDM_NAME_LEN)) {
+				value.s32 = prop->value;
+				tdm_output_set_property(output, props[i].id, value);
+				break;
+			}
+		}
+	}
+
+	arg_o->output = output;
+
+	return 1;
+}
+
+int
+tdm_test_layer_set(tdm_test_data *data, layer_arg *arg_l)
+{
+	tdm_output *output;
+	tdm_layer *layer;
+	tdm_error ret = TDM_ERROR_NONE;
+	prop_arg *prop = NULL;
+	int i, count = 0;
+
+	output = tdm_display_get_output(data->display, arg_l->output_idx, &ret);
+	return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+	/* getting layer */
+	if (arg_l->layer_idx == -1) {
+
+		ret = tdm_output_get_layer_count(output, &count);
+		return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+		for (i = 0; i < count; i++) {
+			tdm_layer_capability capa;
+
+			layer = tdm_output_get_layer(output, i, &ret);
+			return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+			ret = tdm_layer_get_capabilities(layer, &capa);
+			return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+			if (!(capa & TDM_LAYER_CAPABILITY_PRIMARY)) {
+				layer = NULL;
+				continue;
+			}
+
+			break;
+		}
+	} else {
+		layer = tdm_output_get_layer(output, arg_l->layer_idx, &ret);
+		return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+	}
+
+	/* property setting */
+	LIST_FOR_EACH_ENTRY(prop, &arg_l->prop_list, link) {
+		const tdm_prop *props;
+		tdm_value value;
+
+		ret = tdm_layer_get_available_properties(layer, &props, &count);
+		return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+		for (i = 0; i < count; i++) {
+			if (!strncmp(props[i].name, prop->name, TDM_NAME_LEN)) {
+				value.s32 = prop->value;
+				tdm_layer_set_property(layer, props[i].id, value);
+				break;
+			}
+		}
+	}
+
+	arg_l->layer = layer;
+
+	return 1;
+}
+
+int
+tdm_test_layer_show_buffer(tdm_test_data *data, output_arg *arg_o,
+                           layer_arg *arg_l, tbm_surface_h buffer,
+                           tdm_output_commit_handler func, void *user_data)
+{
+	tdm_info_layer info, old_info;
+	tbm_surface_info_s buffer_info;
+	tdm_error ret;
+
+	tbm_surface_get_info(buffer, &buffer_info);
+
+	memset(&info, 0, sizeof(tdm_info_layer));
+	if (IS_RGB(buffer_info.format))
+		info.src_config.size.h = buffer_info.planes[0].stride >> 2;
+	else
+		info.src_config.size.h = buffer_info.planes[0].stride;
+	info.src_config.size.v = buffer_info.height;
+	info.src_config.pos.x = arg_l->x;
+	info.src_config.pos.y = arg_l->x;
+	info.src_config.pos.w = arg_l->w;
+	info.src_config.pos.h = arg_l->h;
+	info.dst_pos.x = arg_l->x;
+	info.dst_pos.y = arg_l->y;
+	info.dst_pos.w = arg_l->w;
+	info.dst_pos.h = arg_l->h;
+	info.transform = arg_l->transform;
+
+	tdm_layer_get_info(arg_l->layer, &old_info);
+	if (memcmp(&info, &old_info, sizeof(tdm_info_layer)))
+		tdm_layer_set_info(arg_l->layer, &info);
+
+	ret = tdm_layer_set_buffer(arg_l->layer, buffer);
+	return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+	ret = tdm_output_commit(arg_o->output, 0, func, user_data);
+	return_val_if_fail(ret == TDM_ERROR_NONE, 0);
+
+	return 1;
 }
