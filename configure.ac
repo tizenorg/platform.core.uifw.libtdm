@@ -23,6 +23,16 @@ LT_INIT([disable-static])
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+PKG_CHECK_MODULES(TTRACE,
+		[ttrace],
+		[have_ttrace="yes"], [have_ttrace="no"])
+if test "x$have_ttrace" = "xyes"; then
+    PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng ttrace)
+	AC_DEFINE(HAVE_TTRACE, 1, [ttrace available])
+else
+    PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng)
+fi
+
 PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng)
 AC_SUBST(TDM_CFLAGS)
 AC_SUBST(TDM_LIBS)
@@ -33,13 +43,6 @@ AC_ARG_WITH(tdm-module-path, AS_HELP_STRING([--with-tdm-module-path=PATH], [tdm 
 				[ TDM_MODULE_PATH="$withval" ],
 				[ TDM_MODULE_PATH="${DEFAULT_TDM_MODULE_PATH}" ])
 AC_DEFINE_UNQUOTED(TDM_MODULE_PATH, "${TDM_MODULE_PATH}", [Directory for the modules of tdm])
-
-PKG_CHECK_MODULES(TTRACE,
-		[ttrace],
-		[have_ttrace="yes"], [have_ttrace="no"])
-if test "x$have_ttrace" = "xyes"; then
-	AC_DEFINE(HAVE_TTRACE, 1, [ttrace available])
-fi
 
 # For enumerating devices in test case
 AC_SUBST(WARN_CFLAGS)
