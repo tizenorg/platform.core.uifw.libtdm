@@ -61,6 +61,7 @@ typedef struct _tdm_buffer_info {
 	struct list_head release_funcs;
 	struct list_head destroy_funcs;
 
+	struct list_head *list;
 	struct list_head link;
 } tdm_buffer_info;
 
@@ -86,7 +87,8 @@ _tdm_buffer_destroy_info(void *user_data)
 		free(func_info);
 	}
 
-	LIST_DEL(&buf_info->link);
+	if (buf_info->list)
+		LIST_DEL(&buf_info->link);
 
 	free(buf_info);
 }
@@ -265,33 +267,32 @@ tdm_buffer_add_list(struct list_head *list, tbm_surface_h buffer)
 	buf_info = _tdm_buffer_get_info(buffer);
 	TDM_RETURN_IF_FAIL(buf_info != NULL);
 
-	if (buf_info->link.prev != buf_info->link.next) {
+	if (buf_info->list) {
 		TDM_ERR("%p already added other list\n", buffer);
 		return;
 	}
 
+	buf_info->list = list;
 	LIST_ADD(&buf_info->link, list);
 }
 
 INTERN void
 tdm_buffer_remove_list(struct list_head *list, tbm_surface_h buffer)
 {
-	tdm_buffer_info *buf_info, *b = NULL, *bb = NULL;
+	tdm_buffer_info *buf_info;
 
 	TDM_RETURN_IF_FAIL(list != NULL);
-
-	if (!buffer)
-		return;
+	TDM_RETURN_IF_FAIL(buffer != NULL);
 
 	buf_info = _tdm_buffer_get_info(buffer);
 	TDM_RETURN_IF_FAIL(buf_info != NULL);
 
-	LIST_FOR_EACH_ENTRY_SAFE(b, bb, list, link) {
-		if (b == buf_info) {
-			LIST_DEL(&buf_info->link);
-			return;
-		}
+	if (buf_info->list != list) {
+		TDM_WRN("%p is not in %p list", buffer, list);
+		return;
 	}
+
+	LIST_DEL(&buf_info->link);
 }
 
 INTERN void
