@@ -18,7 +18,7 @@ static const char *dump_prefix[2] = {"png", "yuv"};
 static void
 _tdm_helper_dump_raw(const char *file, void *data1, int size1, void *data2,
                      int size2, void *data3, int size3)
-{
+{return;
 	unsigned int *blocks;
 	FILE *fp = fopen(file, "w+");
 	TDM_RETURN_IF_FAIL(fp != NULL);
@@ -44,7 +44,7 @@ _tdm_helper_dump_png(const char *file, const void *data, int width,
                      int height)
 {
 	FILE *fp = fopen(file, "wb");
-	TDM_RETURN_IF_FAIL(fp != NULL);
+	if(!fp) return;
 
 	png_structp pPngStruct =
 	        png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);

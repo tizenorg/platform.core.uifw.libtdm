@@ -40,6 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm.h"
 #include "tdm_backend.h"
 #include "tdm_private.h"
+#include "tdm_helper.h"
 
 #define COUNT_MAX   10
 
@@ -1108,6 +1109,8 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 	}
 
 	private_layer->waiting_buffer = tdm_buffer_ref_backend(buffer);
+
+	TDM_INFO("layer buffer: %p", buffer);
 
 	ret = func_layer->layer_set_buffer(private_layer->layer_backend, buffer);
 

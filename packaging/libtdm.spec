@@ -26,7 +26,7 @@ This supports frontend & backend library header and so
 %package tools
 Summary:        Tools for libtdm
 Group:          Development/Utilities
-Provides:       libtdm = %version
+#Provides:       libtdm = %version
 
 %description tools
 This contains libtdm tools for fundamental testing
