@@ -52,6 +52,7 @@ extern "C" {
  * @endcode
  */
 extern int tdm_debug;
+extern int tdm_debug_buffer;
 
 //#define TDM_CONFIG_DLOG
 #ifdef TDM_CONFIG_DLOG

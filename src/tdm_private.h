@@ -236,6 +236,8 @@ struct _tdm_private_pp {
 	tdm_private_display *private_display;
 
 	tdm_pp *pp_backend;
+
+	struct list_head buffer_list;
 };
 
 struct _tdm_private_capture {
@@ -248,6 +250,8 @@ struct _tdm_private_capture {
 	tdm_private_layer *private_layer;
 
 	tdm_capture *capture_backend;
+
+	struct list_head buffer_list;
 };
 
 struct _tdm_private_vblank_handler {
@@ -279,6 +283,13 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
                                   tdm_error *error);
 void
 tdm_capture_destroy_internal(tdm_private_capture *private_capture);
+
+void
+tdm_buffer_add_list(struct list_head *list, tbm_surface_h buffer);
+void
+tdm_buffer_remove_list(struct list_head *list, tbm_surface_h buffer);
+void
+tdm_buffer_dump_list(struct list_head *list, char *str, int len);
 
 #ifdef __cplusplus
 }

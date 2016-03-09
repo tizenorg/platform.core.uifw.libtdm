@@ -60,6 +60,8 @@ typedef struct _tdm_buffer_info {
 
 	struct list_head release_funcs;
 	struct list_head destroy_funcs;
+
+	struct list_head link;
 } tdm_buffer_info;
 
 static void
@@ -84,6 +86,8 @@ _tdm_buffer_destroy_info(void *user_data)
 		free(func_info);
 	}
 
+	LIST_DEL(&buf_info->link);
+
 	free(buf_info);
 }
 
@@ -106,6 +110,7 @@ _tdm_buffer_get_info(tbm_surface_h buffer)
 
 		LIST_INITHEAD(&buf_info->release_funcs);
 		LIST_INITHEAD(&buf_info->destroy_funcs);
+		LIST_INITHEAD(&buf_info->link);
 
 		tbm_bo_add_user_data(bo, TDM_BUFFER_KEY, _tdm_buffer_destroy_info);
 		tbm_bo_set_user_data(bo, TDM_BUFFER_KEY, buf_info);
@@ -246,5 +251,63 @@ tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
 		free(func_info);
 
 		return;
+	}
+}
+
+INTERN void
+tdm_buffer_add_list(struct list_head *list, tbm_surface_h buffer)
+{
+	tdm_buffer_info *buf_info;
+
+	TDM_RETURN_IF_FAIL(list != NULL);
+	TDM_RETURN_IF_FAIL(buffer != NULL);
+
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_IF_FAIL(buf_info != NULL);
+
+	if (buf_info->link.prev != buf_info->link.next) {
+		TDM_ERR("%p already added other list\n", buffer);
+		return;
+	}
+
+	LIST_ADD(&buf_info->link, list);
+}
+
+INTERN void
+tdm_buffer_remove_list(struct list_head *list, tbm_surface_h buffer)
+{
+	tdm_buffer_info *buf_info, *b = NULL, *bb = NULL;
+
+	TDM_RETURN_IF_FAIL(list != NULL);
+
+	if (!buffer)
+		return;
+
+	buf_info = _tdm_buffer_get_info(buffer);
+	TDM_RETURN_IF_FAIL(buf_info != NULL);
+
+	LIST_FOR_EACH_ENTRY_SAFE(b, bb, list, link) {
+		if (b == buf_info) {
+			LIST_DEL(&buf_info->link);
+			return;
+		}
+	}
+}
+
+INTERN void
+tdm_buffer_dump_list(struct list_head *list, char *str, int len)
+{
+	tdm_buffer_info *buf_info = NULL;
+
+	TDM_RETURN_IF_FAIL(list != NULL);
+
+	LIST_FOR_EACH_ENTRY(buf_info, list, link) {
+		if (len > 0) {
+			int l = snprintf(str, len, " %p", buf_info->buffer);
+			str += l;
+			len -= l;
+		}
+		else
+			break;
 	}
 }

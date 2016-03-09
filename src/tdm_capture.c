@@ -68,6 +68,11 @@ _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 		lock_after_cb_done = 1;
 	}
 
+	if (tdm_debug_buffer)
+		TDM_INFO("done: %p", buffer);
+
+	tdm_buffer_remove_list(&private_capture->buffer_list, buffer);
+
 	tdm_buffer_unref_backend(buffer);
 
 	if (lock_after_cb_done)
@@ -126,6 +131,8 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 	private_capture->private_layer = NULL;
 	private_capture->capture_backend = capture_backend;
 
+	LIST_INITHEAD(&private_capture->buffer_list);
+
 	if (error)
 		*error = TDM_ERROR_NONE;
 
@@ -172,6 +179,8 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 	private_capture->private_layer = private_layer;
 	private_capture->capture_backend = capture_backend;
 
+	LIST_INITHEAD(&private_capture->buffer_list);
+
 	if (error)
 		*error = TDM_ERROR_NONE;
 
@@ -190,6 +199,13 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 
 	func_capture = &private_capture->private_display->func_capture;
 	func_capture->capture_destroy(private_capture->capture_backend);
+
+	if (!LIST_IS_EMPTY(&private_capture->buffer_list)) {
+		char str[256] = {0,};
+		tdm_buffer_dump_list(&private_capture->buffer_list, str, 256);
+		if (strlen(str) > 0)
+			TDM_WRN("not finished: %s buffers", str);
+	}
 
 	free(private_capture);
 }
@@ -247,6 +263,15 @@ tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer)
 
 	tdm_buffer_ref_backend(buffer);
 	ret = func_capture->capture_attach(private_capture->capture_backend, buffer);
+
+	if (ret == TDM_ERROR_NONE)
+		tdm_buffer_add_list(&private_capture->buffer_list, buffer);
+
+	if (tdm_debug_buffer) {
+		char str[256] = {0,};
+		tdm_buffer_dump_list(&private_capture->buffer_list, str, 256);
+		TDM_INFO("attached: %s", str);
+	}
 
 	pthread_mutex_unlock(&private_display->lock);
 
