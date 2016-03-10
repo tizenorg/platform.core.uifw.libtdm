@@ -221,6 +221,7 @@ struct _tdm_private_layer {
 	tdm_caps_layer caps;
 	tdm_layer *layer_backend;
 
+	tbm_surface_h pending_buffer;
 	tbm_surface_h waiting_buffer;
 	tbm_surface_h showing_buffer;
 	tbm_surface_queue_h buffer_queue;
@@ -237,7 +238,10 @@ struct _tdm_private_pp {
 
 	tdm_pp *pp_backend;
 
-	struct list_head buffer_list;
+	struct list_head src_pending_buffer_list;
+	struct list_head dst_pending_buffer_list;
+	struct list_head src_buffer_list;
+	struct list_head dst_buffer_list;
 };
 
 struct _tdm_private_capture {
@@ -251,6 +255,7 @@ struct _tdm_private_capture {
 
 	tdm_capture *capture_backend;
 
+	struct list_head pending_buffer_list;
 	struct list_head buffer_list;
 };
 
@@ -270,6 +275,19 @@ struct _tdm_private_commit_handler {
 	void *user_data;
 };
 
+typedef struct _tdm_buffer_info {
+	tbm_surface_h buffer;
+
+	/* ref_count for backend */
+	int backend_ref_count;
+
+	struct list_head release_funcs;
+	struct list_head destroy_funcs;
+
+	struct list_head *list;
+	struct list_head link;
+} tdm_buffer_info;
+
 tdm_private_pp *
 tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);
 void
@@ -284,12 +302,13 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 void
 tdm_capture_destroy_internal(tdm_private_capture *private_capture);
 
+/* utility buffer functions for private */
+tdm_buffer_info*
+tdm_buffer_get_info(tbm_surface_h buffer);
+tbm_surface_h
+tdm_buffer_list_get_first_entry(struct list_head *list);
 void
-tdm_buffer_add_list(struct list_head *list, tbm_surface_h buffer);
-void
-tdm_buffer_remove_list(struct list_head *list, tbm_surface_h buffer);
-void
-tdm_buffer_dump_list(struct list_head *list, char *str, int len);
+tdm_buffer_list_dump(struct list_head *list);
 
 #ifdef __cplusplus
 }

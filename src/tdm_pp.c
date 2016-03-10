@@ -57,8 +57,27 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 {
 	tdm_private_pp *private_pp = user_data;
 	tdm_private_display *private_display = private_pp->private_display;
+	tdm_buffer_info *buf_info;
+	tbm_surface_h first_entry;
 	int lock_after_cb_done = 0;
 	int ret;
+
+	if (tdm_debug_buffer)
+		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
+
+	first_entry = tdm_buffer_list_get_first_entry(&private_pp->src_buffer_list);
+	if (first_entry != src)
+		TDM_ERR("src(%p) is skipped", first_entry);
+
+	first_entry = tdm_buffer_list_get_first_entry(&private_pp->dst_buffer_list);
+	if (first_entry != dst)
+		TDM_ERR("dst(%p) is skipped", first_entry);
+
+	if ((buf_info = tdm_buffer_get_info(src)))
+		LIST_DEL(&buf_info->link);
+
+	if ((buf_info = tdm_buffer_get_info(dst)))
+		LIST_DEL(&buf_info->link);
 
 	ret = pthread_mutex_trylock(&private_display->lock);
 	if (ret == 0)
@@ -67,11 +86,6 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 		pthread_mutex_unlock(&private_display->lock);
 		lock_after_cb_done = 1;
 	}
-
-	if (tdm_debug_buffer)
-		TDM_INFO("done: %p", src);
-
-	tdm_buffer_remove_list(&private_pp->buffer_list, src);
 
 	tdm_buffer_unref_backend(src);
 	tdm_buffer_unref_backend(dst);
@@ -117,7 +131,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 
 	ret = func_pp->pp_set_done_handler(pp_backend, _tdm_pp_cb_done, private_pp);
 	if (ret != TDM_ERROR_NONE) {
-		TDM_ERR("set pp_done_handler failed");
+		TDM_ERR("spp(%p) et pp_done_handler failed", private_pp);
 		func_pp->pp_destroy(pp_backend);
 		if (error)
 			*error = ret;
@@ -128,7 +142,10 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 	private_pp->private_display = private_display;
 	private_pp->pp_backend = pp_backend;
 
-	LIST_INITHEAD(&private_pp->buffer_list);
+	LIST_INITHEAD(&private_pp->src_pending_buffer_list);
+	LIST_INITHEAD(&private_pp->dst_pending_buffer_list);
+	LIST_INITHEAD(&private_pp->src_buffer_list);
+	LIST_INITHEAD(&private_pp->dst_buffer_list);
 
 	if (error)
 		*error = TDM_ERROR_NONE;
@@ -139,22 +156,50 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 INTERN void
 tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 {
+	tdm_private_display *private_display;
 	tdm_func_pp *func_pp;
+	tdm_buffer_info *b = NULL, *bb = NULL;
 
 	if (!private_pp)
 		return;
 
-	func_pp = &private_pp->private_display->func_pp;
+	private_display = private_pp->private_display;
+	func_pp = &private_display->func_pp;
 
 	LIST_DEL(&private_pp->link);
 
 	func_pp->pp_destroy(private_pp->pp_backend);
 
-	if (!LIST_IS_EMPTY(&private_pp->buffer_list)) {
-		char str[256] = {0,};
-		tdm_buffer_dump_list(&private_pp->buffer_list, str, 256);
-		if (strlen(str) > 0)
-			TDM_WRN("not finished: %s buffers", str);
+	if (!LIST_IS_EMPTY(&private_pp->src_pending_buffer_list)) {
+		TDM_ERR("pp(%p) not finished:", private_pp);
+		tdm_buffer_list_dump(&private_pp->src_pending_buffer_list);
+
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link)
+			LIST_DEL(&b->link);
+	}
+
+	if (!LIST_IS_EMPTY(&private_pp->dst_pending_buffer_list)) {
+		TDM_ERR("pp(%p) not finished:", private_pp);
+		tdm_buffer_list_dump(&private_pp->dst_pending_buffer_list);
+
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link)
+			LIST_DEL(&b->link);
+	}
+
+	if (!LIST_IS_EMPTY(&private_pp->src_buffer_list)) {
+		TDM_ERR("pp(%p) not finished:", private_pp);
+		tdm_buffer_list_dump(&private_pp->src_buffer_list);
+
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_buffer_list, link)
+			LIST_DEL(&b->link);
+	}
+
+	if (!LIST_IS_EMPTY(&private_pp->dst_buffer_list)) {
+		TDM_ERR("pp(%p) not finished:", private_pp);
+		tdm_buffer_list_dump(&private_pp->dst_buffer_list);
+
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_buffer_list, link)
+			LIST_DEL(&b->link);
 	}
 
 	free(private_pp);
@@ -190,8 +235,8 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 		return TDM_ERROR_NONE;
 	}
 
-	TDM_INFO("pp info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%dx%d %d,%d %dx%d %c%c%c%c) trans(%d) sync(%d) flags(%x)",
-	         info->src_config.size.h, info->src_config.size.v,
+	TDM_INFO("pp(%p) info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%dx%d %d,%d %dx%d %c%c%c%c) trans(%d) sync(%d) flags(%x)",
+	         private_pp, info->src_config.size.h, info->src_config.size.v,
 	         info->src_config.pos.x, info->src_config.pos.y,
 	         info->src_config.pos.w, info->src_config.pos.h,
 	         FOURCC_STR(info->src_config.format),
@@ -202,6 +247,7 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 	         info->transform, info->sync, info->flags);
 
 	ret = func_pp->pp_set_info(private_pp->pp_backend, info);
+	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	pthread_mutex_unlock(&private_display->lock);
 
@@ -223,17 +269,23 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 		return TDM_ERROR_NONE;
 	}
 
-	tdm_buffer_ref_backend(src);
-	tdm_buffer_ref_backend(dst);
 	ret = func_pp->pp_attach(private_pp->pp_backend, src, dst);
+	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
-	if (ret == TDM_ERROR_NONE)
-		tdm_buffer_add_list(&private_pp->buffer_list, src);
+	if (ret == TDM_ERROR_NONE) {
+		tdm_buffer_info *buf_info;
 
-	if (tdm_debug_buffer) {
-		char str[256] = {0,};
-		tdm_buffer_dump_list(&private_pp->buffer_list, str, 256);
-		TDM_INFO("attached: %s", str);
+		if ((buf_info = tdm_buffer_get_info(src)))
+			LIST_ADDTAIL(&buf_info->link, &private_pp->src_pending_buffer_list);
+
+		if ((buf_info = tdm_buffer_get_info(dst)))
+			LIST_ADDTAIL(&buf_info->link, &private_pp->dst_pending_buffer_list);
+
+		if (tdm_debug_buffer) {
+			TDM_INFO("pp(%p) attached:", private_pp);
+			tdm_buffer_list_dump(&private_pp->src_pending_buffer_list);
+			tdm_buffer_list_dump(&private_pp->dst_pending_buffer_list);
+		}
 	}
 
 	pthread_mutex_unlock(&private_display->lock);
@@ -244,6 +296,8 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 EXTERN tdm_error
 tdm_pp_commit(tdm_pp *pp)
 {
+	tdm_buffer_info *b = NULL, *bb = NULL;
+
 	PP_FUNC_ENTRY();
 
 	pthread_mutex_lock(&private_display->lock);
@@ -254,6 +308,26 @@ tdm_pp_commit(tdm_pp *pp)
 	}
 
 	ret = func_pp->pp_commit(private_pp->pp_backend);
+	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
+
+	if (ret == TDM_ERROR_NONE) {
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link) {
+			LIST_DEL(&b->link);
+			tdm_buffer_ref_backend(b->buffer);
+			LIST_ADDTAIL(&b->link, &private_pp->src_buffer_list);
+		}
+
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link) {
+			LIST_DEL(&b->link);
+			tdm_buffer_ref_backend(b->buffer);
+			LIST_ADDTAIL(&b->link, &private_pp->dst_buffer_list);
+		}
+	} else {
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link)
+			LIST_DEL(&b->link);
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link)
+			LIST_DEL(&b->link);
+	}
 
 	pthread_mutex_unlock(&private_display->lock);
 
