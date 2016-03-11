@@ -23,6 +23,8 @@ Requires:       pkgconfig(libtbm)
 %description devel
 This supports frontend & backend library header and so
 
+%global TZ_SYS_RO_SHARE  %{?TZ_SYS_RO_SHARE:%TZ_SYS_RO_SHARE}%{!?TZ_SYS_RO_SHARE:/usr/share}
+
 %prep
 %setup -q
 cp %{SOURCE1001} .
@@ -34,7 +36,12 @@ cp %{SOURCE1001} .
 make %{?_smp_mflags}
 
 %install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/%{TZ_SYS_RO_SHARE}/license
+cp -af COPYING %{buildroot}/%{TZ_SYS_RO_SHARE}/license/%{name}
 %make_install
+
+%remove_docs
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -42,8 +49,8 @@ make %{?_smp_mflags}
 
 %files
 %manifest %{name}.manifest
-%license COPYING
 %defattr(-,root,root,-)
+%{TZ_SYS_RO_SHARE}/license/%{name}
 %{_libdir}/libtdm.so.*
 
 %files devel
