@@ -1290,10 +1290,10 @@ tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 	}
 
 	private_layer->buffer_queue = buffer_queue;
-	tbm_surface_queue_set_acquirable_cb(private_layer->buffer_queue,
+	tbm_surface_queue_add_acquirable_cb(private_layer->buffer_queue,
 	                                    _tbm_layer_queue_acquirable_cb,
 	                                    layer);
-	tbm_surface_queue_set_destroy_cb(private_layer->buffer_queue,
+	tbm_surface_queue_add_destroy_cb(private_layer->buffer_queue,
 	                                 _tbm_layer_queue_destroy_cb,
 	                                 layer);
 	pthread_mutex_unlock(&private_display->lock);
@@ -1337,8 +1337,8 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 			         private_layer, private_layer->showing_buffer);
 	}
 
-	tbm_surface_queue_set_acquirable_cb(private_layer->buffer_queue, NULL, NULL);
-	tbm_surface_queue_set_destroy_cb(private_layer->buffer_queue, NULL, NULL);
+	tbm_surface_queue_remove_acquirable_cb(private_layer->buffer_queue, _tbm_layer_queue_acquirable_cb, layer);
+	tbm_surface_queue_remove_destroy_cb(private_layer->buffer_queue, _tbm_layer_queue_destroy_cb, layer);
 	private_layer->buffer_queue = NULL;
 	private_layer->usable = 1;
 
