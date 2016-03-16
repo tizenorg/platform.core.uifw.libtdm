@@ -110,13 +110,14 @@ EXTERN void
 tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 {
 	tbm_surface_info_s info;
-	int len;
+	int len, ret;
 	const char *prefix;
 
 	TDM_RETURN_IF_FAIL(buffer != NULL);
 	TDM_RETURN_IF_FAIL(file != NULL);
 
-	tbm_surface_get_info(buffer, &info);
+	ret = tbm_surface_map(buffer, TBM_DEVICE_CPU, &info);
+	TDM_RETURN_IF_FAIL(ret == TBM_SURFACE_ERROR_NONE);
 
 	len = strnlen(file, 1024);
 	if (info.format == TBM_FORMAT_ARGB8888 || info.format == TBM_FORMAT_XRGB8888)
@@ -126,6 +127,7 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 
 	if (strncmp(file + (len - 3), prefix, 3)) {
 		TDM_ERR("can't dump to '%s' file", file + (len - 3));
+		tbm_surface_unmap(buffer);
 		return;
 	}
 
@@ -163,8 +165,11 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 		break;
 	default:
 		TDM_ERR("can't dump %c%c%c%c buffer", FOURCC_STR (info.format));
+		tbm_surface_unmap(buffer);
 		return;
 	}
+
+	tbm_surface_unmap(buffer);
 
 	TDM_INFO("dump %s", file);
 }
