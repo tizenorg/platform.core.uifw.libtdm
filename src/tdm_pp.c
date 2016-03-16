@@ -51,6 +51,43 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     private_display = private_pp->private_display; \
     func_pp = &private_display->func_pp
 
+static tdm_error
+_tdm_pp_check_if_exist(tdm_private_pp *private_pp,
+                       tbm_surface_h src, tbm_surface_h dst)
+{
+	tdm_buffer_info *buf_info = NULL;
+
+	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->src_buffer_list, link) {
+		if (buf_info->buffer == src) {
+			TDM_ERR("%p attached twice", src);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
+	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->src_pending_buffer_list, link) {
+		if (buf_info->buffer == src) {
+			TDM_ERR("%p attached twice", src);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
+	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->dst_buffer_list, link) {
+		if (buf_info->buffer == dst) {
+			TDM_ERR("%p attached twice", dst);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
+	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->dst_pending_buffer_list, link) {
+		if (buf_info->buffer == dst) {
+			TDM_ERR("%p attached twice", dst);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
+	return TDM_ERROR_NONE;
+}
+
 static void
 _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
                 void *user_data)
@@ -267,6 +304,12 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 	if (!func_pp->pp_attach) {
 		pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_NONE;
+	}
+
+	ret = _tdm_pp_check_if_exist(private_pp, src, dst);
+	if (ret != TDM_ERROR_NONE) {
+		pthread_mutex_unlock(&private_display->lock);
+		return ret;
 	}
 
 	ret = func_pp->pp_attach(private_pp->pp_backend, src, dst);

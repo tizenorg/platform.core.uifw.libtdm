@@ -51,6 +51,29 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     private_display = private_capture->private_display; \
     func_capture = &private_display->func_capture
 
+static tdm_error
+_tdm_capture_check_if_exist(tdm_private_capture *private_capture,
+                            tbm_surface_h buffer)
+{
+	tdm_buffer_info *buf_info = NULL;
+
+	LIST_FOR_EACH_ENTRY(buf_info, &private_capture->buffer_list, link) {
+		if (buf_info->buffer == buffer) {
+			TDM_ERR("%p attached twice", buffer);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
+	LIST_FOR_EACH_ENTRY(buf_info, &private_capture->pending_buffer_list, link) {
+		if (buf_info->buffer == buffer) {
+			TDM_ERR("%p attached twice", buffer);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
+	return TDM_ERROR_NONE;
+}
+
 static void
 _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
                      void *user_data)
@@ -279,6 +302,12 @@ tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer)
 	if (!func_capture->capture_attach) {
 		pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_NONE;
+	}
+
+	ret = _tdm_capture_check_if_exist(private_capture, buffer);
+	if (ret != TDM_ERROR_NONE) {
+		pthread_mutex_unlock(&private_display->lock);
+		return ret;
 	}
 
 	ret = func_capture->capture_attach(private_capture->capture_backend, buffer);
