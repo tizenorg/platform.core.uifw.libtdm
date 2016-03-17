@@ -140,26 +140,26 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 	case TBM_FORMAT_YVU420:
 	case TBM_FORMAT_YUV420:
 		_tdm_helper_dump_raw(file,
-		                     info.planes[0].ptr + info.planes[0].offset,
+		                     info.planes[0].ptr,
 		                     info.planes[0].stride * info.height,
-		                     info.planes[1].ptr + info.planes[1].offset,
+		                     info.planes[1].ptr,
 		                     info.planes[1].stride * (info.height >> 1),
-		                     info.planes[2].ptr + info.planes[2].offset,
+		                     info.planes[2].ptr,
 		                     info.planes[2].stride * (info.height >> 1));
 		break;
 	case TBM_FORMAT_NV12:
 	case TBM_FORMAT_NV21:
 		_tdm_helper_dump_raw(file,
-		                     info.planes[0].ptr + info.planes[0].offset,
+		                     info.planes[0].ptr,
 		                     info.planes[0].stride * info.height,
-		                     info.planes[1].ptr + info.planes[1].offset,
+		                     info.planes[1].ptr,
 		                     info.planes[1].stride * (info.height >> 1), NULL,
 		                     0);
 		break;
 	case TBM_FORMAT_YUYV:
 	case TBM_FORMAT_UYVY:
 		_tdm_helper_dump_raw(file,
-		                     info.planes[0].ptr + info.planes[0].offset,
+		                     info.planes[0].ptr,
 		                     info.planes[0].stride * info.height, NULL, 0,
 		                     NULL, 0);
 		break;
