@@ -72,7 +72,7 @@ typedef struct _tdm_caps_display {
 
 /**
  * @brief The capabilities structure of a output object
- * @see The output_get_capability() function of #tdm_func_display
+ * @see The output_get_capability() function of #tdm_func_output
  */
 typedef struct _tdm_caps_output {
 	char maker[TDM_NAME_LEN];       /**< The output maker */
@@ -103,7 +103,7 @@ typedef struct _tdm_caps_output {
 
 /**
  * @brief The capabilities structure of a layer object
- * @see The layer_get_capability() function of #tdm_func_display
+ * @see The layer_get_capability() function of #tdm_func_layer
  */
 typedef struct _tdm_caps_layer {
 	tdm_layer_capability capabilities;  /**< The capabilities of layer */
@@ -113,7 +113,7 @@ typedef struct _tdm_caps_layer {
 	 * GRAPHIC layers are non-changeable. The zpos of GRAPHIC layers starts
 	 * from 0. If there are 4 GRAPHIC layers, The zpos SHOULD be 0, 1, 2, 3.\n
 	 * But the zpos of VIDEO layer is changeable by layer_set_video_pos() function
-	 * of #tdm_func_display. And The zpos of VIDEO layers is less than GRAPHIC
+	 * of #tdm_func_layer. And The zpos of VIDEO layers is less than GRAPHIC
 	 * layers or more than GRAPHIC layers.
 	 * ie, ..., -2, -1, 4, 5, ... (if 0 <= GRAPHIC layer's zpos < 4).
 	 * The zpos of VIDEO layers is @b relative. It doesn't need to start
@@ -521,7 +521,7 @@ typedef struct _tdm_func_layer {
 	 * @param[in] layer A layer object
 	 * @param[in] info The geometry information
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
-	 * @see output_commit() function of #tdm_func_display
+	 * @see output_commit() function of #tdm_func_output
 	 * @remark
 	 * A backend module would apply the geometry information when the output object
 	 * of a layer object is committed.
@@ -541,7 +541,7 @@ typedef struct _tdm_func_layer {
 	 * @param[in] layer A layer object
 	 * @param[in] buffer A TDM buffer
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
-	 * @see output_commit() function of #tdm_func_display
+	 * @see output_commit() function of #tdm_func_output
 	 * @remark
 	 * A backend module would apply a TDM buffer when the output object
 	 * of a layer object is committed.
@@ -689,8 +689,8 @@ typedef struct _tdm_func_capture {
 	/**
 	 * @brief Destroy a capture object
 	 * @param[in] capture A capture object
-	 * @see output_create_capture() function of #tdm_func_display
-	 * @see layer_create_capture() function of #tdm_func_display
+	 * @see output_create_capture() function of #tdm_func_output
+	 * @see layer_create_capture() function of #tdm_func_layer
 	 */
 	void         (*capture_destroy)(tdm_capture *capture);
 

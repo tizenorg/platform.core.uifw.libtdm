@@ -39,8 +39,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /**
  * @mainpage TDM
  * @author     Boram Park, boram1288.park@samsung.com
- * @date       Dec 30, 2015
- * @version    1.0.0
+ * @date       Mar 17, 2016
+ * @version    1.1.0
  * @par Introduction
  * TDM stands for Tizen Display Manager. It's the display HAL layer for tizen
  * display server. It offers the frontend APIs(@ref tdm.h) for a frontend user
@@ -69,20 +69,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * A backend module @b SHOULD define the global data symbol of which name is
  * @b "tdm_backend_module_data". TDM will read this symbol, @b "tdm_backend_module_data",
  * at the initial time and call init() function of #tdm_backend_module.
- * A backend module at least @b SHOULD register the #tdm_func_display functions
- * to a display object with #tdm_backend_register_func_display() function in initial time.\n
+ * A backend module at least @b SHOULD register the #tdm_func_display,
+ * #tdm_func_output, #tdm_func_layer functions to a display object via
+ * #tdm_backend_register_func_display(), #tdm_backend_register_func_output(),
+ * #tdm_backend_register_func_layer() functions in initial time.\n
  * @code
     #include <tdm_backend.h>
 
-    static tdm_func_display drm_func_display =
-    {
+    static tdm_func_display drm_func_display = {
         drm_display_get_capabilitiy,
         ...
-        drm_display_get_outputs,
-        ...
+    };
+
+    static tdm_func_output drm_func_output = {
         drm_output_get_capability,
-        drm_output_get_layers,
         ...
+    };
+
+    static tdm_func_layer drm_func_layer = {
         drm_layer_get_capability,
         ...
     };
@@ -96,6 +100,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         drm_data = calloc(1, sizeof(tdm_drm_data));
         ...
         ret = tdm_backend_register_func_display(dpy, &drm_func_display);
+        if (ret != TDM_ERROR_NONE)
+            goto failed;
+        ret = tdm_backend_register_func_output(dpy, &drm_func_output);
+        if (ret != TDM_ERROR_NONE)
+            goto failed;
+        ret = tdm_backend_register_func_layer(dpy, &drm_func_layer);
         if (ret != TDM_ERROR_NONE)
             goto failed;
         ...
