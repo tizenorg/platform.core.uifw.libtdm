@@ -237,16 +237,20 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 		TDM_ERR("capture(%p) not finished:", private_capture);
 		tdm_buffer_list_dump(&private_capture->pending_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->pending_buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->pending_buffer_list, link) {
 			LIST_DEL(&b->link);
+			tdm_buffer_unref_backend(b->buffer);
+		}
 	}
 
 	if (!LIST_IS_EMPTY(&private_capture->buffer_list)) {
 		TDM_ERR("capture(%p) not finished:", private_capture);
 		tdm_buffer_list_dump(&private_capture->buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->buffer_list, link) {
 			LIST_DEL(&b->link);
+			tdm_buffer_unref_backend(b->buffer);
+		}
 	}
 
 	free(private_capture);

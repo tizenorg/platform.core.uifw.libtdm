@@ -211,32 +211,40 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 		TDM_ERR("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->src_pending_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link) {
 			LIST_DEL(&b->link);
+			tdm_buffer_unref_backend(b->buffer);
+		}
 	}
 
 	if (!LIST_IS_EMPTY(&private_pp->dst_pending_buffer_list)) {
 		TDM_ERR("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->dst_pending_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link) {
 			LIST_DEL(&b->link);
+			tdm_buffer_unref_backend(b->buffer);
+		}
 	}
 
 	if (!LIST_IS_EMPTY(&private_pp->src_buffer_list)) {
 		TDM_ERR("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->src_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_buffer_list, link) {
 			LIST_DEL(&b->link);
+			tdm_buffer_unref_backend(b->buffer);
+		}
 	}
 
 	if (!LIST_IS_EMPTY(&private_pp->dst_buffer_list)) {
 		TDM_ERR("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->dst_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_buffer_list, link) {
 			LIST_DEL(&b->link);
+			tdm_buffer_unref_backend(b->buffer);
+		}
 	}
 
 	free(private_pp);
