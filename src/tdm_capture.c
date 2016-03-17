@@ -222,6 +222,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 INTERN void
 tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 {
+	tdm_private_display *private_display = private_capture->private_display;
 	tdm_func_capture *func_capture;
 	tdm_buffer_info *b = NULL, *bb = NULL;
 
@@ -237,16 +238,24 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 		TDM_ERR("capture(%p) not finished:", private_capture);
 		tdm_buffer_list_dump(&private_capture->pending_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->pending_buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->pending_buffer_list, link) {
 			LIST_DEL(&b->link);
+			pthread_mutex_unlock(&private_display->lock);
+			tdm_buffer_unref_backend(b->buffer);
+			pthread_mutex_lock(&private_display->lock);
+		}
 	}
 
 	if (!LIST_IS_EMPTY(&private_capture->buffer_list)) {
 		TDM_ERR("capture(%p) not finished:", private_capture);
 		tdm_buffer_list_dump(&private_capture->buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->buffer_list, link)
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->buffer_list, link) {
 			LIST_DEL(&b->link);
+			pthread_mutex_unlock(&private_display->lock);
+			tdm_buffer_unref_backend(b->buffer);
+			pthread_mutex_lock(&private_display->lock);
+		}
 	}
 
 	free(private_capture);
