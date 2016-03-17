@@ -83,7 +83,7 @@ _tdm_buffer_destroy_info(void *user_data)
 	free(buf_info);
 }
 
-tdm_buffer_info *
+INTERN tdm_buffer_info *
 tdm_buffer_get_info(tbm_surface_h buffer)
 {
 	tdm_buffer_info *buf_info = NULL;
