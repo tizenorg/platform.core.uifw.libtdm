@@ -68,6 +68,36 @@ extern "C" {
 void
 tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
 
+/**
+ * @brief Get a drm-master-fd.
+ * @details
+ * This function will get the value of TIZEN_DRM_MASTER_FD enviroment variable
+ * and return it. TIZEN_DRM_MASTER_FD might be set by a TBM drm-supported backend
+ * when #tbm_bufmgr_init() is called. If #tdm_display_init() is called before
+ * #tbm_bufmgr_init() is called, TIZEN_DRM_MASTER_FD can have no value. In this
+ * case, this function will return -1. \n
+ * \n
+ * In DRM system, a drm-master-fd @b SHOULD be shared between TDM drm-supported
+ * backend and TBM drm-supported backend in display server side.
+ * @return drm-master-fd if success. Otherwise, -1.
+ * @see #tdm_helper_set_drm_master_fd()
+ */
+int tdm_helper_get_drm_master_fd(void);
+
+/**
+ * @brief Set a drm-master-fd.
+ * @details
+ * This function will set a drm-master-fd to TIZEN_DRM_MASTER_FD enviroment
+ * variable. Then TBM drm-supported backend might read the TIZEN_DRM_MASTER_FD
+ * enviroment variable and use it during processing #tbm_bufmgr_init.\n
+ * \n
+ * In DRM system, a drm-master-fd @b SHOULD be shared between TDM drm-supported
+ * backend and TBM drm-supported backend in display server side.
+ * @param[in] fd A drm-master-fd
+ * @see #tdm_helper_get_drm_master_fd()
+ */
+void tdm_helper_set_drm_master_fd(int fd);
+
 #ifdef __cplusplus
 }
 #endif

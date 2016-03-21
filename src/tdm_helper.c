@@ -173,3 +173,41 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 
 	TDM_INFO("dump %s", file);
 }
+
+EXTERN int
+tdm_helper_get_drm_master_fd(void)
+{
+	const char *value;
+	int ret, fd = -1;
+
+	value = (const char*)getenv("TIZEN_DRM_MASTER_FD");
+	if (!value)
+		return -1;
+
+	ret = sscanf(value, "%d", &fd);
+	if (ret < 0)
+		return -1;
+
+	TDM_INFO("TIZEN_DRM_MASTER_FD: %d", fd);
+
+	return fd;
+}
+
+EXTERN void
+tdm_helper_set_drm_master_fd(int fd)
+{
+	char buf[32];
+	int ret;
+
+	TDM_RETURN_IF_FAIL(fd >= 0);
+
+	snprintf(buf, sizeof(buf), "%d", fd);
+
+	ret = setenv("TIZEN_DRM_MASTER_FD", (const char*)buf, 1);
+	if (ret) {
+		TDM_ERR("failed to set TIZEN_DRM_MASTER_FD to %d", fd);
+		return;
+	}
+
+	TDM_INFO("TIZEN_DRM_MASTER_FD: %d", fd);
+}
