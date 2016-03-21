@@ -40,6 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm.h"
 #include "tdm_backend.h"
 #include "tdm_private.h"
+#include "tdm_helper.h"
 
 static tdm_private_layer *
 _tdm_display_find_private_layer(tdm_private_output *private_output,
@@ -783,6 +784,8 @@ tdm_display_deinit(tdm_display *dpy)
 
 	_tdm_display_destroy_private_display(private_display);
 	_tdm_display_unload_module(private_display);
+
+	tdm_helper_set_fd("TDM_DRM_MASTER_FD", -1);
 
 	pthread_mutex_unlock(&private_display->lock);
 

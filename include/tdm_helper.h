@@ -68,6 +68,33 @@ extern "C" {
 void
 tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
 
+/**
+ * @brief Get a fd from the given enviroment variable.
+ * @details
+ * This function will dup the fd of the given enviroment variable. The Caller
+ * @b SHOULD close the fd.
+ * \n
+ * In DRM system, a drm-master-fd @b SHOULD be shared between TDM backend and
+ * TBM backend in display server side by using "TDM_DRM_MASTER_FD"
+ * and "TBM_DRM_MASTER_FD".
+ * @param[in] env The given enviroment variable
+ * @return fd if success. Otherwise, -1.
+ * @see #tdm_helper_set_fd()
+ */
+int tdm_helper_get_fd(const char *env);
+
+/**
+ * @brief Set the given fd to the give enviroment variable.
+ * @details
+ * In DRM system, a drm-master-fd @b SHOULD be shared between TDM backend and
+ * TBM backend in display server side by using "TDM_DRM_MASTER_FD"
+ * and "TBM_DRM_MASTER_FD".
+ * @param[in] env The given enviroment variable
+ * @param[in] fd The given fd
+ * @see #tdm_helper_get_fd()
+ */
+void tdm_helper_set_fd(const char *env, int fd);
+
 #ifdef __cplusplus
 }
 #endif

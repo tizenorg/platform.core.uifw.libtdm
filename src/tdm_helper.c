@@ -173,3 +173,56 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 
 	TDM_INFO("dump %s", file);
 }
+
+EXTERN int
+tdm_helper_get_fd(const char *env)
+{
+	const char *value;
+	int fd, newfd, flags, ret;
+
+	value = (const char*)getenv(env);
+	if (!value)
+		return -1;
+
+	ret = sscanf(value, "%d", &fd);
+	if (ret < 0) {
+		TDM_ERR("sscanf failed: %m");
+		return -1;
+	}
+
+	flags = fcntl(fd, F_GETFD);
+	if (flags == -1) {
+		TDM_ERR("fcntl failed: %m");
+		return -1;
+	}
+
+	newfd = dup(fd);
+	if (newfd < 0) {
+		TDM_ERR("dup failed: %m");
+		return -1;
+	}
+
+	TDM_INFO("%s: fd(%d) newfd(%d)", env, fd, newfd);
+
+	fcntl(newfd, F_SETFD, flags | FD_CLOEXEC);
+
+	return newfd;
+}
+
+EXTERN void
+tdm_helper_set_fd(const char *env, int fd)
+{
+	char buf[32];
+	int ret;
+
+	snprintf(buf, sizeof(buf), "%d", fd);
+
+	ret = setenv(env, (const char*)buf, 1);
+	if (ret) {
+		TDM_ERR("setenv failed: %m");
+		return;
+	}
+
+	if (fd >= 0)
+		TDM_INFO("%s: fd(%d)", env, fd);
+}
