@@ -288,16 +288,6 @@ typedef struct _tdm_func_display {
 	tdm_error (*display_get_fd)(tdm_backend_data *bdata, int *fd);
 
 	/**
-	 * @brief Get the file descriptor for the memory-management framework of a backend module
-	 * @param[in] bdata The backend module data
-	 * @param[out] fd The fd of a backend module
-	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
-	 * @see display_handle_events() function of #tdm_func_display
-	 * This buffer fd will be passed to tbm_bufmgr_init.
-	 */
-	tdm_error (*display_get_buffer_fd)(tdm_backend_data *bdata, int *fd);
-
-	/**
 	 * @brief Handle the events which happens on the fd of a backend module
 	 * @param[in] bdata The backend module data
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
