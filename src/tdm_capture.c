@@ -288,7 +288,8 @@ tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info)
 
 	if (!func_capture->capture_set_info) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_capture->capture_set_info(private_capture->capture_backend, info);
@@ -310,7 +311,8 @@ tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer)
 
 	if (!func_capture->capture_attach) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = _tdm_capture_check_if_exist(private_capture, buffer);
@@ -350,7 +352,8 @@ tdm_capture_commit(tdm_capture *capture)
 
 	if (!func_capture->capture_commit) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_capture->capture_commit(private_capture->capture_backend);

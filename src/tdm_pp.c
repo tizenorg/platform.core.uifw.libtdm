@@ -285,7 +285,8 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 
 	if (!func_pp->pp_set_info) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	TDM_INFO("pp(%p) info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%dx%d %d,%d %dx%d %c%c%c%c) trans(%d) sync(%d) flags(%x)",
@@ -319,7 +320,8 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 
 	if (!func_pp->pp_attach) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = _tdm_pp_check_if_exist(private_pp, src, dst);
@@ -363,7 +365,8 @@ tdm_pp_commit(tdm_pp *pp)
 
 	if (!func_pp->pp_commit) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_pp->pp_commit(private_pp->pp_backend);

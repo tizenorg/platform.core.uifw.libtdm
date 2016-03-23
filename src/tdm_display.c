@@ -585,7 +585,8 @@ tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
 
 	if (!func_output->output_set_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_output->output_set_property(private_output->output_backend, id,
@@ -610,7 +611,8 @@ tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value)
 
 	if (!func_output->output_get_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_output->output_get_property(private_output->output_backend, id,
@@ -708,7 +710,8 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 
 	if (!func_output->output_wait_vblank) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	vblank_handler = calloc(1, sizeof(tdm_private_vblank_handler));
@@ -752,7 +755,8 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 	func_output = &private_display->func_output;
 
 	if (!func_output->output_commit) {
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	commit_handler = calloc(1, sizeof(tdm_private_commit_handler));
@@ -808,7 +812,8 @@ tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode)
 
 	if (!func_output->output_set_mode) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_output->output_set_mode(private_output->output_backend, mode);
@@ -832,7 +837,8 @@ tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
 
 	if (!func_output->output_get_mode) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_output->output_get_mode(private_output->output_backend, mode);
@@ -859,7 +865,8 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 
 	if (!func_output->output_set_dpms) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_output->output_set_dpms(private_output->output_backend, dpms_value);
@@ -883,7 +890,8 @@ tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value)
 
 	if (!func_output->output_get_dpms) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_output->output_get_dpms(private_output->output_backend, dpms_value);
@@ -992,7 +1000,8 @@ tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value)
 
 	if (!func_layer->layer_set_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_set_property(private_layer->layer_backend, id, value);
@@ -1016,7 +1025,8 @@ tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value)
 
 	if (!func_layer->layer_get_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_get_property(private_layer->layer_backend, id, value);
@@ -1042,7 +1052,8 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 
 	if (!func_layer->layer_set_info) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	TDM_INFO("layer(%p) info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%d,%d %dx%d) trans(%d)",
@@ -1076,7 +1087,8 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 
 	if (!func_layer->layer_get_info) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_get_info(private_layer->layer_backend, info);
@@ -1103,7 +1115,8 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 
 	if (!func_layer->layer_set_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_set_buffer(private_layer->layer_backend, buffer);
@@ -1166,7 +1179,8 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 
 	if (!func_layer->layer_unset_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_unset_buffer(private_layer->layer_backend);
@@ -1268,7 +1282,8 @@ tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 
 	if (!func_layer->layer_set_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	if (buffer_queue == private_layer->buffer_queue) {
@@ -1344,7 +1359,8 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 
 	if (!func_layer->layer_unset_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_unset_buffer(private_layer->layer_backend);
@@ -1388,7 +1404,8 @@ tdm_layer_set_video_pos(tdm_layer *layer, int zpos)
 
 	if (!func_layer->layer_set_video_pos) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
 	ret = func_layer->layer_set_video_pos(private_layer->layer_backend, zpos);
