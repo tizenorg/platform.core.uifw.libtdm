@@ -80,23 +80,23 @@ typedef enum
  * @brief The transform enumeration(rotate, flip)
  */
 typedef enum {
-        TDM_TRANSFORM_NORMAL            = 0, /**< no transform */
-        TDM_TRANSFORM_90                = 1, /**< rotate 90 */
-        TDM_TRANSFORM_180               = 2, /**< rotate 180 */
-        TDM_TRANSFORM_270               = 3, /**< rotate 270 */
-        TDM_TRANSFORM_FLIPPED           = 4, /**< no rotate and horizontal flip */
-        TDM_TRANSFORM_FLIPPED_90        = 5, /**< rotate 90 and horizontal flip */
-        TDM_TRANSFORM_FLIPPED_180       = 6, /**< rotate 180 and horizontal flip */
-        TDM_TRANSFORM_FLIPPED_270       = 7, /**< rotate 270 and horizontal flip */
+	TDM_TRANSFORM_NORMAL            = 0, /**< no transform */
+	TDM_TRANSFORM_90                = 1, /**< rotate 90 */
+	TDM_TRANSFORM_180               = 2, /**< rotate 180 */
+	TDM_TRANSFORM_270               = 3, /**< rotate 270 */
+	TDM_TRANSFORM_FLIPPED           = 4, /**< no rotate and horizontal flip */
+	TDM_TRANSFORM_FLIPPED_90        = 5, /**< rotate 90 and horizontal flip */
+	TDM_TRANSFORM_FLIPPED_180       = 6, /**< rotate 180 and horizontal flip */
+	TDM_TRANSFORM_FLIPPED_270       = 7, /**< rotate 270 and horizontal flip */
 } tdm_transform;
 
 /**
  * @brief The output connection status enumeration
  */
 typedef enum {
-        TDM_OUTPUT_CONN_STATUS_DISCONNECTED, /**< output disconnected */
-        TDM_OUTPUT_CONN_STATUS_CONNECTED,    /**< output connected */
-        TDM_OUTPUT_CONN_STATUS_MODE_SETTED,  /**< output connected and setted a mode */
+	TDM_OUTPUT_CONN_STATUS_DISCONNECTED, /**< output disconnected */
+	TDM_OUTPUT_CONN_STATUS_CONNECTED,    /**< output connected */
+	TDM_OUTPUT_CONN_STATUS_MODE_SETTED,  /**< output connected and setted a mode */
 } tdm_output_conn_status;
 
 /**
@@ -104,23 +104,23 @@ typedef enum {
  * @details bit compatible with the libdrm definitions.
  */
 typedef enum {
-        TDM_OUTPUT_TYPE_Unknown,        /**< unknown */
-        TDM_OUTPUT_TYPE_VGA,            /**< VGA connection */
-        TDM_OUTPUT_TYPE_DVII,           /**< DVII connection */
-        TDM_OUTPUT_TYPE_DVID,           /**< DVID connection */
-        TDM_OUTPUT_TYPE_DVIA,           /**< DVIA connection */
-        TDM_OUTPUT_TYPE_Composite,      /**< Composite connection */
-        TDM_OUTPUT_TYPE_SVIDEO,         /**< SVIDEO connection */
-        TDM_OUTPUT_TYPE_LVDS,           /**< LVDS connection */
-        TDM_OUTPUT_TYPE_Component,      /**< Component connection */
-        TDM_OUTPUT_TYPE_9PinDIN,        /**< 9PinDIN connection */
-        TDM_OUTPUT_TYPE_DisplayPort,    /**< DisplayPort connection */
-        TDM_OUTPUT_TYPE_HDMIA,          /**< HDMIA connection */
-        TDM_OUTPUT_TYPE_HDMIB,          /**< HDMIB connection */
-        TDM_OUTPUT_TYPE_TV,             /**< TV connection */
-        TDM_OUTPUT_TYPE_eDP,            /**< eDP connection */
-        TDM_OUTPUT_TYPE_VIRTUAL,        /**< Virtual connection for WiFi Display */
-        TDM_OUTPUT_TYPE_DSI,            /**< DSI connection */
+	TDM_OUTPUT_TYPE_Unknown,        /**< unknown */
+	TDM_OUTPUT_TYPE_VGA,            /**< VGA connection */
+	TDM_OUTPUT_TYPE_DVII,           /**< DVII connection */
+	TDM_OUTPUT_TYPE_DVID,           /**< DVID connection */
+	TDM_OUTPUT_TYPE_DVIA,           /**< DVIA connection */
+	TDM_OUTPUT_TYPE_Composite,      /**< Composite connection */
+	TDM_OUTPUT_TYPE_SVIDEO,         /**< SVIDEO connection */
+	TDM_OUTPUT_TYPE_LVDS,           /**< LVDS connection */
+	TDM_OUTPUT_TYPE_Component,      /**< Component connection */
+	TDM_OUTPUT_TYPE_9PinDIN,        /**< 9PinDIN connection */
+	TDM_OUTPUT_TYPE_DisplayPort,    /**< DisplayPort connection */
+	TDM_OUTPUT_TYPE_HDMIA,          /**< HDMIA connection */
+	TDM_OUTPUT_TYPE_HDMIB,          /**< HDMIB connection */
+	TDM_OUTPUT_TYPE_TV,             /**< TV connection */
+	TDM_OUTPUT_TYPE_eDP,            /**< eDP connection */
+	TDM_OUTPUT_TYPE_VIRTUAL,        /**< Virtual connection for WiFi Display */
+	TDM_OUTPUT_TYPE_DSI,            /**< DSI connection */
 } tdm_output_type;
 
 /**
@@ -128,10 +128,10 @@ typedef enum {
  * @details bit compatible with the libdrm definitions.
  */
 typedef enum {
-        TDM_OUTPUT_DPMS_ON,         /**< On */
-        TDM_OUTPUT_DPMS_STANDBY,    /**< StandBy */
-        TDM_OUTPUT_DPMS_SUSPEND,    /**< Suspend */
-        TDM_OUTPUT_DPMS_OFF,        /**< Off */
+	TDM_OUTPUT_DPMS_ON,         /**< On */
+	TDM_OUTPUT_DPMS_STANDBY,    /**< StandBy */
+	TDM_OUTPUT_DPMS_SUSPEND,    /**< Suspend */
+	TDM_OUTPUT_DPMS_OFF,        /**< Off */
 } tdm_output_dpms;
 
 /**
@@ -158,35 +158,35 @@ typedef enum {
  * buffer to a VIDEO layer without converting.
  */
 typedef enum {
-        TDM_LAYER_CAPABILITY_CURSOR         = (1 << 0), /**< cursor */
-        TDM_LAYER_CAPABILITY_PRIMARY        = (1 << 1), /**< primary */
-        TDM_LAYER_CAPABILITY_OVERLAY        = (1 << 2), /**< overlay */
-        TDM_LAYER_CAPABILITY_GRAPHIC        = (1 << 4), /**< graphic */
-        TDM_LAYER_CAPABILITY_VIDEO          = (1 << 5), /**< video */
-        TDM_LAYER_CAPABILITY_SCALE          = (1 << 8), /**< if a layer has scale capability  */
-        TDM_LAYER_CAPABILITY_TRANSFORM      = (1 << 9), /**< if a layer has transform capability  */
-        TDM_LAYER_CAPABILITY_SCANOUT        = (1 << 10), /**< if a layer allows a scanout buffer only */
-        TDM_LAYER_CAPABILITY_RESEVED_MEMORY = (1 << 11), /**< if a layer allows a reserved buffer only */
+	TDM_LAYER_CAPABILITY_CURSOR         = (1 << 0), /**< cursor */
+	TDM_LAYER_CAPABILITY_PRIMARY        = (1 << 1), /**< primary */
+	TDM_LAYER_CAPABILITY_OVERLAY        = (1 << 2), /**< overlay */
+	TDM_LAYER_CAPABILITY_GRAPHIC        = (1 << 4), /**< graphic */
+	TDM_LAYER_CAPABILITY_VIDEO          = (1 << 5), /**< video */
+	TDM_LAYER_CAPABILITY_SCALE          = (1 << 8), /**< if a layer has scale capability  */
+	TDM_LAYER_CAPABILITY_TRANSFORM      = (1 << 9), /**< if a layer has transform capability  */
+	TDM_LAYER_CAPABILITY_SCANOUT        = (1 << 10), /**< if a layer allows a scanout buffer only */
+	TDM_LAYER_CAPABILITY_RESEVED_MEMORY = (1 << 11), /**< if a layer allows a reserved buffer only */
 } tdm_layer_capability;
 
 /**
  * @brief The pp capability enumeration
  */
 typedef enum {
-        TDM_PP_CAPABILITY_SYNC           = (1 << 0), /**< The pp device supports synchronous operation */
-        TDM_PP_CAPABILITY_ASYNC          = (1 << 1), /**< The pp device supports asynchronous operation */
-        TDM_PP_CAPABILITY_SCALE          = (1 << 4), /**< The pp device supports scale operation */
-        TDM_PP_CAPABILITY_TRANSFORM      = (1 << 5), /**< The pp device supports transform operation */
+	TDM_PP_CAPABILITY_SYNC           = (1 << 0), /**< The pp device supports synchronous operation */
+	TDM_PP_CAPABILITY_ASYNC          = (1 << 1), /**< The pp device supports asynchronous operation */
+	TDM_PP_CAPABILITY_SCALE          = (1 << 4), /**< The pp device supports scale operation */
+	TDM_PP_CAPABILITY_TRANSFORM      = (1 << 5), /**< The pp device supports transform operation */
 } tdm_pp_capability;
 
 /**
  * @brief The capture capability enumeration
  */
 typedef enum {
-        TDM_CAPTURE_CAPABILITY_OUTPUT    = (1 << 0), /**< The capture device supports to dump a output */
-        TDM_CAPTURE_CAPABILITY_LAYER     = (1 << 1), /**< The capture device supports to dump a layer */
-        TDM_CAPTURE_CAPABILITY_SCALE     = (1 << 4), /**< The capture device supports scale operation */
-        TDM_CAPTURE_CAPABILITY_TRANSFORM = (1 << 5), /**< The capture device supports transform operation */
+	TDM_CAPTURE_CAPABILITY_OUTPUT    = (1 << 0), /**< The capture device supports to dump a output */
+	TDM_CAPTURE_CAPABILITY_LAYER     = (1 << 1), /**< The capture device supports to dump a layer */
+	TDM_CAPTURE_CAPABILITY_SCALE     = (1 << 4), /**< The capture device supports scale operation */
+	TDM_CAPTURE_CAPABILITY_TRANSFORM = (1 << 5), /**< The capture device supports transform operation */
 } tdm_capture_capability;
 
 /**
@@ -194,13 +194,13 @@ typedef enum {
  * @details bit compatible with the libdrm definitions.
  */
 typedef enum {
-        TDM_OUTPUT_MODE_TYPE_BUILTIN    = (1 << 0),
-        TDM_OUTPUT_MODE_TYPE_CLOCK_C    = ((1 << 1) | TDM_OUTPUT_MODE_TYPE_BUILTIN),
-        TDM_OUTPUT_MODE_TYPE_CRTC_C     = ((1 << 2) | TDM_OUTPUT_MODE_TYPE_BUILTIN),
-        TDM_OUTPUT_MODE_TYPE_PREFERRED  = (1 << 3),
-        TDM_OUTPUT_MODE_TYPE_DEFAULT    = (1 << 4),
-        TDM_OUTPUT_MODE_TYPE_USERDEF    = (1 << 5),
-        TDM_OUTPUT_MODE_TYPE_DRIVER     = (1 << 6),
+	TDM_OUTPUT_MODE_TYPE_BUILTIN    = (1 << 0),
+	TDM_OUTPUT_MODE_TYPE_CLOCK_C    = ((1 << 1) | TDM_OUTPUT_MODE_TYPE_BUILTIN),
+	TDM_OUTPUT_MODE_TYPE_CRTC_C     = ((1 << 2) | TDM_OUTPUT_MODE_TYPE_BUILTIN),
+	TDM_OUTPUT_MODE_TYPE_PREFERRED  = (1 << 3),
+	TDM_OUTPUT_MODE_TYPE_DEFAULT    = (1 << 4),
+	TDM_OUTPUT_MODE_TYPE_USERDEF    = (1 << 5),
+	TDM_OUTPUT_MODE_TYPE_DRIVER     = (1 << 6),
 } tdm_output_mode_type;
 
 /**
@@ -208,20 +208,20 @@ typedef enum {
  * @details bit compatible with the libdrm definitions.
  */
 typedef enum {
-        TDM_OUTPUT_MODE_FLAG_PHSYNC     = (1 << 0),
-        TDM_OUTPUT_MODE_FLAG_NHSYNC     = (1 << 1),
-        TDM_OUTPUT_MODE_FLAG_PVSYNC     = (1 << 2),
-        TDM_OUTPUT_MODE_FLAG_NVSYNC     = (1 << 3),
-        TDM_OUTPUT_MODE_FLAG_INTERLACE  = (1 << 4),
-        TDM_OUTPUT_MODE_FLAG_DBLSCAN    = (1 << 5),
-        TDM_OUTPUT_MODE_FLAG_CSYNC      = (1 << 6),
-        TDM_OUTPUT_MODE_FLAG_PCSYNC     = (1 << 7),
-        TDM_OUTPUT_MODE_FLAG_NCSYNC     = (1 << 8),
-        TDM_OUTPUT_MODE_FLAG_HSKEW      = (1 << 9), /* hskew provided */
-        TDM_OUTPUT_MODE_FLAG_BCAST      = (1 << 10),
-        TDM_OUTPUT_MODE_FLAG_PIXMUX     = (1 << 11),
-        TDM_OUTPUT_MODE_FLAG_DBLCLK     = (1 << 12),
-        TDM_OUTPUT_MODE_FLAG_CLKDIV2    = (1 << 13),
+	TDM_OUTPUT_MODE_FLAG_PHSYNC     = (1 << 0),
+	TDM_OUTPUT_MODE_FLAG_NHSYNC     = (1 << 1),
+	TDM_OUTPUT_MODE_FLAG_PVSYNC     = (1 << 2),
+	TDM_OUTPUT_MODE_FLAG_NVSYNC     = (1 << 3),
+	TDM_OUTPUT_MODE_FLAG_INTERLACE  = (1 << 4),
+	TDM_OUTPUT_MODE_FLAG_DBLSCAN    = (1 << 5),
+	TDM_OUTPUT_MODE_FLAG_CSYNC      = (1 << 6),
+	TDM_OUTPUT_MODE_FLAG_PCSYNC     = (1 << 7),
+	TDM_OUTPUT_MODE_FLAG_NCSYNC     = (1 << 8),
+	TDM_OUTPUT_MODE_FLAG_HSKEW      = (1 << 9), /* hskew provided */
+	TDM_OUTPUT_MODE_FLAG_BCAST      = (1 << 10),
+	TDM_OUTPUT_MODE_FLAG_PIXMUX     = (1 << 11),
+	TDM_OUTPUT_MODE_FLAG_DBLCLK     = (1 << 12),
+	TDM_OUTPUT_MODE_FLAG_CLKDIV2    = (1 << 13),
 } tdm_output_mode_flag;
 
 /**
