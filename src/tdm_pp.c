@@ -118,9 +118,9 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 
 	ret = pthread_mutex_trylock(&private_display->lock);
 	if (ret == 0)
-		pthread_mutex_unlock(&private_display->lock);
+		_pthread_mutex_unlock(&private_display->lock);
 	else  if (ret == EBUSY) {
-		pthread_mutex_unlock(&private_display->lock);
+		_pthread_mutex_unlock(&private_display->lock);
 		lock_after_cb_done = 1;
 	}
 
@@ -128,7 +128,7 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	tdm_buffer_unref_backend(dst);
 
 	if (lock_after_cb_done)
-		pthread_mutex_lock(&private_display->lock);
+		_pthread_mutex_lock(&private_display->lock);
 }
 
 INTERN tdm_private_pp *
@@ -213,9 +213,9 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link) {
 			LIST_DEL(&b->link);
-			pthread_mutex_unlock(&private_display->lock);
+			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(b->buffer);
-			pthread_mutex_lock(&private_display->lock);
+			_pthread_mutex_lock(&private_display->lock);
 		}
 	}
 
@@ -225,9 +225,9 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link) {
 			LIST_DEL(&b->link);
-			pthread_mutex_unlock(&private_display->lock);
+			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(b->buffer);
-			pthread_mutex_lock(&private_display->lock);
+			_pthread_mutex_lock(&private_display->lock);
 		}
 	}
 
@@ -237,9 +237,9 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_buffer_list, link) {
 			LIST_DEL(&b->link);
-			pthread_mutex_unlock(&private_display->lock);
+			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(b->buffer);
-			pthread_mutex_lock(&private_display->lock);
+			_pthread_mutex_lock(&private_display->lock);
 		}
 	}
 
@@ -249,9 +249,9 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_buffer_list, link) {
 			LIST_DEL(&b->link);
-			pthread_mutex_unlock(&private_display->lock);
+			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(b->buffer);
-			pthread_mutex_lock(&private_display->lock);
+			_pthread_mutex_lock(&private_display->lock);
 		}
 	}
 
@@ -269,9 +269,9 @@ tdm_pp_destroy(tdm_pp *pp)
 
 	private_display = private_pp->private_display;
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 	tdm_pp_destroy_internal(private_pp);
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 }
 
 EXTERN tdm_error
@@ -281,10 +281,10 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 
 	TDM_RETURN_VAL_IF_FAIL(info != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 
 	if (!func_pp->pp_set_info) {
-		pthread_mutex_unlock(&private_display->lock);
+		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_NONE;
 	}
 
@@ -302,7 +302,7 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 	ret = func_pp->pp_set_info(private_pp->pp_backend, info);
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return ret;
 }
@@ -315,16 +315,16 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 	TDM_RETURN_VAL_IF_FAIL(src != NULL, TDM_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(dst != NULL, TDM_ERROR_INVALID_PARAMETER);
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 
 	if (!func_pp->pp_attach) {
-		pthread_mutex_unlock(&private_display->lock);
+		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_NONE;
 	}
 
 	ret = _tdm_pp_check_if_exist(private_pp, src, dst);
 	if (ret != TDM_ERROR_NONE) {
-		pthread_mutex_unlock(&private_display->lock);
+		_pthread_mutex_unlock(&private_display->lock);
 		return ret;
 	}
 
@@ -347,7 +347,7 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 		}
 	}
 
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return ret;
 }
@@ -359,10 +359,10 @@ tdm_pp_commit(tdm_pp *pp)
 
 	PP_FUNC_ENTRY();
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 
 	if (!func_pp->pp_commit) {
-		pthread_mutex_unlock(&private_display->lock);
+		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_NONE;
 	}
 
@@ -388,7 +388,7 @@ tdm_pp_commit(tdm_pp *pp)
 			LIST_DEL(&b->link);
 	}
 
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return ret;
 }

@@ -78,9 +78,9 @@ tdm_backend_register_func_display(tdm_display *dpy,
 	if (_check_abi_version(module, 1, 1) < 0)
 		return TDM_ERROR_BAD_MODULE;
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 	private_display->func_display = *func_display;
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -99,9 +99,9 @@ tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
 	if (_check_abi_version(module, 1, 1) < 0)
 		return TDM_ERROR_BAD_MODULE;
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 	private_display->func_output = *func_output;
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -120,9 +120,9 @@ tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
 	if (_check_abi_version(module, 1, 1) < 0)
 		return TDM_ERROR_BAD_MODULE;
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 	private_display->func_layer = *func_layer;
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -135,10 +135,10 @@ tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp)
 	if (!func_pp)
 		return TDM_ERROR_NONE;
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 	private_display->capabilities |= TDM_DISPLAY_CAPABILITY_PP;
 	private_display->func_pp = *func_pp;
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -152,10 +152,10 @@ tdm_backend_register_func_capture(tdm_display *dpy,
 	if (!func_capture)
 		return TDM_ERROR_NONE;
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 	private_display->capabilities |= TDM_DISPLAY_CAPABILITY_CAPTURE;
 	private_display->func_capture = *func_capture;
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }

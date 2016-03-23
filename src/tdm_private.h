@@ -65,6 +65,9 @@ extern "C" {
  * @brief The private header file for a frontend library
  */
 
+extern int tdm_debug_buffer;
+extern int tdm_debug_mutex;
+
 #undef EXTERN
 #undef DEPRECATED
 #undef INTERN
@@ -307,6 +310,11 @@ tbm_surface_h
 tdm_buffer_list_get_first_entry(struct list_head *list);
 void
 tdm_buffer_list_dump(struct list_head *list);
+
+#define _pthread_mutex_lock(l) \
+    do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)
+#define _pthread_mutex_unlock(l) \
+    do {if (tdm_debug_mutex) TDM_INFO("mutex unlock"); pthread_mutex_unlock(l);} while (0)
 
 #ifdef __cplusplus
 }

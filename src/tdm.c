@@ -461,11 +461,11 @@ tdm_display_update(tdm_display *dpy)
 	TDM_RETURN_VAL_IF_FAIL(dpy != NULL, TDM_ERROR_INVALID_PARAMETER);
 
 	private_display = dpy;
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 
 	ret = _tdm_display_update_internal(private_display, 1);
 
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return ret;
 }
@@ -475,6 +475,7 @@ tdm_display_update(tdm_display *dpy)
 
 int tdm_debug;
 int tdm_debug_buffer;
+int tdm_debug_mutex;
 
 static tdm_private_display *g_private_display;
 static pthread_mutex_t gLock = PTHREAD_MUTEX_INITIALIZER;
@@ -697,11 +698,11 @@ tdm_display_init(tdm_error *error)
 	const char *debug;
 	tdm_error ret;
 
-	pthread_mutex_lock(&gLock);
+	_pthread_mutex_lock(&gLock);
 
 	if (g_private_display) {
 		g_private_display->init_count++;
-		pthread_mutex_unlock(&gLock);
+		_pthread_mutex_unlock(&gLock);
 		if (error)
 			*error = TDM_ERROR_NONE;
 		return g_private_display;
@@ -714,6 +715,10 @@ tdm_display_init(tdm_error *error)
 	debug = getenv("TDM_DEBUG_BUFFER");
 	if (debug && (strstr(debug, "1")))
 		tdm_debug_buffer = 1;
+
+	debug = getenv("TDM_DEBUG_MUTEX");
+	if (debug && (strstr(debug, "1")))
+		tdm_debug_mutex = 1;
 
 	private_display = calloc(1, sizeof(tdm_private_display));
 	if (!private_display) {
@@ -745,7 +750,7 @@ tdm_display_init(tdm_error *error)
 	if (error)
 		*error = TDM_ERROR_NONE;
 
-	pthread_mutex_unlock(&gLock);
+	_pthread_mutex_unlock(&gLock);
 
 	return (tdm_display *)private_display;
 
@@ -760,7 +765,7 @@ failed_alloc:
 	tdm_debug_buffer = 0;
 	if (error)
 		*error = ret;
-	pthread_mutex_unlock(&gLock);
+	_pthread_mutex_unlock(&gLock);
 	return NULL;
 }
 
@@ -772,22 +777,22 @@ tdm_display_deinit(tdm_display *dpy)
 	if (!private_display)
 		return;
 
-	pthread_mutex_lock(&gLock);
+	_pthread_mutex_lock(&gLock);
 
 	private_display->init_count--;
 	if (private_display->init_count > 0) {
-		pthread_mutex_unlock(&gLock);
+		_pthread_mutex_unlock(&gLock);
 		return;
 	}
 
-	pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 
 	_tdm_display_destroy_private_display(private_display);
 	_tdm_display_unload_module(private_display);
 
 	tdm_helper_set_fd("TDM_DRM_MASTER_FD", -1);
 
-	pthread_mutex_unlock(&private_display->lock);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	pthread_mutex_destroy(&private_display->lock);
 	free(private_display);
@@ -795,6 +800,6 @@ tdm_display_deinit(tdm_display *dpy)
 	tdm_debug = 0;
 	tdm_debug_buffer = 0;
 
-	pthread_mutex_unlock(&gLock);
+	_pthread_mutex_unlock(&gLock);
 }
 
