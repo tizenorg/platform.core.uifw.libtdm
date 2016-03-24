@@ -66,6 +66,24 @@ typedef enum
 } tdm_display_capability;
 
 /**
+ * @brief The output change enumeration of #tdm_output_change_handler
+ */
+typedef enum {
+	TDM_OUTPUT_CHANGE_CONNECTION    = (1 << 0), /**< connection chagne */
+	TDM_OUTPUT_CHANGE_DPMS          = (1 << 1), /**< dpms change */
+} tdm_output_change_type;
+
+/**
+ * @brief The output change handler
+ * @details This handler will be called when the status of a output object is
+ * changed in runtime.
+ */
+typedef void (*tdm_output_change_handler)(tdm_output *output,
+                                          tdm_output_change_type type,
+                                          tdm_value value,
+                                          void *user_data);
+
+/**
  * @brief Initialize a display object
  * @param[out] error #TDM_ERROR_NONE if success. Otherwise, error value.
  * @return A display object
@@ -232,6 +250,32 @@ tdm_output_get_model_info(tdm_output *output, const char **maker,
  */
 tdm_error
 tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status);
+
+/**
+ * @brief Add a output change handler
+ * @details The handler will be called when the status of a
+ * output object is changed. connection, DPMS, etc.
+ * @param[in] output A output object
+ * @param[in] func A output change handler
+ * @param[in] user_data The user data
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_output_add_change_handler(tdm_output *output,
+                              tdm_output_change_handler func,
+                              void *user_data);
+
+/**
+ * @brief Remove a output change handler
+ * @param[in] output A output object
+ * @param[in] func A output change handler
+ * @param[in] user_data The user data
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+void
+tdm_output_remove_change_handler(tdm_output *output,
+                                 tdm_output_change_handler func,
+                                 void *user_data);
 
 /**
  * @brief Get the connection type of a output object.

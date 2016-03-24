@@ -122,6 +122,7 @@ _tdm_display_destroy_private_output(tdm_private_output *private_output)
 	tdm_private_capture *c = NULL, *cc = NULL;
 	tdm_private_vblank_handler *v = NULL, *vv = NULL;
 	tdm_private_commit_handler *m = NULL, *mm = NULL;
+	tdm_private_change_handler *h = NULL, *hh = NULL;
 
 	LIST_DEL(&private_output->link);
 
@@ -135,6 +136,11 @@ _tdm_display_destroy_private_output(tdm_private_output *private_output)
 	LIST_FOR_EACH_ENTRY_SAFE(m, mm, &private_output->commit_handler_list, link) {
 		LIST_DEL(&m->link);
 		free(m);
+	}
+
+	LIST_FOR_EACH_ENTRY_SAFE(h, hh, &private_output->change_handler_list, link) {
+		LIST_DEL(&h->link);
+		free(h);
 	}
 
 	LIST_FOR_EACH_ENTRY_SAFE(c, cc, &private_output->capture_list, link)
@@ -356,6 +362,21 @@ failed_update:
 	return ret;
 }
 
+static void
+_tdm_output_cb_status(tdm_output *output, tdm_output_conn_status status,
+                      void *user_data)
+{
+	tdm_private_output *private_output = user_data;
+	tdm_value value;
+
+	TDM_RETURN_IF_FAIL(private_output);
+
+	value.u32 = status;
+	tdm_output_call_change_handler_internal(private_output,
+	                                        TDM_OUTPUT_CHANGE_CONNECTION,
+	                                        value);
+}
+
 static tdm_error
 _tdm_display_update_output(tdm_private_display *private_display,
                            tdm_output *output_backend, int pipe)
@@ -381,6 +402,16 @@ _tdm_display_update_output(tdm_private_display *private_display,
 		LIST_INITHEAD(&private_output->capture_list);
 		LIST_INITHEAD(&private_output->vblank_handler_list);
 		LIST_INITHEAD(&private_output->commit_handler_list);
+		LIST_INITHEAD(&private_output->change_handler_list);
+
+		if (func_output->output_set_status_handler) {
+			private_output->regist_change_cb = 1;
+			ret = func_output->output_set_status_handler(output_backend,
+			                                             _tdm_output_cb_status,
+			                                             private_output);
+			if (ret != TDM_ERROR_NONE)
+				goto failed_update;
+		}
 	} else
 		_tdm_display_destroy_caps_output(&private_output->caps);
 

@@ -101,6 +101,40 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     private_output = private_layer->private_output; \
     private_display = private_output->private_display
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+struct type_name {
+	int type;
+	const char *name;
+};
+
+#define type_name_fn(res) \
+const char * res##_str(int type) {			\
+	unsigned int i;					\
+	for (i = 0; i < ARRAY_SIZE(res##_names); i++) { \
+		if (res##_names[i].type == type)	\
+			return res##_names[i].name;	\
+	}						\
+	return "(invalid)";				\
+}
+
+struct type_name dpms_names[] = {
+	{ TDM_OUTPUT_DPMS_ON, "on" },
+	{ TDM_OUTPUT_DPMS_STANDBY, "standby" },
+	{ TDM_OUTPUT_DPMS_SUSPEND, "suspend" },
+	{ TDM_OUTPUT_DPMS_OFF, "off" },
+};
+
+static type_name_fn(dpms)
+
+struct type_name status_names[] = {
+	{ TDM_OUTPUT_CONN_STATUS_DISCONNECTED, "disconnected" },
+	{ TDM_OUTPUT_CONN_STATUS_CONNECTED, "connected" },
+	{ TDM_OUTPUT_CONN_STATUS_MODE_SETTED, "mode_setted" },
+};
+
+static type_name_fn(status)
+
 EXTERN tdm_error
 tdm_display_get_capabilities(tdm_display *dpy,
                              tdm_display_capability *capabilities)
@@ -377,6 +411,73 @@ tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status)
 	_pthread_mutex_unlock(&private_display->lock);
 
 	return ret;
+}
+
+EXTERN tdm_error
+tdm_output_add_change_handler(tdm_output *output,
+                              tdm_output_change_handler func,
+                              void *user_data)
+{
+	tdm_private_change_handler *change_handler;
+	OUTPUT_FUNC_ENTRY();
+
+	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+	pthread_mutex_lock(&private_display->lock);
+
+	if (!private_output->regist_change_cb) {
+		_pthread_mutex_unlock(&private_display->lock);
+		TDM_DBG("failed: not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
+	}
+
+	change_handler = calloc(1, sizeof(tdm_private_change_handler));
+	if (!change_handler) {
+		TDM_ERR("failed: alloc memory");
+		_pthread_mutex_unlock(&private_display->lock);
+		return TDM_ERROR_OUT_OF_MEMORY;
+	}
+
+	LIST_ADD(&change_handler->link, &private_output->change_handler_list);
+	change_handler->private_output = private_output;
+	change_handler->func = func;
+	change_handler->user_data = user_data;
+
+	_pthread_mutex_unlock(&private_display->lock);
+
+	return ret;
+}
+
+EXTERN void
+tdm_output_remove_change_handler(tdm_output *output,
+                                 tdm_output_change_handler func,
+                                 void *user_data)
+{
+	tdm_private_display *private_display;
+	tdm_private_output *private_output;
+	tdm_private_change_handler *h = NULL, *hh = NULL;
+
+	TDM_RETURN_IF_FAIL(output != NULL);
+	TDM_RETURN_IF_FAIL(func != NULL);
+
+	private_output = (tdm_private_output*)output;
+	private_display = private_output->private_display;
+
+	_pthread_mutex_lock(&private_display->lock);
+
+	LIST_FOR_EACH_ENTRY_SAFE(h, hh, &private_output->change_handler_list, link) {
+		if (h->func != func || h->user_data != user_data)
+			continue;
+
+		LIST_DEL(&h->link);
+		free(h);
+
+		_pthread_mutex_unlock(&private_display->lock);
+
+		return;
+	}
+
+	_pthread_mutex_unlock(&private_display->lock);
 }
 
 EXTERN tdm_error
@@ -900,6 +1001,35 @@ tdm_output_create_capture(tdm_output *output, tdm_error *error)
 	_pthread_mutex_unlock(&private_display->lock);
 
 	return capture;
+}
+
+INTERN void
+tdm_output_call_change_handler_internal(tdm_private_output *private_output,
+                                        tdm_output_change_type type,
+                                        tdm_value value)
+{
+	tdm_private_change_handler *change_handler;
+	tdm_private_display *private_display;
+
+	TDM_RETURN_IF_FAIL(private_output);
+
+	private_display = private_output->private_display;
+
+	if (type & TDM_OUTPUT_CHANGE_CONNECTION)
+		TDM_INFO("output(%d) changed: %s",
+		         private_output->pipe, status_str(value.u32));
+	if (type & TDM_OUTPUT_CHANGE_DPMS)
+		TDM_INFO("output(%d) changed: dpms %s",
+		         private_output->pipe, dpms_str(value.u32));
+
+	_pthread_mutex_unlock(&private_display->lock);
+
+	LIST_FOR_EACH_ENTRY(change_handler, &private_output->change_handler_list, link) {
+		change_handler->func(private_output, type,
+		                     value, change_handler->user_data);
+	}
+
+	_pthread_mutex_lock(&private_display->lock);
 }
 
 EXTERN tdm_error

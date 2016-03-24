@@ -163,6 +163,7 @@ typedef struct _tdm_private_capture tdm_private_capture;
 typedef struct _tdm_private_event tdm_private_event;
 typedef struct _tdm_private_vblank_handler tdm_private_vblank_handler;
 typedef struct _tdm_private_commit_handler tdm_private_commit_handler;
+typedef struct _tdm_private_change_handler tdm_private_change_handler;
 
 struct _tdm_private_display {
 	pthread_mutex_t lock;
@@ -208,11 +209,13 @@ struct _tdm_private_output {
 
 	int regist_vblank_cb;
 	int regist_commit_cb;
+	int regist_change_cb;
 
 	struct list_head layer_list;
 	struct list_head capture_list;
 	struct list_head vblank_handler_list;
 	struct list_head commit_handler_list;
+	struct list_head change_handler_list;
 
 	void **layers_ptr;
 };
@@ -280,6 +283,14 @@ struct _tdm_private_commit_handler {
 	void *user_data;
 };
 
+struct _tdm_private_change_handler {
+	struct list_head link;
+
+	tdm_private_output *private_output;
+	tdm_output_change_handler func;
+	void *user_data;
+};
+
 typedef struct _tdm_buffer_info {
 	tbm_surface_h buffer;
 
@@ -292,6 +303,11 @@ typedef struct _tdm_buffer_info {
 	struct list_head *list;
 	struct list_head link;
 } tdm_buffer_info;
+
+void
+tdm_output_call_change_handler_internal(tdm_private_output *private_output,
+                                        tdm_output_change_type type,
+                                        tdm_value value);
 
 tdm_private_pp *
 tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);

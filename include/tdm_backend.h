@@ -63,6 +63,15 @@ extern "C" {
 typedef void tdm_backend_data;
 
 /**
+ * @brief The output status handler
+ * @details This handler will be called when the status of a output object is
+ * changed in runtime.
+ */
+typedef void (*tdm_output_status_handler)(tdm_output *output,
+                                          tdm_output_conn_status status,
+                                          void *user_data);
+
+/**
  * @brief The display capabilities structure of a backend module
  * @see The display_get_capabilitiy() function of #tdm_func_display
  */
@@ -458,6 +467,19 @@ typedef struct _tdm_func_output {
 	 * doesn't have the capture device.
 	 */
 	tdm_capture *(*output_create_capture)(tdm_output *output, tdm_error *error);
+
+	/**
+	 * @brief Set a output connection status handler
+	 * @details The handler will be called when the connection status of a
+	 * output object is changed.
+	 * @param[in] output A output object
+	 * @param[in] func A output status handler
+	 * @param[in] user_data The user data
+	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+	 */
+	tdm_error (*output_set_status_handler)(tdm_output *output,
+	                                       tdm_output_status_handler func,
+	                                       void *user_data);
 
 	void (*reserved1)(void);
 	void (*reserved2)(void);
