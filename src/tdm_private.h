@@ -51,6 +51,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <tbm_bufmgr.h>
 #include <tbm_surface_queue.h>
+#include <wayland-server-core.h>
 
 #include "tdm_backend.h"
 #include "tdm_log.h"
@@ -190,6 +191,10 @@ struct _tdm_private_display {
 	struct list_head pp_list;
 
 	void **outputs_ptr;
+
+	/* for event handling */
+	struct wl_event_loop *event_loop;
+	tdm_event_source *main_source;
 };
 
 struct _tdm_private_output {
@@ -310,6 +315,18 @@ tbm_surface_h
 tdm_buffer_list_get_first_entry(struct list_head *list);
 void
 tdm_buffer_list_dump(struct list_head *list);
+
+/* event functions for private */
+tdm_error
+tdm_event_init(tdm_private_display *private_display);
+void
+tdm_event_deinit(tdm_private_display *private_display);
+void
+tdm_event_create_main_source(tdm_private_display *private_display);
+int
+tdm_event_get_fd(tdm_private_display *private_display);
+tdm_error
+tdm_event_dispatch(tdm_private_display *private_display);
 
 #define _pthread_mutex_lock(l) \
     do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)

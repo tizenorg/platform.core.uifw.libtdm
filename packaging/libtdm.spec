@@ -10,6 +10,7 @@ BuildRequires:  pkgconfig(pthread-stubs)
 BuildRequires:  pkgconfig(libtbm)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(ttrace)
+BuildRequires:  pkgconfig(wayland-server)
 
 %description
 Common user library of Tizen Display Manager : libtdm front-end library

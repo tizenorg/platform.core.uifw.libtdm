@@ -23,17 +23,17 @@ LT_INIT([disable-static])
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng wayland-server)
+
 PKG_CHECK_MODULES(TTRACE,
 		[ttrace],
 		[have_ttrace="yes"], [have_ttrace="no"])
 if test "x$have_ttrace" = "xyes"; then
-    PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng ttrace)
+    TDM_CFLAGS="$TDM_CFLAGS $TTRACE_CFLAGS"
+    TDM_LIBS="$TDM_LIBS $TTRACE_LIBS"
 	AC_DEFINE(HAVE_TTRACE, 1, [ttrace available])
-else
-    PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng)
 fi
 
-PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng)
 AC_SUBST(TDM_CFLAGS)
 AC_SUBST(TDM_LIBS)
 

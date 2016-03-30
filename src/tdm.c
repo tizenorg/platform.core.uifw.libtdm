@@ -733,6 +733,10 @@ tdm_display_init(tdm_error *error)
 		goto failed_mutex_init;
 	}
 
+	ret = tdm_event_init(private_display);
+	if (ret != TDM_ERROR_NONE)
+		goto failed_load;
+
 	ret = _tdm_display_load_module(private_display);
 	if (ret != TDM_ERROR_NONE)
 		goto failed_load;
@@ -742,6 +746,8 @@ tdm_display_init(tdm_error *error)
 	TDM_TRACE_END();
 	if (ret != TDM_ERROR_NONE)
 		goto failed_update;
+
+	tdm_event_create_main_source(private_display);
 
 	private_display->init_count = 1;
 
@@ -789,6 +795,7 @@ tdm_display_deinit(tdm_display *dpy)
 
 	_tdm_display_destroy_private_display(private_display);
 	_tdm_display_unload_module(private_display);
+	tdm_event_deinit(private_display);
 
 	tdm_helper_set_fd("TDM_DRM_MASTER_FD", -1);
 

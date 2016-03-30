@@ -300,21 +300,13 @@ tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error)
 EXTERN tdm_error
 tdm_display_get_fd(tdm_display *dpy, int *fd)
 {
-	tdm_func_display *func_display;
 	DISPLAY_FUNC_ENTRY();
 
 	TDM_RETURN_VAL_IF_FAIL(fd != NULL, TDM_ERROR_INVALID_PARAMETER);
 
 	_pthread_mutex_lock(&private_display->lock);
 
-	func_display = &private_display->func_display;
-
-	if (!func_display->display_get_fd) {
-		pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
-	}
-
-	ret = func_display->display_get_fd(private_display->bdata, fd);
+	*fd = tdm_event_get_fd(private_display);
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -324,19 +316,11 @@ tdm_display_get_fd(tdm_display *dpy, int *fd)
 EXTERN tdm_error
 tdm_display_handle_events(tdm_display *dpy)
 {
-	tdm_func_display *func_display;
 	DISPLAY_FUNC_ENTRY();
 
 	_pthread_mutex_lock(&private_display->lock);
 
-	func_display = &private_display->func_display;
-
-	if (!func_display->display_handle_events) {
-		pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_NONE;
-	}
-
-	ret = func_display->display_handle_events(private_display->bdata);
+	ret = tdm_event_dispatch(private_display);
 
 	_pthread_mutex_unlock(&private_display->lock);
 
