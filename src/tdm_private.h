@@ -51,7 +51,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <tbm_bufmgr.h>
 #include <tbm_surface_queue.h>
-#include <wayland-server-core.h>
 
 #include "tdm_backend.h"
 #include "tdm_log.h"
@@ -161,6 +160,7 @@ typedef struct _tdm_private_output tdm_private_output;
 typedef struct _tdm_private_layer tdm_private_layer;
 typedef struct _tdm_private_pp tdm_private_pp;
 typedef struct _tdm_private_capture tdm_private_capture;
+typedef struct _tdm_private_event tdm_private_event;
 typedef struct _tdm_private_vblank_handler tdm_private_vblank_handler;
 typedef struct _tdm_private_commit_handler tdm_private_commit_handler;
 
@@ -193,8 +193,7 @@ struct _tdm_private_display {
 	void **outputs_ptr;
 
 	/* for event handling */
-	struct wl_event_loop *event_loop;
-	tdm_event_source *main_source;
+	tdm_private_event *private_event;
 };
 
 struct _tdm_private_output {
@@ -327,6 +326,9 @@ int
 tdm_event_get_fd(tdm_private_display *private_display);
 tdm_error
 tdm_event_dispatch(tdm_private_display *private_display);
+tdm_error
+tdm_event_add_socket(tdm_private_display *private_display, const char *name);
+
 
 #define _pthread_mutex_lock(l) \
     do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)

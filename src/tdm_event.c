@@ -41,6 +41,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_private.h"
 #include "tdm_list.h"
 
+#include <wayland-server-core.h>
+
+struct _tdm_private_event {
+	struct wl_display *wl_display;
+	struct wl_event_loop *event_loop;
+	tdm_event_source *main_source;
+};
+
 typedef struct _tdm_event_source_base
 {
 	struct wl_event_source *wl_source;
@@ -80,17 +88,33 @@ _tdm_event_main_fd_handler(int fd, tdm_event_mask mask, void *user_data)
 INTERN tdm_error
 tdm_event_init(tdm_private_display *private_display)
 {
-	if (private_display->event_loop)
+	tdm_private_event *private_event;
+
+	if (private_display->private_event)
 		return TDM_ERROR_NONE;
 
-	private_display->event_loop = wl_event_loop_create();
-	if (!private_display->event_loop) {
-		TDM_ERR("creating a event loop failed");
+	private_event = calloc(1, sizeof *private_event);
+	if (!private_event) {
+		TDM_ERR("alloc failed");
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
-	TDM_INFO("event_loop fd(%d)",
-	         wl_event_loop_get_fd(private_display->event_loop));
+	private_event->wl_display = wl_display_create();
+	if (!private_event->wl_display) {
+		TDM_ERR("creating a wayland display failed");
+		free(private_event);
+		return TDM_ERROR_OUT_OF_MEMORY;
+	}
+
+	private_event->event_loop = wl_display_get_event_loop(private_event->wl_display);
+	if (!private_event->event_loop) {
+		TDM_ERR("no event loop");
+		wl_display_destroy(private_event->wl_display);
+		free(private_event);
+		return TDM_ERROR_OUT_OF_MEMORY;
+	}
+
+	private_display->private_event = private_event;
 
 	return TDM_ERROR_NONE;
 }
@@ -98,23 +122,28 @@ tdm_event_init(tdm_private_display *private_display)
 INTERN void
 tdm_event_deinit(tdm_private_display *private_display)
 {
-	if (private_display->main_source) {
-		tdm_event_source_remove(private_display->main_source);
-		private_display->main_source = NULL;
-	}
+	if (!private_display->private_event)
+		return;
 
-	if (private_display->event_loop) {
-		wl_event_loop_destroy(private_display->event_loop);
-		private_display->event_loop = NULL;
-	}
+	if (private_display->private_event->main_source)
+		tdm_event_source_remove(private_display->private_event->main_source);
+
+	if (private_display->private_event->wl_display)
+		wl_display_destroy(private_display->private_event->wl_display);
+
+	free(private_display->private_event);
+	private_display->private_event = NULL;
 }
 
 INTERN void
 tdm_event_create_main_source(tdm_private_display *private_display)
 {
+	tdm_private_event *private_event = private_display->private_event;
 	tdm_func_display *func_display;
 	tdm_error ret;
 	int fd = -1;
+
+	TDM_RETURN_IF_FAIL(private_event != NULL);
 
 	func_display = &private_display->func_display;
 	if (!func_display->display_get_fd) {
@@ -133,11 +162,11 @@ tdm_event_create_main_source(tdm_private_display *private_display)
 		return;
 	}
 
-	private_display->main_source =
+	private_event->main_source =
 		tdm_event_add_fd_handler(private_display, fd, TDM_EVENT_READABLE,
 		                         _tdm_event_main_fd_handler, private_display,
 		                         &ret);
-	if (!private_display->main_source) {
+	if (!private_event->main_source) {
 		TDM_ERR("no main event source");
 		return;
 	}
@@ -148,20 +177,37 @@ tdm_event_create_main_source(tdm_private_display *private_display)
 INTERN int
 tdm_event_get_fd(tdm_private_display *private_display)
 {
-	if (!private_display->event_loop)
-		return -1;
+	tdm_private_event *private_event = private_display->private_event;
 
-	return wl_event_loop_get_fd(private_display->event_loop);
+	TDM_RETURN_VAL_IF_FAIL(private_event->event_loop != NULL, -1);
+
+	return wl_event_loop_get_fd(private_event->event_loop);
 }
 
 INTERN tdm_error
 tdm_event_dispatch(tdm_private_display *private_display)
 {
-	if (!private_display->event_loop)
-		return TDM_ERROR_NONE;
+	tdm_private_event *private_event = private_display->private_event;
 
-	if (wl_event_loop_dispatch(private_display->event_loop, 0) < 0) {
+	TDM_RETURN_VAL_IF_FAIL(private_event->event_loop != NULL, TDM_ERROR_OPERATION_FAILED);
+
+	if (wl_event_loop_dispatch(private_event->event_loop, 0) < 0) {
 		TDM_ERR("dispatch failed");
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	return TDM_ERROR_NONE;
+}
+
+INTERN tdm_error
+tdm_event_add_socket(tdm_private_display *private_display, const char *name)
+{
+	tdm_private_event *private_event = private_display->private_event;
+
+	TDM_RETURN_VAL_IF_FAIL(private_event->wl_display != NULL, TDM_ERROR_OPERATION_FAILED);
+
+	if (wl_display_add_socket(private_event->wl_display, name) < 0) {
+		TDM_ERR("add socket(\"%s\") failed", name);
 		return TDM_ERROR_OPERATION_FAILED;
 	}
 
@@ -197,6 +243,7 @@ tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
                          tdm_error *error)
 {
 	tdm_private_display *private_display;
+	tdm_private_event *private_event;
 	tdm_event_source_fd *fd_source;
 	uint32_t wl_mask = 0;
 	tdm_error ret;
@@ -206,7 +253,9 @@ tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(func, TDM_ERROR_INVALID_PARAMETER, NULL);
 
 	private_display = (tdm_private_display*)dpy;
-	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_display->event_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
+	private_event = private_display->private_event;
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event, TDM_ERROR_INVALID_PARAMETER, NULL);
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event->event_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
 
 	fd_source = calloc(1, sizeof(tdm_event_source_fd));
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(fd_source, TDM_ERROR_OUT_OF_MEMORY, NULL);
@@ -217,7 +266,7 @@ tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
 		wl_mask |= WL_EVENT_WRITABLE;
 
 	fd_source->base.wl_source =
-		wl_event_loop_add_fd(private_display->event_loop,
+		wl_event_loop_add_fd(private_event->event_loop,
 		                     fd, wl_mask, _tdm_event_loop_fd_func, fd_source);
 	if (!fd_source->base.wl_source) {
 		if (error)
@@ -275,6 +324,7 @@ tdm_event_add_timer_handler(tdm_display *dpy, tdm_event_timer_handler func,
                             void *user_data, tdm_error *error)
 {
 	tdm_private_display *private_display;
+	tdm_private_event *private_event;
 	tdm_event_source_timer *timer_source;
 	tdm_error ret;
 
@@ -282,13 +332,15 @@ tdm_event_add_timer_handler(tdm_display *dpy, tdm_event_timer_handler func,
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(func, TDM_ERROR_INVALID_PARAMETER, NULL);
 
 	private_display = (tdm_private_display*)dpy;
-	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_display->event_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
+	private_event = private_display->private_event;
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event, TDM_ERROR_INVALID_PARAMETER, NULL);
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event->event_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
 
 	timer_source = calloc(1, sizeof(tdm_event_source_timer));
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(timer_source, TDM_ERROR_OUT_OF_MEMORY, NULL);
 
 	timer_source->base.wl_source =
-		wl_event_loop_add_timer(private_display->event_loop,
+		wl_event_loop_add_timer(private_event->event_loop,
 		                        _tdm_event_loop_timer_func, timer_source);
 	if (!timer_source->base.wl_source) {
 		if (error)
