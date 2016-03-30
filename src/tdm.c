@@ -70,6 +70,20 @@ _tdm_display_find_private_output(tdm_private_display *private_display,
 	return NULL;
 }
 
+INTERN tdm_private_output *
+tdm_display_find_output_stamp(tdm_private_display *private_display,
+                              unsigned long stamp)
+{
+	tdm_private_output *private_output = NULL;
+
+	LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link) {
+		if (private_output->stamp == stamp)
+			return private_output;
+	}
+
+	return NULL;
+}
+
 static void
 _tdm_display_destroy_caps_pp(tdm_caps_pp *caps_pp)
 {
@@ -151,6 +165,7 @@ _tdm_display_destroy_private_output(tdm_private_output *private_output)
 
 	_tdm_display_destroy_caps_output(&private_output->caps);
 
+	private_output->stamp = 0;
 	free(private_output);
 }
 
@@ -362,14 +377,33 @@ failed_update:
 	return ret;
 }
 
-static void
-_tdm_output_cb_status(tdm_output *output, tdm_output_conn_status status,
-                      void *user_data)
+INTERN void
+tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
+                     void *user_data)
 {
+	tdm_private_display *private_display;
 	tdm_private_output *private_output = user_data;
 	tdm_value value;
 
 	TDM_RETURN_IF_FAIL(private_output);
+
+	private_display = private_output->private_display;
+
+	if (!tdm_thread_in_display_thread(private_display)) {
+		tdm_thread_cb_output_status output_status;
+		tdm_error ret;
+
+		output_status.base.type = TDM_THREAD_CB_OUTPUT_STATUS;
+		output_status.base.length = sizeof output_status;
+		output_status.output_stamp = private_output->stamp;
+		output_status.status = status;
+		output_status.user_data = user_data;
+
+		ret = tdm_thread_send_cb(private_display, &output_status.base);
+		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
+
+		return;
+	}
 
 	value.u32 = status;
 	tdm_output_call_change_handler_internal(private_output,
@@ -393,7 +427,12 @@ _tdm_display_update_output(tdm_private_display *private_display,
 		private_output = calloc(1, sizeof(tdm_private_output));
 		TDM_RETURN_VAL_IF_FAIL(private_output != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
+		private_output->stamp = tdm_helper_get_time_in_millis();
+		while (tdm_display_find_output_stamp(private_display, private_output->stamp))
+			private_output->stamp++;
+
 		LIST_ADD(&private_output->link, &private_display->output_list);
+
 		private_output->private_display = private_display;
 		private_output->output_backend = output_backend;
 		private_output->pipe = pipe;
@@ -407,7 +446,7 @@ _tdm_display_update_output(tdm_private_display *private_display,
 		if (func_output->output_set_status_handler) {
 			private_output->regist_change_cb = 1;
 			ret = func_output->output_set_status_handler(output_backend,
-			                                             _tdm_output_cb_status,
+			                                             tdm_output_cb_status,
 			                                             private_output);
 			if (ret != TDM_ERROR_NONE)
 				goto failed_update;
@@ -450,6 +489,7 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 
 	LIST_INITHEAD(&private_display->output_list);
 	LIST_INITHEAD(&private_display->pp_list);
+	LIST_INITHEAD(&private_display->capture_list);
 
 	if (!only_display) {
 		ret = _tdm_display_update_caps_pp(private_display, &private_display->caps_pp);
@@ -506,6 +546,7 @@ tdm_display_update(tdm_display *dpy)
 
 int tdm_debug;
 int tdm_debug_buffer;
+int tdm_debug_thread;
 int tdm_debug_mutex;
 
 static tdm_private_display *g_private_display;
@@ -747,6 +788,10 @@ tdm_display_init(tdm_error *error)
 	if (debug && (strstr(debug, "1")))
 		tdm_debug_buffer = 1;
 
+	debug = getenv("TDM_DEBUG_THREAD");
+	if (debug && (strstr(debug, "1")))
+		tdm_debug_thread = 1;
+
 	debug = getenv("TDM_DEBUG_MUTEX");
 	if (debug && (strstr(debug, "1")))
 		tdm_debug_mutex = 1;
@@ -766,7 +811,11 @@ tdm_display_init(tdm_error *error)
 
 	ret = tdm_event_init(private_display);
 	if (ret != TDM_ERROR_NONE)
-		goto failed_load;
+		goto failed_event;
+
+	ret = tdm_thread_init(private_display);
+	if (ret != TDM_ERROR_NONE)
+		goto failed_thread;
 
 	ret = _tdm_display_load_module(private_display);
 	if (ret != TDM_ERROR_NONE)
@@ -778,7 +827,7 @@ tdm_display_init(tdm_error *error)
 	if (ret != TDM_ERROR_NONE)
 		goto failed_update;
 
-	tdm_event_create_main_source(private_display);
+	tdm_event_create_backend_source(private_display);
 
 	private_display->init_count = 1;
 
@@ -794,6 +843,10 @@ tdm_display_init(tdm_error *error)
 failed_update:
 	_tdm_display_unload_module(private_display);
 failed_load:
+	tdm_thread_deinit(private_display);
+failed_thread:
+	tdm_event_deinit(private_display);
+failed_event:
 	pthread_mutex_destroy(&private_display->lock);
 failed_mutex_init:
 	free(private_display);
@@ -824,9 +877,11 @@ tdm_display_deinit(tdm_display *dpy)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	tdm_thread_deinit(private_display);
+	tdm_event_deinit(private_display);
+
 	_tdm_display_destroy_private_display(private_display);
 	_tdm_display_unload_module(private_display);
-	tdm_event_deinit(private_display);
 
 	tdm_helper_set_fd("TDM_DRM_MASTER_FD", -1);
 

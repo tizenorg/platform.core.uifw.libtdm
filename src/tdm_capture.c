@@ -74,9 +74,9 @@ _tdm_capture_check_if_exist(tdm_private_capture *private_capture,
 	return TDM_ERROR_NONE;
 }
 
-static void
-_tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
-                     void *user_data)
+INTERN void
+tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
+                    void *user_data)
 {
 	tdm_private_capture *private_capture = user_data;
 	tdm_private_display *private_display = private_capture->private_display;
@@ -84,6 +84,22 @@ _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 	tbm_surface_h first_entry;
 	int lock_after_cb_done = 0;
 	int ret;
+
+	if (!tdm_thread_in_display_thread(private_display)) {
+		tdm_thread_cb_capture_done capture_done;
+		tdm_error ret;
+
+		capture_done.base.type = TDM_THREAD_CB_PP_DONE;
+		capture_done.base.length = sizeof capture_done;
+		capture_done.capture_stamp = private_capture->stamp;
+		capture_done.buffer = buffer;
+		capture_done.user_data = user_data;
+
+		ret = tdm_thread_send_cb(private_display, &capture_done.base);
+		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
+
+		return;
+	}
 
 	if (tdm_debug_buffer)
 		TDM_INFO("capture(%p) done: %p", private_capture, buffer);
@@ -107,6 +123,19 @@ _tdm_caputre_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 
 	if (lock_after_cb_done)
 		_pthread_mutex_lock(&private_display->lock);
+}
+
+INTERN tdm_private_capture *
+tdm_capture_find_stamp(tdm_private_display *private_display, unsigned long stamp)
+{
+	tdm_private_capture *private_capture = NULL;
+
+	LIST_FOR_EACH_ENTRY(private_capture, &private_display->capture_list, link) {
+		if (private_capture->stamp == stamp)
+			return private_capture;
+	}
+
+	return NULL;
 }
 
 INTERN tdm_private_capture *
@@ -145,7 +174,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 	}
 
 	ret = func_capture->capture_set_done_handler(capture_backend,
-	                _tdm_caputre_cb_done, private_capture);
+	                tdm_capture_cb_done, private_capture);
 	if (ret != TDM_ERROR_NONE) {
 		TDM_ERR("capture(%p) set capture_done_handler failed", private_capture);
 		func_capture->capture_destroy(capture_backend);
@@ -154,7 +183,13 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 		return NULL;
 	}
 
+	private_capture->stamp = tdm_helper_get_time_in_millis();
+	while (tdm_capture_find_stamp(private_display, private_capture->stamp))
+		private_capture->stamp++;
+
 	LIST_ADD(&private_capture->link, &private_output->capture_list);
+	LIST_ADD(&private_capture->display_link, &private_display->capture_list);
+
 	private_capture->target = TDM_CAPTURE_TARGET_OUTPUT;
 	private_capture->private_display = private_display;
 	private_capture->private_output = private_output;
@@ -203,7 +238,13 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 		return NULL;
 	}
 
-	LIST_ADD(&private_capture->link, &private_output->capture_list);
+	private_capture->stamp = tdm_helper_get_time_in_millis();
+	while (tdm_capture_find_stamp(private_display, private_capture->stamp))
+		private_capture->stamp++;
+
+	LIST_ADD(&private_capture->link, &private_layer->capture_list);
+	LIST_ADD(&private_capture->display_link, &private_display->capture_list);
+
 	private_capture->target = TDM_CAPTURE_TARGET_LAYER;
 	private_capture->private_display = private_display;
 	private_capture->private_output = private_output;
@@ -230,6 +271,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 		return;
 
 	LIST_DEL(&private_capture->link);
+	LIST_DEL(&private_capture->display_link);
 
 	func_capture = &private_capture->private_display->func_capture;
 	func_capture->capture_destroy(private_capture->capture_backend);
@@ -258,6 +300,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 		}
 	}
 
+	private_capture->stamp = 0;
 	free(private_capture);
 }
 

@@ -48,6 +48,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <dirent.h>
+#include <poll.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 
 #include <tbm_bufmgr.h>
 #include <tbm_surface_queue.h>
@@ -67,6 +70,7 @@ extern "C" {
 
 extern int tdm_debug_buffer;
 extern int tdm_debug_mutex;
+extern int tdm_debug_thread;
 
 #undef EXTERN
 #undef DEPRECATED
@@ -161,6 +165,7 @@ typedef struct _tdm_private_layer tdm_private_layer;
 typedef struct _tdm_private_pp tdm_private_pp;
 typedef struct _tdm_private_capture tdm_private_capture;
 typedef struct _tdm_private_event tdm_private_event;
+typedef struct _tdm_private_thread tdm_private_thread;
 typedef struct _tdm_private_vblank_handler tdm_private_vblank_handler;
 typedef struct _tdm_private_commit_handler tdm_private_commit_handler;
 typedef struct _tdm_private_change_handler tdm_private_change_handler;
@@ -190,15 +195,21 @@ struct _tdm_private_display {
 	/* output, pp list */
 	struct list_head output_list;
 	struct list_head pp_list;
+	struct list_head capture_list;
 
 	void **outputs_ptr;
 
 	/* for event handling */
 	tdm_private_event *private_event;
+
+	/* for own event thread */
+	tdm_private_thread *private_thread;
 };
 
 struct _tdm_private_output {
 	struct list_head link;
+
+	unsigned long stamp;
 
 	tdm_private_display *private_display;
 
@@ -242,6 +253,8 @@ struct _tdm_private_layer {
 struct _tdm_private_pp {
 	struct list_head link;
 
+	unsigned long stamp;
+
 	tdm_private_display *private_display;
 
 	tdm_pp *pp_backend;
@@ -254,6 +267,9 @@ struct _tdm_private_pp {
 
 struct _tdm_private_capture {
 	struct list_head link;
+	struct list_head display_link;
+
+	unsigned long stamp;
 
 	tdm_capture_target target;
 
@@ -304,6 +320,30 @@ typedef struct _tdm_buffer_info {
 	struct list_head link;
 } tdm_buffer_info;
 
+tdm_private_output *
+tdm_display_find_output_stamp(tdm_private_display *private_display,
+                              unsigned long stamp);
+tdm_private_pp *
+tdm_pp_find_stamp(tdm_private_display *private_display, unsigned long stamp);
+tdm_private_capture *
+tdm_capture_find_stamp(tdm_private_display *private_display, unsigned long stamp);
+
+void
+tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
+                     unsigned int tv_sec, unsigned int tv_usec, void *user_data);
+void
+tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
+                     unsigned int tv_sec, unsigned int tv_usec, void *user_data);
+void
+tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
+                     void *user_data);
+void
+tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
+               void *user_data);
+void
+tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
+                    void *user_data);
+
 void
 tdm_output_call_change_handler_internal(tdm_private_output *private_output,
                                         tdm_output_change_type type,
@@ -337,7 +377,7 @@ tdm_event_init(tdm_private_display *private_display);
 void
 tdm_event_deinit(tdm_private_display *private_display);
 void
-tdm_event_create_main_source(tdm_private_display *private_display);
+tdm_event_create_backend_source(tdm_private_display *private_display);
 int
 tdm_event_get_fd(tdm_private_display *private_display);
 tdm_error
@@ -345,6 +385,74 @@ tdm_event_dispatch(tdm_private_display *private_display);
 tdm_error
 tdm_event_add_socket(tdm_private_display *private_display, const char *name);
 
+
+typedef enum {
+	TDM_THREAD_CB_NONE,
+	TDM_THREAD_CB_OUTPUT_COMMIT,
+	TDM_THREAD_CB_OUTPUT_VBLANK,
+	TDM_THREAD_CB_OUTPUT_STATUS,
+	TDM_THREAD_CB_PP_DONE,
+	TDM_THREAD_CB_CAPTURE_DONE,
+} tdm_thread_cb_type;
+
+typedef struct _tdm_thread_cb_base tdm_thread_cb_base;
+typedef struct _tdm_thread_cb_output_vblank tdm_thread_cb_output_commit;
+typedef struct _tdm_thread_cb_output_vblank tdm_thread_cb_output_vblank;
+typedef struct _tdm_thread_cb_output_status tdm_thread_cb_output_status;
+typedef struct _tdm_thread_cb_pp_done tdm_thread_cb_pp_done;
+typedef struct _tdm_thread_cb_capture_done tdm_thread_cb_capture_done;
+
+struct _tdm_thread_cb_base {
+	tdm_thread_cb_type type;
+	unsigned int length;
+};
+
+struct _tdm_thread_cb_output_vblank {
+	tdm_thread_cb_base base;
+	unsigned long output_stamp;
+	unsigned int sequence;
+	unsigned int tv_sec;
+	unsigned int tv_usec;
+	void *user_data;
+};
+
+struct _tdm_thread_cb_output_status {
+	tdm_thread_cb_base base;
+	unsigned long output_stamp;
+	tdm_output_conn_status status;
+	void *user_data;
+};
+
+struct _tdm_thread_cb_pp_done {
+	tdm_thread_cb_base base;
+	unsigned long pp_stamp;
+	tbm_surface_h src;
+	tbm_surface_h dst;
+	void *user_data;
+};
+
+struct _tdm_thread_cb_capture_done {
+	tdm_thread_cb_base base;
+	unsigned long capture_stamp;
+	tbm_surface_h buffer;
+	void *user_data;
+};
+
+tdm_error
+tdm_thread_init(tdm_private_display *private_display);
+void
+tdm_thread_deinit(tdm_private_display *private_display);
+int
+tdm_thread_get_fd(tdm_private_display *private_display);
+tdm_error
+tdm_thread_send_cb(tdm_private_display *private_display, tdm_thread_cb_base *base);
+tdm_error
+tdm_thread_handle_cb(tdm_private_display *private_display);
+int
+tdm_thread_in_display_thread(tdm_private_display *private_display);
+
+unsigned long
+tdm_helper_get_time_in_millis(void);
 
 #define _pthread_mutex_lock(l) \
     do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)

@@ -41,6 +41,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif
 
+#include <time.h>
+#include <sys/syscall.h>
+
+
 /**
  * @file tdm_log.h
  * @brief The header file to print logs in frontend and backend modules
@@ -57,7 +61,6 @@ extern int tdm_debug;
 #ifdef TDM_CONFIG_DLOG
 
 #include <dlog.h>
-#include <time.h>
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -70,8 +73,8 @@ extern int tdm_debug;
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
 		LOGD("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_DBG][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_DBG][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #define TDM_INFO(fmt, args...) \
@@ -79,8 +82,8 @@ extern int tdm_debug;
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
 		LOGI("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_INF][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_INF][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #define TDM_WRN(fmt, args...) \
@@ -88,8 +91,8 @@ extern int tdm_debug;
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
 		LOGI("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_WRN][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_WRN][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #define TDM_ERR(fmt, args...) \
@@ -97,46 +100,45 @@ extern int tdm_debug;
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
 		LOGE("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_ERR][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_ERR][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #else /* TDM_CONFIG_DLOG */
 
 #include <stdio.h>
-#include <time.h>
 
 #define TDM_DBG(fmt, args...) \
     if (tdm_debug) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_DBG][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_DBG][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #define TDM_INFO(fmt, args...) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_INF][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_INF][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #define TDM_WRN(fmt, args...) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_WRN][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_WRN][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #define TDM_ERR(fmt, args...) \
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_ERR][%d.%06d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, __func__, __LINE__, ##args); \
+		printf("[TDM_ERR][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
 #endif /* TDM_CONFIG_DLOG */

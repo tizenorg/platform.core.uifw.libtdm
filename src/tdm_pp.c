@@ -88,9 +88,9 @@ _tdm_pp_check_if_exist(tdm_private_pp *private_pp,
 	return TDM_ERROR_NONE;
 }
 
-static void
-_tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
-                void *user_data)
+INTERN void
+tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
+               void *user_data)
 {
 	tdm_private_pp *private_pp = user_data;
 	tdm_private_display *private_display = private_pp->private_display;
@@ -98,6 +98,23 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	tbm_surface_h first_entry;
 	int lock_after_cb_done = 0;
 	int ret;
+
+	if (!tdm_thread_in_display_thread(private_display)) {
+		tdm_thread_cb_pp_done pp_done;
+		tdm_error ret;
+
+		pp_done.base.type = TDM_THREAD_CB_PP_DONE;
+		pp_done.base.length = sizeof pp_done;
+		pp_done.pp_stamp = private_pp->stamp;
+		pp_done.src = src;
+		pp_done.dst = dst;
+		pp_done.user_data = user_data;
+
+		ret = tdm_thread_send_cb(private_display, &pp_done.base);
+		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
+
+		return;
+	}
 
 	if (tdm_debug_buffer)
 		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
@@ -129,6 +146,19 @@ _tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 
 	if (lock_after_cb_done)
 		_pthread_mutex_lock(&private_display->lock);
+}
+
+INTERN tdm_private_pp *
+tdm_pp_find_stamp(tdm_private_display *private_display, unsigned long stamp)
+{
+	tdm_private_pp *private_pp = NULL;
+
+	LIST_FOR_EACH_ENTRY(private_pp, &private_display->pp_list, link) {
+		if (private_pp->stamp == stamp)
+			return private_pp;
+	}
+
+	return NULL;
 }
 
 INTERN tdm_private_pp *
@@ -166,7 +196,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 		return NULL;
 	}
 
-	ret = func_pp->pp_set_done_handler(pp_backend, _tdm_pp_cb_done, private_pp);
+	ret = func_pp->pp_set_done_handler(pp_backend, tdm_pp_cb_done, private_pp);
 	if (ret != TDM_ERROR_NONE) {
 		TDM_ERR("spp(%p) et pp_done_handler failed", private_pp);
 		func_pp->pp_destroy(pp_backend);
@@ -174,6 +204,10 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 			*error = ret;
 		return NULL;
 	}
+
+	private_pp->stamp = tdm_helper_get_time_in_millis();
+	while (tdm_pp_find_stamp(private_display, private_pp->stamp))
+		private_pp->stamp++;
 
 	LIST_ADD(&private_pp->link, &private_display->pp_list);
 	private_pp->private_display = private_display;
@@ -255,6 +289,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 		}
 	}
 
+	private_pp->stamp = 0;
 	free(private_pp);
 }
 

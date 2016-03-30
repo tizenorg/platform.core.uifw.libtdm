@@ -46,7 +46,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 struct _tdm_private_event {
 	struct wl_display *wl_display;
 	struct wl_event_loop *event_loop;
-	tdm_event_source *main_source;
+
+	int backend_fd;
+	tdm_event_source *backend_source;
+
+	struct wl_display *wl_display2;
+	struct wl_event_loop *event_loop2;
 };
 
 typedef struct _tdm_event_source_base
@@ -74,9 +79,16 @@ static tdm_error
 _tdm_event_main_fd_handler(int fd, tdm_event_mask mask, void *user_data)
 {
 	tdm_private_display *private_display = (tdm_private_display*)user_data;
+	tdm_private_event *private_event;
 	tdm_func_display *func_display;
 
 	TDM_RETURN_VAL_IF_FAIL(private_display != NULL, TDM_ERROR_OPERATION_FAILED);
+	TDM_RETURN_VAL_IF_FAIL(private_display->private_event != NULL, TDM_ERROR_OPERATION_FAILED);
+
+	private_event = private_display->private_event;
+
+	if (tdm_debug_thread)
+		TDM_INFO("backend fd(%d) event happens", private_event->backend_fd);
 
 	func_display = &private_display->func_display;
 	if (!func_display->display_handle_events)
@@ -99,6 +111,8 @@ tdm_event_init(tdm_private_display *private_display)
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
+	private_event->backend_fd = -1;
+
 	private_event->wl_display = wl_display_create();
 	if (!private_event->wl_display) {
 		TDM_ERR("creating a wayland display failed");
@@ -114,6 +128,22 @@ tdm_event_init(tdm_private_display *private_display)
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
+	TDM_INFO("event loop fd(%d)", wl_event_loop_get_fd(private_event->event_loop));
+
+	private_event->wl_display2 = wl_display_create();
+	if (!private_event->wl_display2) {
+		TDM_ERR("creating a wayland display2 failed");
+		return TDM_ERROR_OUT_OF_MEMORY;
+	}
+
+	private_event->event_loop2 = wl_display_get_event_loop(private_event->wl_display2);
+	if (!private_event->event_loop2) {
+		TDM_ERR("no event loop2");
+		wl_display_destroy(private_event->wl_display2);
+		private_event->wl_display2 = NULL;
+		return TDM_ERROR_OUT_OF_MEMORY;
+	}
+
 	private_display->private_event = private_event;
 
 	return TDM_ERROR_NONE;
@@ -125,8 +155,8 @@ tdm_event_deinit(tdm_private_display *private_display)
 	if (!private_display->private_event)
 		return;
 
-	if (private_display->private_event->main_source)
-		tdm_event_source_remove(private_display->private_event->main_source);
+	if (private_display->private_event->backend_source)
+		tdm_event_source_remove(private_display->private_event->backend_source);
 
 	if (private_display->private_event->wl_display)
 		wl_display_destroy(private_display->private_event->wl_display);
@@ -136,7 +166,7 @@ tdm_event_deinit(tdm_private_display *private_display)
 }
 
 INTERN void
-tdm_event_create_main_source(tdm_private_display *private_display)
+tdm_event_create_backend_source(tdm_private_display *private_display)
 {
 	tdm_private_event *private_event = private_display->private_event;
 	tdm_func_display *func_display;
@@ -162,16 +192,18 @@ tdm_event_create_main_source(tdm_private_display *private_display)
 		return;
 	}
 
-	private_event->main_source =
+	private_event->backend_source =
 		tdm_event_add_fd_handler(private_display, fd, TDM_EVENT_READABLE,
 		                         _tdm_event_main_fd_handler, private_display,
 		                         &ret);
-	if (!private_event->main_source) {
-		TDM_ERR("no main event source");
+	if (!private_event->backend_source) {
+		TDM_ERR("no backend fd(%d) source", fd);
 		return;
 	}
 
-	TDM_INFO("main event source created");
+	private_event->backend_fd = fd;
+
+	TDM_INFO("backend fd(%d) source created", private_event->backend_fd);
 }
 
 INTERN int
@@ -191,10 +223,15 @@ tdm_event_dispatch(tdm_private_display *private_display)
 
 	TDM_RETURN_VAL_IF_FAIL(private_event->event_loop != NULL, TDM_ERROR_OPERATION_FAILED);
 
-	if (wl_event_loop_dispatch(private_event->event_loop, 0) < 0) {
+	if (tdm_debug_thread)
+		TDM_INFO("dispatch");
+
+	/* Don't set timeout to -1. It can make deadblock by two mutex locks.
+	 * If need to set -1, use poll() and call tdm_event_dispatch() after
+	 * escaping polling.
+	 */
+	if (wl_event_loop_dispatch(private_event->event_loop, 0) < 0)
 		TDM_ERR("dispatch failed");
-		return TDM_ERROR_OPERATION_FAILED;
-	}
 
 	return TDM_ERROR_NONE;
 }

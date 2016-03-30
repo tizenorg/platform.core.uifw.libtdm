@@ -7,6 +7,7 @@
 #include <tbm_surface.h>
 #include <tbm_surface_internal.h>
 #include <string.h>
+#include <time.h>
 
 #include "tdm.h"
 #include "tdm_private.h"
@@ -14,6 +15,17 @@
 #define PNG_DEPTH 8
 
 static const char *dump_prefix[2] = {"png", "yuv"};
+
+INTERN unsigned long
+tdm_helper_get_time_in_millis(void)
+{
+	struct timespec tp;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &tp) == 0)
+		return (tp.tv_sec * 1000) + (tp.tv_nsec / 1000000L);
+
+	return 0;
+}
 
 static void
 _tdm_helper_dump_raw(const char *file, void *data1, int size1, void *data2,
