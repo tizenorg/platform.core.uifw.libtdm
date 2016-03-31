@@ -43,14 +43,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <wayland-server-core.h>
 
-struct _tdm_private_loop {
-	struct wl_display *wl_display;
-	struct wl_event_loop *wl_loop;
-
-	int backend_fd;
-	tdm_event_loop_source *backend_source;
-};
-
 typedef struct _tdm_event_loop_source_base
 {
 	struct wl_event_source *wl_source;
@@ -78,6 +70,7 @@ _tdm_event_loop_main_fd_handler(int fd, tdm_event_loop_mask mask, void *user_dat
 	tdm_private_display *private_display = (tdm_private_display*)user_data;
 	tdm_private_loop *private_loop;
 	tdm_func_display *func_display;
+	tdm_error ret;
 
 	TDM_RETURN_VAL_IF_FAIL(private_display != NULL, TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(private_display->private_loop != NULL, TDM_ERROR_OPERATION_FAILED);
@@ -91,13 +84,16 @@ _tdm_event_loop_main_fd_handler(int fd, tdm_event_loop_mask mask, void *user_dat
 	if (!func_display->display_handle_events)
 		return TDM_ERROR_NONE;
 
-	return func_display->display_handle_events(private_display->bdata);
+	ret = func_display->display_handle_events(private_display->bdata);
+
+	return ret;
 }
 
 INTERN tdm_error
 tdm_event_loop_init(tdm_private_display *private_display)
 {
 	tdm_private_loop *private_loop;
+	tdm_error ret;
 
 	if (private_display->private_loop)
 		return TDM_ERROR_NONE;
@@ -122,12 +118,30 @@ tdm_event_loop_init(tdm_private_display *private_display)
 		TDM_ERR("no event loop");
 		wl_display_destroy(private_loop->wl_display);
 		free(private_loop);
-		return TDM_ERROR_OUT_OF_MEMORY;
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	ret = tdm_server_init(private_loop);
+	if (ret != TDM_ERROR_NONE) {
+		TDM_ERR("server init failed");
+		wl_display_destroy(private_loop->wl_display);
+		free(private_loop);
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	private_loop->dpy = private_display;
+	private_display->private_loop = private_loop;
+
+	ret = tdm_thread_init(private_loop);
+	if (ret != TDM_ERROR_NONE) {
+		TDM_ERR("thread init failed");
+		tdm_server_deinit(private_loop);
+		wl_display_destroy(private_loop->wl_display);
+		free(private_loop);
+		return TDM_ERROR_OPERATION_FAILED;
 	}
 
 	TDM_INFO("event loop fd(%d)", wl_event_loop_get_fd(private_loop->wl_loop));
-
-	private_display->private_loop = private_loop;
 
 	return TDM_ERROR_NONE;
 }
@@ -137,6 +151,9 @@ tdm_event_loop_deinit(tdm_private_display *private_display)
 {
 	if (!private_display->private_loop)
 		return;
+
+	tdm_thread_deinit(private_display->private_loop);
+	tdm_server_deinit(private_display->private_loop);
 
 	if (private_display->private_loop->backend_source)
 		tdm_event_loop_source_remove(private_display->private_loop->backend_source);
@@ -220,19 +237,15 @@ tdm_event_loop_dispatch(tdm_private_display *private_display)
 	return TDM_ERROR_NONE;
 }
 
-INTERN tdm_error
-tdm_event_loop_add_socket(tdm_private_display *private_display, const char *name)
+
+INTERN void
+tdm_event_loop_flush(tdm_private_display *private_display)
 {
 	tdm_private_loop *private_loop = private_display->private_loop;
 
-	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_display != NULL, TDM_ERROR_OPERATION_FAILED);
+	TDM_RETURN_IF_FAIL(private_loop->wl_display != NULL);
 
-	if (wl_display_add_socket(private_loop->wl_display, name) < 0) {
-		TDM_ERR("add socket(\"%s\") failed", name);
-		return TDM_ERROR_OPERATION_FAILED;
-	}
-
-	return TDM_ERROR_NONE;
+	wl_display_flush_clients(private_loop->wl_display);
 }
 
 static int

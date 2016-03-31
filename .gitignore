@@ -24,3 +24,5 @@ stamp-h1
 *~
 html/
 latex/
+protocol/*.h
+protocol/*.c

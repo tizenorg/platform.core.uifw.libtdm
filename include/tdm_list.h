@@ -133,4 +133,12 @@ static inline void list_delinit(struct list_head *item)
 	&pos->member != (head);						\
 	pos = container_of(pos->member.prev, pos, member))
 
+#define LIST_FIND_ITEM(item, head, type, member, found) \
+	do {	\
+		type *pos;	\
+		found = NULL;	\
+		LIST_FOR_EACH_ENTRY(pos, head, member)	\
+			if (pos == item) { found = item; break; }	\
+	} while (0)
+
 #endif /*_U_DOUBLE_LIST_H_*/

@@ -85,7 +85,7 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 	int lock_after_cb_done = 0;
 	int ret;
 
-	if (!tdm_thread_in_display_thread(private_display)) {
+	if (private_capture->owner_tid != syscall(SYS_gettid)) {
 		tdm_thread_cb_capture_done capture_done;
 		tdm_error ret;
 
@@ -95,11 +95,14 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 		capture_done.buffer = buffer;
 		capture_done.user_data = user_data;
 
-		ret = tdm_thread_send_cb(private_display, &capture_done.base);
+		ret = tdm_thread_send_cb(private_display->private_loop, &capture_done.base);
 		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 		return;
 	}
+
+	if (private_capture->owner_tid != syscall(SYS_gettid))
+		TDM_NEVER_GET_HERE();
 
 	if (tdm_debug_buffer)
 		TDM_INFO("capture(%p) done: %p", private_capture, buffer);
@@ -195,6 +198,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 	private_capture->private_output = private_output;
 	private_capture->private_layer = NULL;
 	private_capture->capture_backend = capture_backend;
+	private_capture->owner_tid = syscall(SYS_gettid);
 
 	LIST_INITHEAD(&private_capture->pending_buffer_list);
 	LIST_INITHEAD(&private_capture->buffer_list);
@@ -250,6 +254,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 	private_capture->private_output = private_output;
 	private_capture->private_layer = private_layer;
 	private_capture->capture_backend = capture_backend;
+	private_capture->owner_tid = syscall(SYS_gettid);
 
 	LIST_INITHEAD(&private_capture->pending_buffer_list);
 	LIST_INITHEAD(&private_capture->buffer_list);

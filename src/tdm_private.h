@@ -58,10 +58,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_backend.h"
 #include "tdm_log.h"
 #include "tdm_list.h"
+#include "tdm_macro.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+//#define INIT_BUFMGR
 
 /**
  * @file tdm_private.h
@@ -72,61 +75,6 @@ extern int tdm_debug_buffer;
 extern int tdm_debug_mutex;
 extern int tdm_debug_thread;
 
-#undef EXTERN
-#undef DEPRECATED
-#undef INTERN
-
-#if defined(__GNUC__) && __GNUC__ >= 4
-#define EXTERN __attribute__ ((visibility("default")))
-#else
-#define EXTERN
-#endif
-
-#if defined(__GNUC__) && __GNUC__ >= 4
-#define INTERN __attribute__ ((visibility("hidden")))
-#else
-#define INTERN
-#endif
-
-#if defined(__GNUC__) && __GNUC__ >= 4
-#define DEPRECATED __attribute__ ((deprecated))
-#else
-#define DEPRECATED
-#endif
-
-/* check condition */
-#define TDM_RETURN_IF_FAIL(cond) {\
-    if (!(cond)) {\
-        TDM_ERR ("'%s' failed", #cond);\
-        return;\
-    }\
-}
-#define TDM_RETURN_VAL_IF_FAIL(cond, val) {\
-    if (!(cond)) {\
-        TDM_ERR ("'%s' failed", #cond);\
-        return val;\
-    }\
-}
-#define TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(cond, error_v, val) {\
-    if (!(cond)) {\
-        TDM_ERR ("'%s' failed", #cond);\
-        ret = error_v;\
-        if (error) *error = ret;\
-        return val;\
-    }\
-}
-
-#define TDM_WARNING_IF_FAIL(cond)  {\
-    if (!(cond))\
-        TDM_ERR ("'%s' failed", #cond);\
-}
-#define TDM_GOTO_IF_FAIL(cond, dst) {\
-    if (!(cond)) {\
-        TDM_ERR ("'%s' failed", #cond);\
-        goto dst;\
-    }\
-}
-
 #ifdef HAVE_TTRACE
 #include <ttrace.h>
 #define TDM_TRACE_BEGIN(NAME) traceBegin(TTRACE_TAG_GRAPHICS, "TDM:"#NAME)
@@ -135,24 +83,6 @@ extern int tdm_debug_thread;
 #define TDM_TRACE_BEGIN(NAME)
 #define TDM_TRACE_END()
 #endif
-
-#define TDM_NEVER_GET_HERE() TDM_ERR("** NEVER GET HERE **")
-
-#define TDM_SNPRINTF(p, len, fmt, ARG...)  \
-    do { \
-        if (p && len && *len > 0) \
-        { \
-            int s = snprintf(p, *len, fmt, ##ARG); \
-            p += s; \
-            *len -= s; \
-        } \
-    } while (0)
-
-#define C(b,m)              (((b) >> (m)) & 0xFF)
-#define B(c,s)              ((((unsigned int)(c)) & 0xff) << (s))
-#define FOURCC(a,b,c,d)     (B(d,24) | B(c,16) | B(b,8) | B(a,0))
-#define FOURCC_STR(id)      C(id,0), C(id,8), C(id,16), C(id,24)
-#define FOURCC_ID(str)      FOURCC(((char*)str)[0],((char*)str)[1],((char*)str)[2],((char*)str)[3])
 
 typedef enum {
         TDM_CAPTURE_TARGET_OUTPUT,
@@ -165,6 +95,7 @@ typedef struct _tdm_private_layer tdm_private_layer;
 typedef struct _tdm_private_pp tdm_private_pp;
 typedef struct _tdm_private_capture tdm_private_capture;
 typedef struct _tdm_private_loop tdm_private_loop;
+typedef struct _tdm_private_server tdm_private_server;
 typedef struct _tdm_private_thread tdm_private_thread;
 typedef struct _tdm_private_vblank_handler tdm_private_vblank_handler;
 typedef struct _tdm_private_commit_handler tdm_private_commit_handler;
@@ -178,6 +109,10 @@ struct _tdm_private_display {
 	void *module;
 	tdm_backend_module *module_data;
 	tdm_backend_data *bdata;
+
+#ifdef INIT_BUFMGR
+	tbm_bufmgr bufmgr;
+#endif
 
 	/* backend function */
 	tdm_display_capability capabilities;
@@ -201,9 +136,6 @@ struct _tdm_private_display {
 
 	/* for event handling */
 	tdm_private_loop *private_loop;
-
-	/* for own event thread */
-	tdm_private_thread *private_thread;
 };
 
 struct _tdm_private_output {
@@ -226,7 +158,10 @@ struct _tdm_private_output {
 	struct list_head capture_list;
 	struct list_head vblank_handler_list;
 	struct list_head commit_handler_list;
-	struct list_head change_handler_list;
+
+	/* seperate list for multi-thread*/
+	struct list_head change_handler_list_main;
+	struct list_head change_handler_list_sub;
 
 	void **layers_ptr;
 };
@@ -263,6 +198,8 @@ struct _tdm_private_pp {
 	struct list_head dst_pending_buffer_list;
 	struct list_head src_buffer_list;
 	struct list_head dst_buffer_list;
+
+	pid_t owner_tid;
 };
 
 struct _tdm_private_capture {
@@ -281,6 +218,40 @@ struct _tdm_private_capture {
 
 	struct list_head pending_buffer_list;
 	struct list_head buffer_list;
+
+	pid_t owner_tid;
+};
+
+/* CAUTION:
+ * Note that this structure is not thread-safe. If there is no TDM thread, all
+ * TDM resources are protected by private_display's lock. If there is a TDM
+ * thread, this struct will be used only in a TDM thread. So, we don't need to
+ * protect this structure.
+ */
+struct _tdm_private_loop {
+	/* TDM uses wl_event_loop to handle various event sources including the TDM
+	 * backend's fd.
+	 */
+	struct wl_display *wl_display;
+	struct wl_event_loop *wl_loop;
+
+	int backend_fd;
+	tdm_event_loop_source *backend_source;
+
+	/* In event loop, all resources are accessed by this dpy.
+	 * CAUTION:
+	 * - DO NOT include other private structure in this structure because this
+	 *   struct is not thread-safe.
+	 */
+	tdm_display *dpy;
+
+	/* for handling TDM client requests */
+	tdm_private_server *private_server;
+
+	/* To have a TDM event thread. If TDM_THREAD enviroment variable is not set
+	 * private_thread is NULL.
+	 */
+	tdm_private_thread *private_thread;
 };
 
 struct _tdm_private_vblank_handler {
@@ -289,6 +260,8 @@ struct _tdm_private_vblank_handler {
 	tdm_private_output *private_output;
 	tdm_output_vblank_handler func;
 	void *user_data;
+
+	pid_t owner_tid;
 };
 
 struct _tdm_private_commit_handler {
@@ -297,6 +270,8 @@ struct _tdm_private_commit_handler {
 	tdm_private_output *private_output;
 	tdm_output_commit_handler func;
 	void *user_data;
+
+	pid_t owner_tid;
 };
 
 struct _tdm_private_change_handler {
@@ -305,6 +280,8 @@ struct _tdm_private_change_handler {
 	tdm_private_output *private_output;
 	tdm_output_change_handler func;
 	void *user_data;
+
+	pid_t owner_tid;
 };
 
 typedef struct _tdm_buffer_info {
@@ -346,6 +323,7 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 
 void
 tdm_output_call_change_handler_internal(tdm_private_output *private_output,
+                                        struct list_head *change_handler_list,
                                         tdm_output_change_type type,
                                         tdm_value value);
 
@@ -382,9 +360,8 @@ int
 tdm_event_loop_get_fd(tdm_private_display *private_display);
 tdm_error
 tdm_event_loop_dispatch(tdm_private_display *private_display);
-tdm_error
-tdm_event_loop_add_socket(tdm_private_display *private_display, const char *name);
-
+void
+tdm_event_loop_flush(tdm_private_display *private_display);
 
 typedef enum {
 	TDM_THREAD_CB_NONE,
@@ -439,20 +416,29 @@ struct _tdm_thread_cb_capture_done {
 };
 
 tdm_error
-tdm_thread_init(tdm_private_display *private_display);
+tdm_thread_init(tdm_private_loop *private_loop);
 void
-tdm_thread_deinit(tdm_private_display *private_display);
+tdm_thread_deinit(tdm_private_loop *private_loop);
 int
-tdm_thread_get_fd(tdm_private_display *private_display);
+tdm_thread_get_fd(tdm_private_loop *private_loop);
 tdm_error
-tdm_thread_send_cb(tdm_private_display *private_display, tdm_thread_cb_base *base);
+tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base);
 tdm_error
-tdm_thread_handle_cb(tdm_private_display *private_display);
+tdm_thread_handle_cb(tdm_private_loop *private_loop);
 int
-tdm_thread_in_display_thread(tdm_private_display *private_display);
+tdm_thread_in_display_thread(tdm_private_loop *private_loop, pid_t tid);
+
+tdm_error
+tdm_server_init(tdm_private_loop *private_loop);
+void
+tdm_server_deinit(tdm_private_loop *private_loop);
 
 unsigned long
 tdm_helper_get_time_in_millis(void);
+int
+tdm_helper_unlock_in_cb(tdm_private_display *private_display);
+void
+tdm_helper_lock_in_cb(tdm_private_display *private_display, int need_lock);
 
 #define _pthread_mutex_lock(l) \
     do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)

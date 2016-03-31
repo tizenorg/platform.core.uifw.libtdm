@@ -340,8 +340,11 @@ tdm_display_get_fd(tdm_display *dpy, int *fd)
 
 	_pthread_mutex_lock(&private_display->lock);
 
-	if (private_display->private_thread)
-		*fd = tdm_thread_get_fd(private_display);
+	if (private_display->private_loop->private_thread) {
+		_pthread_mutex_unlock(&private_display->lock);
+		*fd = tdm_thread_get_fd(private_display->private_loop);
+		_pthread_mutex_lock(&private_display->lock);
+	}
 	else
 		*fd = tdm_event_loop_get_fd(private_display);
 
@@ -382,8 +385,11 @@ tdm_display_handle_events(tdm_display *dpy)
 
 	_pthread_mutex_lock(&private_display->lock);
 
-	if (private_display->private_thread)
-		ret = tdm_thread_handle_cb(private_display);
+	if (private_display->private_loop->private_thread) {
+		_pthread_mutex_unlock(&private_display->lock);
+		ret = tdm_thread_handle_cb(private_display->private_loop);
+		_pthread_mutex_lock(&private_display->lock);
+	}
 	else
 		ret = tdm_event_loop_dispatch(private_display);
 
@@ -444,6 +450,61 @@ tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status)
 	return ret;
 }
 
+INTERN void
+tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
+                     void *user_data)
+{
+	tdm_private_display *private_display;
+	tdm_private_output *private_output = user_data;
+	tdm_value value;
+	int lock_after_cb_done = 0;
+	int ret;
+
+	TDM_RETURN_IF_FAIL(private_output);
+
+	private_display = private_output->private_display;
+
+	if (!tdm_thread_in_display_thread(private_display->private_loop,
+	                                  syscall(SYS_gettid))) {
+		tdm_thread_cb_output_status output_status;
+		tdm_error ret;
+
+		output_status.base.type = TDM_THREAD_CB_OUTPUT_STATUS;
+		output_status.base.length = sizeof output_status;
+		output_status.output_stamp = private_output->stamp;
+		output_status.status = status;
+		output_status.user_data = user_data;
+
+		value.u32 = status;
+		tdm_output_call_change_handler_internal(private_output,
+		                                        &private_output->change_handler_list_sub,
+		                                        TDM_OUTPUT_CHANGE_CONNECTION,
+		                                        value);
+
+		ret = tdm_thread_send_cb(private_display->private_loop, &output_status.base);
+		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
+
+		return;
+	}
+
+	ret = pthread_mutex_trylock(&private_display->lock);
+	if (ret == 0)
+		_pthread_mutex_unlock(&private_display->lock);
+	else  if (ret == EBUSY) {
+		_pthread_mutex_unlock(&private_display->lock);
+		lock_after_cb_done = 1;
+	}
+
+	value.u32 = status;
+	tdm_output_call_change_handler_internal(private_output,
+	                                        &private_output->change_handler_list_main,
+	                                        TDM_OUTPUT_CHANGE_CONNECTION,
+	                                        value);
+
+	if (lock_after_cb_done)
+		_pthread_mutex_lock(&private_display->lock);
+}
+
 EXTERN tdm_error
 tdm_output_add_change_handler(tdm_output *output,
                               tdm_output_change_handler func,
@@ -469,10 +530,16 @@ tdm_output_add_change_handler(tdm_output *output,
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
-	LIST_ADD(&change_handler->link, &private_output->change_handler_list);
 	change_handler->private_output = private_output;
 	change_handler->func = func;
 	change_handler->user_data = user_data;
+	change_handler->owner_tid = syscall(SYS_gettid);
+
+	if (!tdm_thread_in_display_thread(private_display->private_loop,
+	                                  change_handler->owner_tid))
+		LIST_ADD(&change_handler->link, &private_output->change_handler_list_sub);
+	else
+		LIST_ADD(&change_handler->link, &private_output->change_handler_list_main);
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -496,7 +563,19 @@ tdm_output_remove_change_handler(tdm_output *output,
 
 	_pthread_mutex_lock(&private_display->lock);
 
-	LIST_FOR_EACH_ENTRY_SAFE(h, hh, &private_output->change_handler_list, link) {
+	LIST_FOR_EACH_ENTRY_SAFE(h, hh, &private_output->change_handler_list_main, link) {
+		if (h->func != func || h->user_data != user_data)
+			continue;
+
+		LIST_DEL(&h->link);
+		free(h);
+
+		_pthread_mutex_unlock(&private_display->lock);
+
+		return;
+	}
+
+	LIST_FOR_EACH_ENTRY_SAFE(h, hh, &private_output->change_handler_list_sub, link) {
 		if (h->func != func || h->user_data != user_data)
 			continue;
 
@@ -750,7 +829,7 @@ tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
 
 	private_display = vblank_handler->private_output->private_display;
 
-	if (!tdm_thread_in_display_thread(private_display)) {
+	if (vblank_handler->owner_tid != syscall(SYS_gettid)) {
 		tdm_thread_cb_output_vblank output_vblank;
 		tdm_error ret;
 
@@ -762,17 +841,32 @@ tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
 		output_vblank.tv_usec = tv_usec;
 		output_vblank.user_data = user_data;
 
-		ret = tdm_thread_send_cb(private_display, &output_vblank.base);
+		ret = tdm_thread_send_cb(private_display->private_loop, &output_vblank.base);
 		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 		return;
 	}
 
+	if (vblank_handler->owner_tid != syscall(SYS_gettid))
+		TDM_NEVER_GET_HERE();
+
 	if (vblank_handler->func) {
-		_pthread_mutex_unlock(&private_display->lock);
+		int lock_after_cb_done = 0;
+		int ret;
+
+		ret = pthread_mutex_trylock(&private_display->lock);
+		if (ret == 0)
+			_pthread_mutex_unlock(&private_display->lock);
+		else  if (ret == EBUSY) {
+			_pthread_mutex_unlock(&private_display->lock);
+			lock_after_cb_done = 1;
+		}
+
 		vblank_handler->func(vblank_handler->private_output, sequence,
 		                     tv_sec, tv_usec, vblank_handler->user_data);
-		_pthread_mutex_lock(&private_display->lock);
+
+		if (lock_after_cb_done)
+			_pthread_mutex_lock(&private_display->lock);
 	}
 
 	LIST_DEL(&vblank_handler->link);
@@ -787,13 +881,15 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 	tdm_private_display *private_display;
 	tdm_private_output *private_output;
 	tdm_private_layer *private_layer = NULL;
+	int lock_after_cb_done = 0;
+	int ret;
 
 	TDM_RETURN_IF_FAIL(commit_handler);
 
 	private_output = commit_handler->private_output;
 	private_display = private_output->private_display;
 
-	if (!tdm_thread_in_display_thread(private_display)) {
+	if (commit_handler->owner_tid != syscall(SYS_gettid)) {
 		tdm_thread_cb_output_commit output_commit;
 		tdm_error ret;
 
@@ -805,10 +901,18 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 		output_commit.tv_usec = tv_usec;
 		output_commit.user_data = user_data;
 
-		ret = tdm_thread_send_cb(private_display, &output_commit.base);
+		ret = tdm_thread_send_cb(private_display->private_loop, &output_commit.base);
 		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 		return;
+	}
+
+	ret = pthread_mutex_trylock(&private_display->lock);
+	if (ret == 0)
+		_pthread_mutex_unlock(&private_display->lock);
+	else  if (ret == EBUSY) {
+		_pthread_mutex_unlock(&private_display->lock);
+		lock_after_cb_done = 1;
 	}
 
 	LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link) {
@@ -816,15 +920,11 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 			continue;
 
 		if (private_layer->showing_buffer) {
-			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(private_layer->showing_buffer);
-			_pthread_mutex_lock(&private_display->lock);
 
 			if (private_layer->buffer_queue) {
-				_pthread_mutex_unlock(&private_display->lock);
 				tbm_surface_queue_release(private_layer->buffer_queue,
 				                          private_layer->showing_buffer);
-				_pthread_mutex_lock(&private_display->lock);
 			}
 		}
 
@@ -838,11 +938,12 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 	}
 
 	if (commit_handler->func) {
-		_pthread_mutex_unlock(&private_display->lock);
 		commit_handler->func(private_output, sequence,
 		                     tv_sec, tv_usec, commit_handler->user_data);
-		_pthread_mutex_lock(&private_display->lock);
 	}
+
+	if (lock_after_cb_done)
+		_pthread_mutex_lock(&private_display->lock);
 
 	LIST_DEL(&commit_handler->link);
 	free(commit_handler);
@@ -877,6 +978,7 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 	vblank_handler->private_output = private_output;
 	vblank_handler->func = func;
 	vblank_handler->user_data = user_data;
+	vblank_handler->owner_tid = syscall(SYS_gettid);
 
 	ret = func_output->output_wait_vblank(private_output->output_backend, interval,
 	                                      sync, vblank_handler);
@@ -921,6 +1023,7 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 	commit_handler->private_output = private_output;
 	commit_handler->func = func;
 	commit_handler->user_data = user_data;
+	commit_handler->owner_tid = syscall(SYS_gettid);
 
 	ret = func_output->output_commit(private_output->output_backend, sync,
 	                                 commit_handler);
@@ -1072,31 +1175,36 @@ tdm_output_create_capture(tdm_output *output, tdm_error *error)
 
 INTERN void
 tdm_output_call_change_handler_internal(tdm_private_output *private_output,
+                                        struct list_head *change_handler_list,
                                         tdm_output_change_type type,
                                         tdm_value value)
 {
-	tdm_private_change_handler *change_handler;
 	tdm_private_display *private_display;
+	tdm_private_change_handler *change_handler;
 
 	TDM_RETURN_IF_FAIL(private_output);
 
 	private_display = private_output->private_display;
+	if (!tdm_thread_in_display_thread(private_display->private_loop,
+	                                  syscall(SYS_gettid))) {
+		if (type & TDM_OUTPUT_CHANGE_CONNECTION)
+			TDM_INFO("output(%d) changed: %s (%d)",
+			         private_output->pipe, status_str(value.u32), value.u32);
+		if (type & TDM_OUTPUT_CHANGE_DPMS)
+			TDM_INFO("output(%d) changed: dpms %s (%d)",
+			         private_output->pipe, dpms_str(value.u32), value.u32);
+	}
 
-	if (type & TDM_OUTPUT_CHANGE_CONNECTION)
-		TDM_INFO("output(%d) changed: %s",
-		         private_output->pipe, status_str(value.u32));
-	if (type & TDM_OUTPUT_CHANGE_DPMS)
-		TDM_INFO("output(%d) changed: dpms %s",
-		         private_output->pipe, dpms_str(value.u32));
+	if (LIST_IS_EMPTY(change_handler_list))
+		return;
 
-	_pthread_mutex_unlock(&private_display->lock);
+	LIST_FOR_EACH_ENTRY(change_handler, change_handler_list, link) {
+		if (change_handler->owner_tid != syscall(SYS_gettid))
+			TDM_NEVER_GET_HERE();
 
-	LIST_FOR_EACH_ENTRY(change_handler, &private_output->change_handler_list, link) {
 		change_handler->func(private_output, type,
 		                     value, change_handler->user_data);
 	}
-
-	_pthread_mutex_lock(&private_display->lock);
 }
 
 EXTERN tdm_error

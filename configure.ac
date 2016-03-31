@@ -23,7 +23,14 @@ LT_INIT([disable-static])
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-PKG_CHECK_MODULES(TDM, libtbm pthread-stubs libpng wayland-server)
+AC_PATH_PROG([wayland_scanner], [wayland-scanner])
+if test x$wayland_scanner = x; then
+   AC_MSG_ERROR([wayland-scanner is needed to compile])
+fi
+
+PKG_CHECK_MODULES(WAYLAND_SCANNER, wayland-scanner >= 1.7.0)
+
+PKG_CHECK_MODULES(TDM, dlog libtbm pthread-stubs libpng wayland-server)
 
 PKG_CHECK_MODULES(TTRACE,
 		[ttrace],
@@ -36,6 +43,10 @@ fi
 
 AC_SUBST(TDM_CFLAGS)
 AC_SUBST(TDM_LIBS)
+
+PKG_CHECK_MODULES(TDM_CLIENT, dlog wayland-client)
+AC_SUBST(TDM_CLIENT_CFLAGS)
+AC_SUBST(TDM_CLIENT_LIBS)
 
 # set the dir for the tbm module
 DEFAULT_TDM_MODULE_PATH="${libdir}/tdm"
@@ -50,6 +61,9 @@ AC_OUTPUT([
 	Makefile
 	libtdm.pc
 	include/Makefile
+	protocol/Makefile
+	client/libtdm-client.pc
+	client/Makefile
 	src/Makefile])
 
 echo ""
@@ -57,5 +71,7 @@ echo "$PACKAGE_STRING will be compiled with:"
 echo ""
 echo "TDM_CFLAGS        : $TDM_CFLAGS"
 echo "TDM_LIBS          : $TDM_LIBS"
+echo "TDM_CLIENT_CFLAGS : $TDM_CLIENT_CFLAGS"
+echo "TDM_CLIENT_LIBS   : $TDM_CLIENT_LIBS"
 echo "TDM_MODULE_PATH   : $TDM_MODULE_PATH"
 echo ""

@@ -99,7 +99,7 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	int lock_after_cb_done = 0;
 	int ret;
 
-	if (!tdm_thread_in_display_thread(private_display)) {
+	if (private_pp->owner_tid != syscall(SYS_gettid)) {
 		tdm_thread_cb_pp_done pp_done;
 		tdm_error ret;
 
@@ -110,11 +110,14 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 		pp_done.dst = dst;
 		pp_done.user_data = user_data;
 
-		ret = tdm_thread_send_cb(private_display, &pp_done.base);
+		ret = tdm_thread_send_cb(private_display->private_loop, &pp_done.base);
 		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 		return;
 	}
+
+	if (private_pp->owner_tid != syscall(SYS_gettid))
+		TDM_NEVER_GET_HERE();
 
 	if (tdm_debug_buffer)
 		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
@@ -212,6 +215,7 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 	LIST_ADD(&private_pp->link, &private_display->pp_list);
 	private_pp->private_display = private_display;
 	private_pp->pp_backend = pp_backend;
+	private_pp->owner_tid = syscall(SYS_gettid);
 
 	LIST_INITHEAD(&private_pp->src_pending_buffer_list);
 	LIST_INITHEAD(&private_pp->dst_pending_buffer_list);

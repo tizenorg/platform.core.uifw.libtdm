@@ -1,0 +1,11 @@
+[Unit]
+Description= tdm-socket setup service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/chmod g+w /run/tdm-socket
+ExecStart=/usr/bin/chgrp display /run/tdm-socket
+ExecStart=/usr/bin/chsmack -a User /run/tdm-socket
+
+[Install]
+WantedBy=graphical.target

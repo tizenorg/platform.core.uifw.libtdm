@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<protocol name="wl_tdm">
+
+    <interface name="wl_tdm_vblank" version="1">
+
+        <event name="done">
+            <arg name="sequence" type="uint"/>
+            <arg name="tv_sec" type="uint"/>
+            <arg name="tv_usec" type="uint"/>
+        </event>
+
+    </interface>
+
+    <interface name="wl_tdm" version="1">
+
+        <enum name="error">
+            <entry name="invalid_name" value="0"/>
+            <entry name="operation_failed" value="1"/>
+        </enum>
+
+        <request name="wait_vblank">
+            <arg name="id" type="new_id" interface="wl_tdm_vblank"/>
+            <arg name="name" type="string"/>
+            <arg name="interval" type="int"/>
+        </request>
+
+    </interface>
+
+</protocol>

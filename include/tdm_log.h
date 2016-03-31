@@ -41,6 +41,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif
 
+#include <unistd.h>
 #include <time.h>
 #include <sys/syscall.h>
 
