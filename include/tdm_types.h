@@ -226,11 +226,11 @@ typedef enum {
 
 typedef enum
 {
-	TDM_EVENT_READABLE = (1 << 0),
-	TDM_EVENT_WRITABLE = (1 << 1),
-	TDM_EVENT_HANGUP   = (1 << 2),
-	TDM_EVENT_ERROR    = (1 << 3),
-} tdm_event_mask;
+	TDM_EVENT_LOOP_READABLE = (1 << 0),
+	TDM_EVENT_LOOP_WRITABLE = (1 << 1),
+	TDM_EVENT_LOOP_HANGUP   = (1 << 2),
+	TDM_EVENT_LOOP_ERROR    = (1 << 3),
+} tdm_event_loop_mask;
 
 /**
  * @brief The output mode structure
@@ -366,17 +366,17 @@ typedef void (*tdm_output_commit_handler)(tdm_output *output, unsigned int seque
 /**
  * @brief The tdm event source
  */
-typedef void tdm_event_source;
+typedef void tdm_event_loop_source;
 
 /**
  * @brief The fd source handler
  */
-typedef tdm_error (*tdm_event_fd_handler)(int fd, tdm_event_mask mask, void *user_data);
+typedef tdm_error (*tdm_event_loop_fd_handler)(int fd, tdm_event_loop_mask mask, void *user_data);
 
 /**
  * @brief The timer source handler
  */
-typedef tdm_error (*tdm_event_timer_handler)(void *user_data);
+typedef tdm_error (*tdm_event_loop_timer_handler)(void *user_data);
 
 #ifdef __cplusplus
 }

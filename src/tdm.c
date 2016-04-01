@@ -809,7 +809,7 @@ tdm_display_init(tdm_error *error)
 		goto failed_mutex_init;
 	}
 
-	ret = tdm_event_init(private_display);
+	ret = tdm_event_loop_init(private_display);
 	if (ret != TDM_ERROR_NONE)
 		goto failed_event;
 
@@ -827,7 +827,7 @@ tdm_display_init(tdm_error *error)
 	if (ret != TDM_ERROR_NONE)
 		goto failed_update;
 
-	tdm_event_create_backend_source(private_display);
+	tdm_event_loop_create_backend_source(private_display);
 
 	private_display->init_count = 1;
 
@@ -845,7 +845,7 @@ failed_update:
 failed_load:
 	tdm_thread_deinit(private_display);
 failed_thread:
-	tdm_event_deinit(private_display);
+	tdm_event_loop_deinit(private_display);
 failed_event:
 	pthread_mutex_destroy(&private_display->lock);
 failed_mutex_init:
@@ -878,7 +878,7 @@ tdm_display_deinit(tdm_display *dpy)
 	_pthread_mutex_lock(&private_display->lock);
 
 	tdm_thread_deinit(private_display);
-	tdm_event_deinit(private_display);
+	tdm_event_loop_deinit(private_display);
 
 	_tdm_display_destroy_private_display(private_display);
 	_tdm_display_unload_module(private_display);

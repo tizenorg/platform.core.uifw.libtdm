@@ -343,7 +343,7 @@ tdm_display_get_fd(tdm_display *dpy, int *fd)
 	if (private_display->private_thread)
 		*fd = tdm_thread_get_fd(private_display);
 	else
-		*fd = tdm_event_get_fd(private_display);
+		*fd = tdm_event_loop_get_fd(private_display);
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -385,7 +385,7 @@ tdm_display_handle_events(tdm_display *dpy)
 	if (private_display->private_thread)
 		ret = tdm_thread_handle_cb(private_display);
 	else
-		ret = tdm_event_dispatch(private_display);
+		ret = tdm_event_loop_dispatch(private_display);
 
 	_pthread_mutex_unlock(&private_display->lock);
 

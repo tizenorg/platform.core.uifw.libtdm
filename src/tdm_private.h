@@ -164,7 +164,7 @@ typedef struct _tdm_private_output tdm_private_output;
 typedef struct _tdm_private_layer tdm_private_layer;
 typedef struct _tdm_private_pp tdm_private_pp;
 typedef struct _tdm_private_capture tdm_private_capture;
-typedef struct _tdm_private_event tdm_private_event;
+typedef struct _tdm_private_loop tdm_private_loop;
 typedef struct _tdm_private_thread tdm_private_thread;
 typedef struct _tdm_private_vblank_handler tdm_private_vblank_handler;
 typedef struct _tdm_private_commit_handler tdm_private_commit_handler;
@@ -200,7 +200,7 @@ struct _tdm_private_display {
 	void **outputs_ptr;
 
 	/* for event handling */
-	tdm_private_event *private_event;
+	tdm_private_loop *private_loop;
 
 	/* for own event thread */
 	tdm_private_thread *private_thread;
@@ -373,17 +373,17 @@ tdm_buffer_list_dump(struct list_head *list);
 
 /* event functions for private */
 tdm_error
-tdm_event_init(tdm_private_display *private_display);
+tdm_event_loop_init(tdm_private_display *private_display);
 void
-tdm_event_deinit(tdm_private_display *private_display);
+tdm_event_loop_deinit(tdm_private_display *private_display);
 void
-tdm_event_create_backend_source(tdm_private_display *private_display);
+tdm_event_loop_create_backend_source(tdm_private_display *private_display);
 int
-tdm_event_get_fd(tdm_private_display *private_display);
+tdm_event_loop_get_fd(tdm_private_display *private_display);
 tdm_error
-tdm_event_dispatch(tdm_private_display *private_display);
+tdm_event_loop_dispatch(tdm_private_display *private_display);
 tdm_error
-tdm_event_add_socket(tdm_private_display *private_display, const char *name);
+tdm_event_loop_add_socket(tdm_private_display *private_display, const char *name);
 
 
 typedef enum {

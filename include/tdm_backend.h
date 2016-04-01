@@ -939,23 +939,23 @@ tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
                                   tdm_buffer_destroy_handler func, void *user_data);
 
 
-tdm_event_source*
-tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
-                         tdm_event_fd_handler func, void *user_data,
+tdm_event_loop_source*
+tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask,
+                         tdm_event_loop_fd_handler func, void *user_data,
                          tdm_error *error);
 
 tdm_error
-tdm_event_source_fd_update(tdm_event_source *source, tdm_event_mask mask);
+tdm_event_loop_source_fd_update(tdm_event_loop_source *source, tdm_event_loop_mask mask);
 
-tdm_event_source*
-tdm_event_add_timer_handler(tdm_display *dpy, tdm_event_timer_handler func,
+tdm_event_loop_source*
+tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler func,
                             void *user_data, tdm_error *error);
 
 tdm_error
-tdm_event_source_timer_update(tdm_event_source *source, int ms_delay);
+tdm_event_loop_source_timer_update(tdm_event_loop_source *source, int ms_delay);
 
 void
-tdm_event_source_remove(tdm_event_source *source);
+tdm_event_loop_source_remove(tdm_event_loop_source *source);
 
 #ifdef __cplusplus
 }

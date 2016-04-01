@@ -43,52 +43,49 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <wayland-server-core.h>
 
-struct _tdm_private_event {
+struct _tdm_private_loop {
 	struct wl_display *wl_display;
-	struct wl_event_loop *event_loop;
+	struct wl_event_loop *wl_loop;
 
 	int backend_fd;
-	tdm_event_source *backend_source;
-
-	struct wl_display *wl_display2;
-	struct wl_event_loop *event_loop2;
+	tdm_event_loop_source *backend_source;
 };
 
-typedef struct _tdm_event_source_base
+typedef struct _tdm_event_loop_source_base
 {
 	struct wl_event_source *wl_source;
-} tdm_event_source_base;
+} tdm_event_loop_source_base;
 
-typedef struct _tdm_event_source_fd
+typedef struct _tdm_event_loop_source_fd
 {
-	tdm_event_source_base base;
+	tdm_event_loop_source_base base;
 	tdm_private_display *private_display;
-	tdm_event_fd_handler func;
+	tdm_event_loop_fd_handler func;
 	void *user_data;
-} tdm_event_source_fd;
+} tdm_event_loop_source_fd;
 
-typedef struct _tdm_event_source_timer
+typedef struct _tdm_event_loop_source_timer
 {
-	tdm_event_source_base base;
+	tdm_event_loop_source_base base;
 	tdm_private_display *private_display;
-	tdm_event_timer_handler func;
+	tdm_event_loop_timer_handler func;
 	void *user_data;
-} tdm_event_source_timer;
+} tdm_event_loop_source_timer;
 
 static tdm_error
-_tdm_event_main_fd_handler(int fd, tdm_event_mask mask, void *user_data)
+_tdm_event_loop_main_fd_handler(int fd, tdm_event_loop_mask mask, void *user_data)
 {
 	tdm_private_display *private_display = (tdm_private_display*)user_data;
-	tdm_private_event *private_event;
+	tdm_private_loop *private_loop;
 	tdm_func_display *func_display;
 
 	TDM_RETURN_VAL_IF_FAIL(private_display != NULL, TDM_ERROR_OPERATION_FAILED);
-	TDM_RETURN_VAL_IF_FAIL(private_display->private_event != NULL, TDM_ERROR_OPERATION_FAILED);
+	TDM_RETURN_VAL_IF_FAIL(private_display->private_loop != NULL, TDM_ERROR_OPERATION_FAILED);
 
-	private_event = private_display->private_event;
+	private_loop = private_display->private_loop;
 
 	if (tdm_debug_thread)
-		TDM_INFO("backend fd(%d) event happens", private_event->backend_fd);
+		TDM_INFO("backend fd(%d) event happens", private_loop->backend_fd);
 
 	func_display = &private_display->func_display;
 	if (!func_display->display_handle_events)
@@ -98,82 +95,68 @@ _tdm_event_main_fd_handler(int fd, tdm_event_mask mask, void *user_data)
 }
 
 INTERN tdm_error
-tdm_event_init(tdm_private_display *private_display)
+tdm_event_loop_init(tdm_private_display *private_display)
 {
-	tdm_private_event *private_event;
+	tdm_private_loop *private_loop;
 
-	if (private_display->private_event)
+	if (private_display->private_loop)
 		return TDM_ERROR_NONE;
 
-	private_event = calloc(1, sizeof *private_event);
-	if (!private_event) {
+	private_loop = calloc(1, sizeof *private_loop);
+	if (!private_loop) {
 		TDM_ERR("alloc failed");
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
-	private_event->backend_fd = -1;
+	private_loop->backend_fd = -1;
 
-	private_event->wl_display = wl_display_create();
-	if (!private_event->wl_display) {
+	private_loop->wl_display = wl_display_create();
+	if (!private_loop->wl_display) {
 		TDM_ERR("creating a wayland display failed");
-		free(private_event);
+		free(private_loop);
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
-	private_event->event_loop = wl_display_get_event_loop(private_event->wl_display);
-	if (!private_event->event_loop) {
+	private_loop->wl_loop = wl_display_get_event_loop(private_loop->wl_display);
+	if (!private_loop->wl_loop) {
 		TDM_ERR("no event loop");
-		wl_display_destroy(private_event->wl_display);
-		free(private_event);
+		wl_display_destroy(private_loop->wl_display);
+		free(private_loop);
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
-	TDM_INFO("event loop fd(%d)", wl_event_loop_get_fd(private_event->event_loop));
+	TDM_INFO("event loop fd(%d)", wl_event_loop_get_fd(private_loop->wl_loop));
 
-	private_event->wl_display2 = wl_display_create();
-	if (!private_event->wl_display2) {
-		TDM_ERR("creating a wayland display2 failed");
-		return TDM_ERROR_OUT_OF_MEMORY;
-	}
-
-	private_event->event_loop2 = wl_display_get_event_loop(private_event->wl_display2);
-	if (!private_event->event_loop2) {
-		TDM_ERR("no event loop2");
-		wl_display_destroy(private_event->wl_display2);
-		private_event->wl_display2 = NULL;
-		return TDM_ERROR_OUT_OF_MEMORY;
-	}
-
-	private_display->private_event = private_event;
+	private_display->private_loop = private_loop;
 
 	return TDM_ERROR_NONE;
 }
 
 INTERN void
-tdm_event_deinit(tdm_private_display *private_display)
+tdm_event_loop_deinit(tdm_private_display *private_display)
 {
-	if (!private_display->private_event)
+	if (!private_display->private_loop)
 		return;
 
-	if (private_display->private_event->backend_source)
-		tdm_event_source_remove(private_display->private_event->backend_source);
+	if (private_display->private_loop->backend_source)
+		tdm_event_loop_source_remove(private_display->private_loop->backend_source);
 
-	if (private_display->private_event->wl_display)
-		wl_display_destroy(private_display->private_event->wl_display);
+	if (private_display->private_loop->wl_display)
+		wl_display_destroy(private_display->private_loop->wl_display);
 
-	free(private_display->private_event);
-	private_display->private_event = NULL;
+	free(private_display->private_loop);
+	private_display->private_loop = NULL;
 }
 
 INTERN void
-tdm_event_create_backend_source(tdm_private_display *private_display)
+tdm_event_loop_create_backend_source(tdm_private_display *private_display)
 {
-	tdm_private_event *private_event = private_display->private_event;
+	tdm_private_loop *private_loop = private_display->private_loop;
 	tdm_func_display *func_display;
 	tdm_error ret;
 	int fd = -1;
 
-	TDM_RETURN_IF_FAIL(private_event != NULL);
+	TDM_RETURN_IF_FAIL(private_loop != NULL);
 
 	func_display = &private_display->func_display;
 	if (!func_display->display_get_fd) {
@@ -192,58 +175,59 @@ tdm_event_create_backend_source(tdm_private_display *private_display)
 		return;
 	}
 
-	private_event->backend_source =
-		tdm_event_add_fd_handler(private_display, fd, TDM_EVENT_READABLE,
-		                         _tdm_event_main_fd_handler, private_display,
-		                         &ret);
-	if (!private_event->backend_source) {
+	private_loop->backend_source =
+		tdm_event_loop_add_fd_handler(private_display, fd,
+		                              TDM_EVENT_LOOP_READABLE,
+		                              _tdm_event_loop_main_fd_handler,
+		                              private_display, &ret);
+	if (!private_loop->backend_source) {
 		TDM_ERR("no backend fd(%d) source", fd);
 		return;
 	}
 
-	private_event->backend_fd = fd;
+	private_loop->backend_fd = fd;
 
-	TDM_INFO("backend fd(%d) source created", private_event->backend_fd);
+	TDM_INFO("backend fd(%d) source created", private_loop->backend_fd);
 }
 
 INTERN int
-tdm_event_get_fd(tdm_private_display *private_display)
+tdm_event_loop_get_fd(tdm_private_display *private_display)
 {
-	tdm_private_event *private_event = private_display->private_event;
+	tdm_private_loop *private_loop = private_display->private_loop;
 
-	TDM_RETURN_VAL_IF_FAIL(private_event->event_loop != NULL, -1);
+	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_loop != NULL, -1);
 
-	return wl_event_loop_get_fd(private_event->event_loop);
+	return wl_event_loop_get_fd(private_loop->wl_loop);
 }
 
 INTERN tdm_error
-tdm_event_dispatch(tdm_private_display *private_display)
+tdm_event_loop_dispatch(tdm_private_display *private_display)
 {
-	tdm_private_event *private_event = private_display->private_event;
+	tdm_private_loop *private_loop = private_display->private_loop;
 
-	TDM_RETURN_VAL_IF_FAIL(private_event->event_loop != NULL, TDM_ERROR_OPERATION_FAILED);
+	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_loop != NULL, TDM_ERROR_OPERATION_FAILED);
 
 	if (tdm_debug_thread)
 		TDM_INFO("dispatch");
 
 	/* Don't set timeout to -1. It can make deadblock by two mutex locks.
-	 * If need to set -1, use poll() and call tdm_event_dispatch() after
+	 * If need to set -1, use poll() and call tdm_event_loop_dispatch() after
 	 * escaping polling.
 	 */
-	if (wl_event_loop_dispatch(private_event->event_loop, 0) < 0)
+	if (wl_event_loop_dispatch(private_loop->wl_loop, 0) < 0)
 		TDM_ERR("dispatch failed");
 
 	return TDM_ERROR_NONE;
 }
 
 INTERN tdm_error
-tdm_event_add_socket(tdm_private_display *private_display, const char *name)
+tdm_event_loop_add_socket(tdm_private_display *private_display, const char *name)
 {
-	tdm_private_event *private_event = private_display->private_event;
+	tdm_private_loop *private_loop = private_display->private_loop;
 
-	TDM_RETURN_VAL_IF_FAIL(private_event->wl_display != NULL, TDM_ERROR_OPERATION_FAILED);
+	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_display != NULL, TDM_ERROR_OPERATION_FAILED);
 
-	if (wl_display_add_socket(private_event->wl_display, name) < 0) {
+	if (wl_display_add_socket(private_loop->wl_display, name) < 0) {
 		TDM_ERR("add socket(\"%s\") failed", name);
 		return TDM_ERROR_OPERATION_FAILED;
 	}
@@ -254,34 +238,34 @@ tdm_event_add_socket(tdm_private_display *private_display, const char *name)
 static int
 _tdm_event_loop_fd_func(int fd, uint32_t wl_mask, void *data)
 {
-	tdm_event_source_fd *fd_source = (tdm_event_source_fd*)data;
-	tdm_event_mask mask = 0;
+	tdm_event_loop_source_fd *fd_source = (tdm_event_loop_source_fd*)data;
+	tdm_event_loop_mask mask = 0;
 
 	TDM_RETURN_VAL_IF_FAIL(fd_source, 1);
 	TDM_RETURN_VAL_IF_FAIL(fd_source->func, 1);
 
 	if (wl_mask & WL_EVENT_READABLE)
-		mask |= TDM_EVENT_READABLE;
+		mask |= TDM_EVENT_LOOP_READABLE;
 	if (wl_mask & WL_EVENT_WRITABLE)
-		mask |= TDM_EVENT_WRITABLE;
+		mask |= TDM_EVENT_LOOP_WRITABLE;
 	if (wl_mask & WL_EVENT_HANGUP)
-		mask |= TDM_EVENT_HANGUP;
+		mask |= TDM_EVENT_LOOP_HANGUP;
 	if (wl_mask & WL_EVENT_ERROR)
-		mask |= TDM_EVENT_ERROR;
+		mask |= TDM_EVENT_LOOP_ERROR;
 
 	fd_source->func(fd, mask, fd_source->user_data);
 
 	return 1;
 }
 
-EXTERN tdm_event_source*
-tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
-                         tdm_event_fd_handler func, void *user_data,
-                         tdm_error *error)
+EXTERN tdm_event_loop_source*
+tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask,
+                              tdm_event_loop_fd_handler func, void *user_data,
+                              tdm_error *error)
 {
 	tdm_private_display *private_display;
-	tdm_private_event *private_event;
-	tdm_event_source_fd *fd_source;
+	tdm_private_loop *private_loop;
+	tdm_event_loop_source_fd *fd_source;
 	uint32_t wl_mask = 0;
 	tdm_error ret;
 
@@ -290,20 +274,20 @@ tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(func, TDM_ERROR_INVALID_PARAMETER, NULL);
 
 	private_display = (tdm_private_display*)dpy;
-	private_event = private_display->private_event;
-	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event, TDM_ERROR_INVALID_PARAMETER, NULL);
-	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event->event_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
+	private_loop = private_display->private_loop;
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_loop->wl_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
 
-	fd_source = calloc(1, sizeof(tdm_event_source_fd));
+	fd_source = calloc(1, sizeof(tdm_event_loop_source_fd));
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(fd_source, TDM_ERROR_OUT_OF_MEMORY, NULL);
 
-	if (mask & TDM_EVENT_READABLE)
+	if (mask & TDM_EVENT_LOOP_READABLE)
 		wl_mask |= WL_EVENT_READABLE;
-	if (mask & TDM_EVENT_WRITABLE)
+	if (mask & TDM_EVENT_LOOP_WRITABLE)
 		wl_mask |= WL_EVENT_WRITABLE;
 
 	fd_source->base.wl_source =
-		wl_event_loop_add_fd(private_event->event_loop,
+		wl_event_loop_add_fd(private_loop->wl_loop,
 		                     fd, wl_mask, _tdm_event_loop_fd_func, fd_source);
 	if (!fd_source->base.wl_source) {
 		if (error)
@@ -319,20 +303,20 @@ tdm_event_add_fd_handler(tdm_display *dpy, int fd, tdm_event_mask mask,
 	if (error)
 		*error = TDM_ERROR_NONE;
 
-	return (tdm_event_source*)fd_source;
+	return (tdm_event_loop_source*)fd_source;
 }
 
 EXTERN tdm_error
-tdm_event_source_fd_update(tdm_event_source *source, tdm_event_mask mask)
+tdm_event_loop_source_fd_update(tdm_event_loop_source *source, tdm_event_loop_mask mask)
 {
-	tdm_event_source_fd *fd_source = source;
+	tdm_event_loop_source_fd *fd_source = source;
 	uint32_t wl_mask = 0;
 
 	TDM_RETURN_VAL_IF_FAIL(fd_source, TDM_ERROR_INVALID_PARAMETER);
 
-	if (mask & TDM_EVENT_READABLE)
+	if (mask & TDM_EVENT_LOOP_READABLE)
 		wl_mask |= WL_EVENT_READABLE;
-	if (mask & TDM_EVENT_WRITABLE)
+	if (mask & TDM_EVENT_LOOP_WRITABLE)
 		wl_mask |= WL_EVENT_WRITABLE;
 
 	if (wl_event_source_fd_update(fd_source->base.wl_source, wl_mask) < 0) {
@@ -346,7 +330,7 @@ tdm_event_source_fd_update(tdm_event_source *source, tdm_event_mask mask)
 static int
 _tdm_event_loop_timer_func(void *data)
 {
-	tdm_event_source_timer *timer_source = (tdm_event_source_timer*)data;
+	tdm_event_loop_source_timer *timer_source = (tdm_event_loop_source_timer*)data;
 
 	TDM_RETURN_VAL_IF_FAIL(timer_source, 1);
 	TDM_RETURN_VAL_IF_FAIL(timer_source->func, 1);
@@ -356,28 +340,28 @@ _tdm_event_loop_timer_func(void *data)
 	return 1;
 }
 
-EXTERN tdm_event_source*
-tdm_event_add_timer_handler(tdm_display *dpy, tdm_event_timer_handler func,
-                            void *user_data, tdm_error *error)
+EXTERN tdm_event_loop_source*
+tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler func,
+                                 void *user_data, tdm_error *error)
 {
 	tdm_private_display *private_display;
-	tdm_private_event *private_event;
-	tdm_event_source_timer *timer_source;
+	tdm_private_loop *private_loop;
+	tdm_event_loop_source_timer *timer_source;
 	tdm_error ret;
 
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(dpy, TDM_ERROR_INVALID_PARAMETER, NULL);
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(func, TDM_ERROR_INVALID_PARAMETER, NULL);
 
 	private_display = (tdm_private_display*)dpy;
-	private_event = private_display->private_event;
-	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event, TDM_ERROR_INVALID_PARAMETER, NULL);
-	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_event->event_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
+	private_loop = private_display->private_loop;
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(private_loop->wl_loop, TDM_ERROR_INVALID_PARAMETER, NULL);
 
-	timer_source = calloc(1, sizeof(tdm_event_source_timer));
+	timer_source = calloc(1, sizeof(tdm_event_loop_source_timer));
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(timer_source, TDM_ERROR_OUT_OF_MEMORY, NULL);
 
 	timer_source->base.wl_source =
-		wl_event_loop_add_timer(private_event->event_loop,
+		wl_event_loop_add_timer(private_loop->wl_loop,
 		                        _tdm_event_loop_timer_func, timer_source);
 	if (!timer_source->base.wl_source) {
 		if (error)
@@ -393,13 +377,13 @@ tdm_event_add_timer_handler(tdm_display *dpy, tdm_event_timer_handler func,
 	if (error)
 		*error = TDM_ERROR_NONE;
 
-	return (tdm_event_source*)timer_source;
+	return (tdm_event_loop_source*)timer_source;
 }
 
 EXTERN tdm_error
-tdm_event_source_timer_update(tdm_event_source *source, int ms_delay)
+tdm_event_loop_source_timer_update(tdm_event_loop_source *source, int ms_delay)
 {
-	tdm_event_source_timer *timer_source = source;
+	tdm_event_loop_source_timer *timer_source = source;
 
 	TDM_RETURN_VAL_IF_FAIL(timer_source, TDM_ERROR_INVALID_PARAMETER);
 
@@ -412,9 +396,9 @@ tdm_event_source_timer_update(tdm_event_source *source, int ms_delay)
 }
 
 EXTERN void
-tdm_event_source_remove(tdm_event_source *source)
+tdm_event_loop_source_remove(tdm_event_loop_source *source)
 {
-	tdm_event_source_base *base = (tdm_event_source_base*)source;
+	tdm_event_loop_source_base *base = (tdm_event_loop_source_base*)source;
 
 	if (!base)
 		return;

@@ -71,7 +71,7 @@ _tdm_thread_main(void *data)
 	TDM_INFO("display_tid:%d, thread_tid: %d",
 	         private_thread->display_tid, private_thread->thread_tid);
 
-	fd = tdm_event_get_fd(private_display);
+	fd = tdm_event_loop_get_fd(private_display);
 	if (fd < 0) {
 		TDM_ERR("couldn't get fd");
 		goto exit_thread;
@@ -107,7 +107,7 @@ _tdm_thread_main(void *data)
 
 		_pthread_mutex_lock(&private_display->lock);
 
-		if (tdm_event_dispatch(private_display) < 0)
+		if (tdm_event_loop_dispatch(private_display) < 0)
 			TDM_ERR("dispatch error");
 
 		_pthread_mutex_unlock(&private_display->lock);
