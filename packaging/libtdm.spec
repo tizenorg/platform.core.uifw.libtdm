@@ -41,6 +41,14 @@ Tizen Display Manager Client Library headers
 
 %global TZ_SYS_RO_SHARE  %{?TZ_SYS_RO_SHARE:%TZ_SYS_RO_SHARE}%{!?TZ_SYS_RO_SHARE:/usr/share}
 
+%package tools
+Summary:        Tools for libtdm
+Group:          Development/Utilities
+#Provides:       libtdm = %version
+
+%description tools
+This contains libtdm tools for fundamental testing
+
 %prep
 %setup -q
 cp %{SOURCE1001} .
@@ -112,5 +120,9 @@ rm -f %{_unitdir_user}/default.target.wants/tdm-socket-user.path
 %{_includedir}/tdm_client.h
 %{_libdir}/pkgconfig/libtdm-client.pc
 %{_libdir}/libtdm-client.so
+
+%files tools
+%manifest %{name}.manifest
+%{_bindir}/tdm-client
 
 %changelog

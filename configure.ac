@@ -64,7 +64,8 @@ AC_OUTPUT([
 	protocol/Makefile
 	client/libtdm-client.pc
 	client/Makefile
-	src/Makefile])
+	src/Makefile
+	tools/Makefile])
 
 echo ""
 echo "$PACKAGE_STRING will be compiled with:"
