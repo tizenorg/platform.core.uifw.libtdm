@@ -166,6 +166,7 @@ typedef enum {
         TDM_LAYER_CAPABILITY_SCALE          = (1 << 8), /**< if a layer has scale capability  */
         TDM_LAYER_CAPABILITY_TRANSFORM      = (1 << 9), /**< if a layer has transform capability  */
         TDM_LAYER_CAPABILITY_SCANOUT        = (1 << 10), /**< if a layer allows a scanout buffer only */
+        TDM_LAYER_CAPABILITY_RESEVED_MEMORY = (1 << 11), /**< if a layer allows a reserved buffer only */
 } tdm_layer_capability;
 
 /**
