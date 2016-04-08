@@ -125,7 +125,7 @@ struct type_name dpms_names[] = {
 	{ TDM_OUTPUT_DPMS_OFF, "off" },
 };
 
-static type_name_fn(dpms)
+INTERN type_name_fn(dpms)
 
 struct type_name status_names[] = {
 	{ TDM_OUTPUT_CONN_STATUS_DISCONNECTED, "disconnected" },
@@ -133,7 +133,7 @@ struct type_name status_names[] = {
 	{ TDM_OUTPUT_CONN_STATUS_MODE_SETTED, "mode_setted" },
 };
 
-static type_name_fn(status)
+INTERN type_name_fn(status)
 
 EXTERN tdm_error
 tdm_display_get_capabilities(tdm_display *dpy,
@@ -959,6 +959,13 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
+		TDM_WRN("output(%d) dpms: %s", private_output->pipe,
+		        dpms_str(private_output->current_dpms_value));
+		_pthread_mutex_unlock(&private_display->lock);
+		return TDM_ERROR_BAD_REQUEST;
+	}
+
 	func_output = &private_display->func_output;
 
 	if (!func_output->output_wait_vblank) {
@@ -1046,6 +1053,13 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
+		TDM_WRN("output(%d) dpms: %s", private_output->pipe,
+		        dpms_str(private_output->current_dpms_value));
+		_pthread_mutex_unlock(&private_display->lock);
+		return TDM_ERROR_BAD_REQUEST;
+	}
+
 	ret = _tdm_output_commit(output, sync, func, user_data);
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -1125,6 +1139,8 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 	}
 
 	ret = func_output->output_set_dpms(private_output->output_backend, dpms_value);
+	if (ret == TDM_ERROR_NONE)
+		private_output->current_dpms_value = dpms_value;
 
 	_pthread_mutex_unlock(&private_display->lock);
 

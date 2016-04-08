@@ -84,6 +84,11 @@ extern int tdm_debug_thread;
 #define TDM_TRACE_END()
 #endif
 
+#define prototype_name_fn(res) const char * res##_str(int type)
+
+prototype_name_fn(dpms);
+prototype_name_fn(status);
+
 typedef enum {
         TDM_CAPTURE_TARGET_OUTPUT,
         TDM_CAPTURE_TARGET_LAYER,
@@ -149,6 +154,7 @@ struct _tdm_private_output {
 	tdm_output *output_backend;
 
 	unsigned int pipe;
+	tdm_output_dpms current_dpms_value;
 
 	int regist_vblank_cb;
 	int regist_commit_cb;

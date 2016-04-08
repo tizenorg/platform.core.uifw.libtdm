@@ -393,10 +393,19 @@ EXTERN tdm_error
 tdm_capture_commit(tdm_capture *capture)
 {
 	tdm_buffer_info *b = NULL, *bb = NULL;
+	tdm_private_output *private_output;
 
 	CAPTURE_FUNC_ENTRY();
 
 	_pthread_mutex_lock(&private_display->lock);
+
+	private_output = private_capture->private_output;
+	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
+		TDM_WRN("output(%d) dpms: %s", private_output->pipe,
+		        dpms_str(private_output->current_dpms_value));
+		_pthread_mutex_unlock(&private_display->lock);
+		return TDM_ERROR_BAD_REQUEST;
+	}
 
 	if (!func_capture->capture_commit) {
 		_pthread_mutex_unlock(&private_display->lock);
