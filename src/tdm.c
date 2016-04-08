@@ -795,6 +795,7 @@ tdm_display_init(tdm_error *error)
 	int tdm_drm_fd = tdm_helper_get_fd("TDM_DRM_MASTER_FD");
 	if (tdm_drm_fd >= 0) {
 		private_display->bufmgr = tbm_bufmgr_init(tdm_drm_fd);
+		close(tdm_drm_fd);
 		if (!private_display->bufmgr) {
 			TDM_ERR("tbm_bufmgr_init failed");
 			goto failed_update;
