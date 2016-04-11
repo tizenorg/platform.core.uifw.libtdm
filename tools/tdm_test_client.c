@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <poll.h>
 #include <errno.h>
 #include <time.h>
+#include <stdint.h>
 
 #include <tdm_client.h>
 #include <tdm_helper.h>
@@ -53,7 +54,7 @@ _client_vblank_handler(unsigned int sequence, unsigned int tv_sec,
 {
 	int temp1, temp2;
 
-	temp1 = (int)user_data;
+	temp1 = (intptr_t)user_data;
 	temp2 = get_time_in_millis();
 
 	printf("%d ms\n", temp2 - temp1);
@@ -89,7 +90,7 @@ main(int argc, char *argv[])
 
 		error = tdm_client_wait_vblank(client, "unknown-0", 1, 0,
 		                               _client_vblank_handler,
-		                               (void*)get_time_in_millis());
+		                               (void*)(intptr_t)get_time_in_millis());
 		if (error != TDM_CLIENT_ERROR_NONE) {
 			printf("tdm_client_wait_vblank failed\n");
 			goto done;

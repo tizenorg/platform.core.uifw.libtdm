@@ -216,7 +216,7 @@ tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base)
 
 	len = write(private_thread->pipe[1], base, base->length);
 	if (len != base->length) {
-		TDM_ERR("write failed (%d != %d): %m", len, base->length);
+		TDM_ERR("write failed (%d != %d): %m", (int)len, base->length);
 		return TDM_ERROR_OPERATION_FAILED;
 	}
 
