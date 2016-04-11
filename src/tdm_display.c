@@ -1130,6 +1130,11 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	if (private_output->current_dpms_value == dpms_value) {
+		_pthread_mutex_unlock(&private_display->lock);
+		return TDM_ERROR_NONE;
+	}
+
 	func_output = &private_display->func_output;
 
 	if (!func_output->output_set_dpms) {
@@ -1139,8 +1144,17 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 	}
 
 	ret = func_output->output_set_dpms(private_output->output_backend, dpms_value);
-	if (ret == TDM_ERROR_NONE)
+	if (ret == TDM_ERROR_NONE) {
+		tdm_value value;
+
 		private_output->current_dpms_value = dpms_value;
+
+		value.u32 = dpms_value;
+		tdm_output_call_change_handler_internal(private_output,
+		                                        &private_output->change_handler_list_main,
+		                                        TDM_OUTPUT_CHANGE_DPMS,
+		                                        value);
+	}
 
 	_pthread_mutex_unlock(&private_display->lock);
 
