@@ -87,14 +87,8 @@ INTERN tdm_buffer_info *
 tdm_buffer_get_info(tbm_surface_h buffer)
 {
 	tdm_buffer_info *buf_info = NULL;
-	tbm_bo bo;
 
-	bo = tbm_surface_internal_get_bo(buffer, 0);
-	TDM_RETURN_VAL_IF_FAIL(bo != NULL, NULL);
-
-	tbm_bo_get_user_data(bo, TDM_BUFFER_KEY, (void **)&buf_info);
-
-	if (!buf_info) {
+	if (!tbm_surface_internal_get_user_data(buffer, TDM_BUFFER_KEY,(void **)&buf_info)) {
 		buf_info = calloc(1, sizeof(tdm_buffer_info));
 		TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
 
@@ -104,8 +98,14 @@ tdm_buffer_get_info(tbm_surface_h buffer)
 		LIST_INITHEAD(&buf_info->destroy_funcs);
 		LIST_INITHEAD(&buf_info->link);
 
-		tbm_bo_add_user_data(bo, TDM_BUFFER_KEY, _tdm_buffer_destroy_info);
-		tbm_bo_set_user_data(bo, TDM_BUFFER_KEY, buf_info);
+		if (!tbm_surface_internal_add_user_data(buffer, TDM_BUFFER_KEY, _tdm_buffer_destroy_info)) {
+			TDM_WRN("FAIL to create user_data for surface %p", buffer);
+			return NULL;
+		}
+		if (!tbm_surface_internal_set_user_data(buffer, TDM_BUFFER_KEY, buf_info)) {
+			TDM_WRN("FAIL to set user_data for surface %p", buffer);
+			return NULL;
+		}
 
 		if (tdm_debug_buffer)
 			TDM_INFO("%p created", buf_info->buffer);
