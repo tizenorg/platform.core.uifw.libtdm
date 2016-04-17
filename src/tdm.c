@@ -410,6 +410,7 @@ _tdm_display_update_output(tdm_private_display *private_display,
 		LIST_ADD(&private_output->link, &private_display->output_list);
 
 		private_output->private_display = private_display;
+		private_output->current_dpms_value = TDM_OUTPUT_DPMS_OFF;
 		private_output->output_backend = output_backend;
 		private_output->pipe = pipe;
 
