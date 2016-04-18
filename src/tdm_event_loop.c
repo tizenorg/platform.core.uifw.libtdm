@@ -112,14 +112,7 @@ tdm_event_loop_init(tdm_private_display *private_display)
 		free(private_loop);
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
-
 	private_loop->wl_loop = wl_display_get_event_loop(private_loop->wl_display);
-	if (!private_loop->wl_loop) {
-		TDM_ERR("no event loop");
-		wl_display_destroy(private_loop->wl_display);
-		free(private_loop);
-		return TDM_ERROR_OPERATION_FAILED;
-	}
 
 	ret = tdm_server_init(private_loop);
 	if (ret != TDM_ERROR_NONE) {
