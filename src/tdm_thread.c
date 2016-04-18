@@ -134,7 +134,7 @@ tdm_thread_init(tdm_private_loop *private_loop)
 
 	/* enable as default */
 	thread = getenv("TDM_THREAD");
-	if (thread && strstr(thread, "1")) {
+	if (!thread || !strncmp(thread, "1", 1)) {
 		TDM_INFO("not using a TDM event thread");
 		return TDM_ERROR_NONE;
 	}
