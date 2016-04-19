@@ -45,7 +45,7 @@ extern "C" {
 
 /**
  * @file tdm_helper.h
- * @brief The header file to help a vendor to implement a backend module
+ * @brief The header file to help tdm backend/frontend user
  */
 
 /**
@@ -94,6 +94,49 @@ int tdm_helper_get_fd(const char *env);
  * @see #tdm_helper_get_fd()
  */
 void tdm_helper_set_fd(const char *env, int fd);
+
+/**
+ * @brief Start the dump debugging.
+ * @details
+ * Start tdm dump.
+ * Make dump file when tdm_layer_set_buffer() function is called.
+ * Set the dump count to 1.
+ * @param[in] dumppath The given dump path
+ * @param[in] count The dump count number
+ * @see #tdm_helper_dump_stop()
+ */
+void
+tdm_helper_dump_start(char *dumppath, int *count);
+
+/**
+ * @brief Stop the dump debugging.
+ * @details
+ * Stop tdm dump.
+ * Set the dump count to 0.
+ * @see #tdm_helper_dump_start()
+ */
+void
+tdm_helper_dump_stop(void);
+
+/**
+ * @brief Get the dump count value.
+ * @details
+ * To debug dump files the dump sequence number is needed.
+ * This API provide dump sequence value.
+ * @return count Dump counting value
+ */
+int
+_tdm_helper_get_dump_count(void);
+
+/**
+ * @brief Get the tdm dump path.
+ * @details
+ * To make dump file get the dump path.
+ * This API provide dump path.
+ * @return path Dump path
+ */
+char *
+_tdm_helper_get_dump_path(void);
 
 #ifdef __cplusplus
 }
