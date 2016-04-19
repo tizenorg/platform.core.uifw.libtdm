@@ -40,6 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm.h"
 #include "tdm_backend.h"
 #include "tdm_private.h"
+#include "tdm_helper.h"
 
 #define COUNT_MAX   10
 
@@ -1417,6 +1418,44 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 	return ret;
 }
 
+static void
+_tdm_layer_set_buffer_dump(tdm_private_output *private_output, tdm_private_layer *private_layer, tbm_surface_h buffer)
+{
+	int count;
+	tbm_surface_info_s info;
+	char *path = NULL;
+	unsigned int pipe;
+	int zpos;
+	tbm_surface_error_e ret;
+
+	path = tdm_helper_get_dump_path();
+	if (path == NULL)
+		return;
+
+	count = tdm_helper_get_dump_count();
+	if (count == 0)
+		return;
+
+	ret = tbm_surface_map(buffer, TBM_DEVICE_CPU, &info);
+	if (ret != TBM_SURFACE_ERROR_NONE)
+		return;
+
+	char fullpath[PATH_MAX] = {0, };
+
+	pipe = private_output->pipe;
+	zpos = private_layer->caps.zpos;
+
+	if (info.format == TBM_FORMAT_ARGB8888 || info.format == TBM_FORMAT_XRGB8888)
+		snprintf(fullpath, sizeof(fullpath), "%s/%03d_o_%d_l_%d.png",
+			path, count, pipe, zpos);
+	else
+		snprintf(fullpath, sizeof(fullpath), "%s/%03d_o_%d_l_%d_%dx%d_%c%c%c%c.yuv",
+			path, count, pipe, zpos, info.planes[0].stride, info.height, FOURCC_STR(info.format));
+
+	tdm_helper_dump_buffer(buffer, fullpath);
+	TDM_DBG("%d, %s dump excute", count, fullpath);
+}
+
 EXTERN tdm_error
 tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 {
@@ -1442,6 +1481,9 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	if (ret == TDM_ERROR_NONE) {
+		/* dump buffer */
+		_tdm_layer_set_buffer_dump(private_output, private_layer, buffer);
+
 		/* FIXME: should save to pending_buffer first. And after committing
 		 * successfully, need to move to waiting_buffer.
 		 */
