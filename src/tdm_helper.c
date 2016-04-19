@@ -16,6 +16,9 @@
 
 static const char *dump_prefix[2] = {"png", "yuv"};
 
+static int *tdm_helper_dump_count;
+static char *tdm_helper_dump_path;
+
 INTERN int
 tdm_helper_unlock_in_cb(tdm_private_display *private_display)
 {
@@ -262,4 +265,49 @@ tdm_helper_set_fd(const char *env, int fd)
 
 	if (fd >= 0)
 		TDM_INFO("%s: fd(%d)", env, fd);
+}
+
+EXTERN void
+tdm_helper_dump_start(char *dumppath, int *count)
+{
+	if (tdm_helper_dump_count != NULL) {
+		TDM_DBG("tdm_helper_dump is already started.");
+		return;
+	}
+
+	if (dumppath == NULL) {
+		TDM_DBG("tdm_helper_dump dumppath is null.");
+		return;
+	}
+
+	tdm_helper_dump_count = count;
+	tdm_helper_dump_path = dumppath;
+
+	TDM_DBG("tdm_helper_dump start.(path : %s)", tdm_helper_dump_path);
+}
+
+EXTERN void
+tdm_helper_dump_stop(void)
+{
+	tdm_helper_dump_path = NULL;
+    tdm_helper_dump_count = NULL;
+
+	TDM_DBG("tdm_helper_dump stop.");
+}
+
+INTERN int
+_tdm_helper_get_dump_count(void)
+{
+	if ((tdm_helper_dump_count != NULL) && (tdm_helper_dump_path != NULL)) {
+		if (*tdm_helper_dump_count == 1000)
+			*tdm_helper_dump_count = 1;
+		return (*tdm_helper_dump_count)++;
+	} else
+		return 0;
+}
+
+INTERN char *
+_tdm_helper_get_dump_path(void)
+{
+	return tdm_helper_dump_path;
 }
