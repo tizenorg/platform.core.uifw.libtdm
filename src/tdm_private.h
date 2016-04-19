@@ -446,6 +446,11 @@ tdm_helper_unlock_in_cb(tdm_private_display *private_display);
 void
 tdm_helper_lock_in_cb(tdm_private_display *private_display, int need_lock);
 
+int
+tdm_helper_get_dump_count(void);
+char *
+tdm_helper_get_dump_path(void);
+
 #define _pthread_mutex_lock(l) \
     do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)
 #define _pthread_mutex_unlock(l) \
