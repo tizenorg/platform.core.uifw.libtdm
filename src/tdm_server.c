@@ -57,6 +57,8 @@ typedef struct _tdm_server_vblank_info {
 	tdm_private_server *private_server;
 } tdm_server_vblank_info;
 
+static tdm_private_loop *keep_private_loop;
+
 static void
 _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
                              unsigned int tv_sec, unsigned int tv_usec,
@@ -65,7 +67,10 @@ _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
 	tdm_server_vblank_info *vblank_info = (tdm_server_vblank_info*)user_data;
 	tdm_server_vblank_info *found;
 
-	LIST_FIND_ITEM(vblank_info, &vblank_info->private_server->vblank_list,
+	if (!keep_private_loop || !keep_private_loop->private_server)
+		return;
+
+	LIST_FIND_ITEM(vblank_info, &keep_private_loop->private_server->vblank_list,
 	               tdm_server_vblank_info, link, found);
 	if (!found) {
 		TDM_DBG("vblank_info(%p) is destroyed", vblank_info);
@@ -222,6 +227,7 @@ tdm_server_init(tdm_private_loop *private_loop)
 	}
 
 	private_loop->private_server = private_server;
+	keep_private_loop = private_loop;
 
 	return TDM_ERROR_NONE;
 }
@@ -243,4 +249,5 @@ tdm_server_deinit(tdm_private_loop *private_loop)
 
 	free(private_server);
 	private_loop->private_server = NULL;
+	keep_private_loop = NULL;
 }
