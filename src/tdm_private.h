@@ -453,16 +453,6 @@ tdm_helper_get_dump_count(void);
 char *
 tdm_helper_get_dump_path(void);
 
-#define _pthread_mutex_lock(l) \
-	do { \
-		if (tdm_debug_mutex) \
-			TDM_INFO("mutex lock"); \
-		pthread_mutex_lock(l); \
-		pthread_mutex_lock(&tdm_mutex_check_lock); \
-		tdm_mutex_locked = 1; \
-		pthread_mutex_unlock(&tdm_mutex_check_lock); \
-	} while (0)
-
 #define _pthread_mutex_unlock(l) \
 	do { \
 		if (tdm_debug_mutex) \
@@ -473,6 +463,23 @@ tdm_helper_get_dump_path(void);
 		pthread_mutex_unlock(l); \
 	} while (0)
 
+#define _pthread_mutex_lock(l) \
+	do { \
+		if (tdm_debug_mutex) \
+			TDM_INFO("mutex lock"); \
+		struct timespec rtime; \
+		clock_gettime(CLOCK_REALTIME, &rtime); \
+		rtime.tv_sec += 5; \
+		if (pthread_mutex_timedlock(l, &rtime)) { \
+			TDM_ERR("Mutex lock failed PID %d", getpid()); \
+			_pthread_mutex_unlock(l); \
+		} \
+		else { \
+			pthread_mutex_lock(&tdm_mutex_check_lock); \
+			tdm_mutex_locked = 1; \
+			pthread_mutex_unlock(&tdm_mutex_check_lock); \
+		} \
+	} while (0)
 //#define TDM_MUTEX_IS_LOCKED() (tdm_mutex_locked == 1)
 static inline int TDM_MUTEX_IS_LOCKED(void)
 {
