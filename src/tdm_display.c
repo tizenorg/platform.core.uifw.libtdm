@@ -1386,19 +1386,20 @@ _tdm_layer_dump_buffer(tdm_layer *layer, tbm_surface_h buffer)
 	int count;
 	unsigned int pipe;
 	int zpos;
+	char fullpath[PATH_MAX];
 	tbm_surface_info_s info;
 	tbm_surface_error_e err;
 
 	path = tdm_helper_get_dump_path();
-	TDM_RETURN_IF_FAIL(path != NULL);
+	if (!path)
+		return;
 
 	count = tdm_helper_get_dump_count();
-	TDM_RETURN_IF_FAIL(count != 0);
+	if (count <= 0)
+		return;
 
 	err = tbm_surface_map(buffer, TBM_SURF_OPTION_READ, &info);
 	TDM_RETURN_IF_FAIL(err == TBM_SURFACE_ERROR_NONE);
-
-	char fullpath[PATH_MAX] = {0, };
 
 	pipe = private_output->pipe;
 	zpos = private_layer->caps.zpos;
