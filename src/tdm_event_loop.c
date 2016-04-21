@@ -72,6 +72,7 @@ _tdm_event_loop_main_fd_handler(int fd, tdm_event_loop_mask mask, void *user_dat
 	tdm_func_display *func_display;
 	tdm_error ret;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(private_display != NULL, TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(private_display->private_loop != NULL, TDM_ERROR_OPERATION_FAILED);
 
@@ -94,6 +95,8 @@ tdm_event_loop_init(tdm_private_display *private_display)
 {
 	tdm_private_loop *private_loop;
 	tdm_error ret;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 
 	if (private_display->private_loop)
 		return TDM_ERROR_NONE;
@@ -142,6 +145,8 @@ tdm_event_loop_init(tdm_private_display *private_display)
 INTERN void
 tdm_event_loop_deinit(tdm_private_display *private_display)
 {
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
+
 	if (!private_display->private_loop)
 		return;
 
@@ -166,6 +171,7 @@ tdm_event_loop_create_backend_source(tdm_private_display *private_display)
 	tdm_error ret;
 	int fd = -1;
 
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 	TDM_RETURN_IF_FAIL(private_loop != NULL);
 
 	func_display = &private_display->func_display;
@@ -205,6 +211,8 @@ tdm_event_loop_get_fd(tdm_private_display *private_display)
 {
 	tdm_private_loop *private_loop = private_display->private_loop;
 
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
+
 	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_loop != NULL, -1);
 
 	return wl_event_loop_get_fd(private_loop->wl_loop);
@@ -214,6 +222,8 @@ INTERN tdm_error
 tdm_event_loop_dispatch(tdm_private_display *private_display)
 {
 	tdm_private_loop *private_loop = private_display->private_loop;
+
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
 
 	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_loop != NULL, TDM_ERROR_OPERATION_FAILED);
 
@@ -236,6 +246,8 @@ tdm_event_loop_flush(tdm_private_display *private_display)
 {
 	tdm_private_loop *private_loop = private_display->private_loop;
 
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
+
 	TDM_RETURN_IF_FAIL(private_loop->wl_display != NULL);
 
 	wl_display_flush_clients(private_loop->wl_display);
@@ -245,10 +257,15 @@ static int
 _tdm_event_loop_fd_func(int fd, uint32_t wl_mask, void *data)
 {
 	tdm_event_loop_source_fd *fd_source = (tdm_event_loop_source_fd*)data;
+	tdm_private_display *private_display;
 	tdm_event_loop_mask mask = 0;
+
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
 
 	TDM_RETURN_VAL_IF_FAIL(fd_source, 1);
 	TDM_RETURN_VAL_IF_FAIL(fd_source->func, 1);
+
+	private_display = fd_source->private_display;
 
 	if (wl_mask & WL_EVENT_READABLE)
 		mask |= TDM_EVENT_LOOP_READABLE;
@@ -259,7 +276,9 @@ _tdm_event_loop_fd_func(int fd, uint32_t wl_mask, void *data)
 	if (wl_mask & WL_EVENT_ERROR)
 		mask |= TDM_EVENT_LOOP_ERROR;
 
+	_pthread_mutex_lock(&private_display->lock);
 	fd_source->func(fd, mask, fd_source->user_data);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return 1;
 }
@@ -275,6 +294,7 @@ tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask
 	uint32_t wl_mask = 0;
 	tdm_error ret;
 
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED, NULL);
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(dpy, TDM_ERROR_INVALID_PARAMETER, NULL);
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(fd >= 0, TDM_ERROR_INVALID_PARAMETER, NULL);
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(func, TDM_ERROR_INVALID_PARAMETER, NULL);
@@ -318,6 +338,7 @@ tdm_event_loop_source_fd_update(tdm_event_loop_source *source, tdm_event_loop_ma
 	tdm_event_loop_source_fd *fd_source = source;
 	uint32_t wl_mask = 0;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(fd_source, TDM_ERROR_INVALID_PARAMETER);
 
 	if (mask & TDM_EVENT_LOOP_READABLE)
@@ -337,11 +358,18 @@ static int
 _tdm_event_loop_timer_func(void *data)
 {
 	tdm_event_loop_source_timer *timer_source = (tdm_event_loop_source_timer*)data;
+	tdm_private_display *private_display;
+
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
 
 	TDM_RETURN_VAL_IF_FAIL(timer_source, 1);
 	TDM_RETURN_VAL_IF_FAIL(timer_source->func, 1);
 
+	private_display = timer_source->private_display;
+
+	_pthread_mutex_lock(&private_display->lock);
 	timer_source->func(timer_source->user_data);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	return 1;
 }
@@ -355,6 +383,7 @@ tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler 
 	tdm_event_loop_source_timer *timer_source;
 	tdm_error ret;
 
+	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED, NULL);
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(dpy, TDM_ERROR_INVALID_PARAMETER, NULL);
 	TDM_RETURN_VAL_IF_FAIL_WITH_ERROR(func, TDM_ERROR_INVALID_PARAMETER, NULL);
 
@@ -391,6 +420,7 @@ tdm_event_loop_source_timer_update(tdm_event_loop_source *source, int ms_delay)
 {
 	tdm_event_loop_source_timer *timer_source = source;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(timer_source, TDM_ERROR_INVALID_PARAMETER);
 
 	if (wl_event_source_timer_update(timer_source->base.wl_source, ms_delay) < 0) {
@@ -405,6 +435,8 @@ EXTERN void
 tdm_event_loop_source_remove(tdm_event_loop_source *source)
 {
 	tdm_event_loop_source_base *base = (tdm_event_loop_source_base*)source;
+
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
 	if (!base)
 		return;

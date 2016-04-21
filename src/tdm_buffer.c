@@ -196,6 +196,9 @@ tdm_buffer_unref_backend(tbm_surface_h buffer)
 		return;
 	}
 
+	if (!tdm_thread_in_display_thread(syscall(SYS_gettid)))
+		TDM_NEVER_GET_HERE();
+
 	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link) {
 		tbm_surface_internal_ref(buffer);
 		func_info->release_func(buffer, func_info->user_data);

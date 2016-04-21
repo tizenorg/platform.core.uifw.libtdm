@@ -229,10 +229,10 @@ struct _tdm_private_capture {
 };
 
 /* CAUTION:
- * Note that this structure is not thread-safe. If there is no TDM thread, all
- * TDM resources are protected by private_display's lock. If there is a TDM
- * thread, this struct will be used only in a TDM thread. So, we don't need to
- * protect this structure.
+ * Note that we don't need to (un)lock mutex to use this structure. If there is
+ * no TDM thread, all TDM resources are protected by private_display's mutex.
+ * If there is a TDM thread, this struct will be used only in a TDM thread.
+ * So, we don't need to protect this structure by mutex. Not thread-safe.
  */
 struct _tdm_private_loop {
 	/* TDM uses wl_event_loop to handle various event sources including the TDM
@@ -247,7 +247,7 @@ struct _tdm_private_loop {
 	/* In event loop, all resources are accessed by this dpy.
 	 * CAUTION:
 	 * - DO NOT include other private structure in this structure because this
-	 *   struct is not thread-safe.
+	 *   struct is not protected by mutex.
 	 */
 	tdm_display *dpy;
 
@@ -432,7 +432,9 @@ tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base);
 tdm_error
 tdm_thread_handle_cb(tdm_private_loop *private_loop);
 int
-tdm_thread_in_display_thread(tdm_private_loop *private_loop, pid_t tid);
+tdm_thread_in_display_thread(pid_t tid);
+int
+tdm_thread_is_running(void);
 
 tdm_error
 tdm_server_init(tdm_private_loop *private_loop);
@@ -441,10 +443,9 @@ tdm_server_deinit(tdm_private_loop *private_loop);
 
 unsigned long
 tdm_helper_get_time_in_millis(void);
-int
-tdm_helper_unlock_in_cb(tdm_private_display *private_display);
-void
-tdm_helper_lock_in_cb(tdm_private_display *private_display, int need_lock);
+
+extern pthread_mutex_t tdm_mutex_check_lock;
+extern int tdm_mutex_locked;
 
 int
 tdm_helper_get_dump_count(void);
@@ -452,9 +453,34 @@ char *
 tdm_helper_get_dump_path(void);
 
 #define _pthread_mutex_lock(l) \
-    do {if (tdm_debug_mutex) TDM_INFO("mutex lock"); pthread_mutex_lock(l);} while (0)
+	do { \
+		if (tdm_debug_mutex) \
+			TDM_INFO("mutex lock"); \
+		pthread_mutex_lock(l); \
+		pthread_mutex_lock(&tdm_mutex_check_lock); \
+		tdm_mutex_locked = 1; \
+		pthread_mutex_unlock(&tdm_mutex_check_lock); \
+	} while (0)
+
 #define _pthread_mutex_unlock(l) \
-    do {if (tdm_debug_mutex) TDM_INFO("mutex unlock"); pthread_mutex_unlock(l);} while (0)
+	do { \
+		if (tdm_debug_mutex) \
+			TDM_INFO("mutex unlock"); \
+		pthread_mutex_lock(&tdm_mutex_check_lock); \
+		tdm_mutex_locked = 0; \
+		pthread_mutex_unlock(&tdm_mutex_check_lock); \
+		pthread_mutex_unlock(l); \
+	} while (0)
+
+//#define TDM_MUTEX_IS_LOCKED() (tdm_mutex_locked == 1)
+static inline int TDM_MUTEX_IS_LOCKED(void)
+{
+	int ret;
+	pthread_mutex_lock(&tdm_mutex_check_lock);
+	ret = (tdm_mutex_locked == 1);
+	pthread_mutex_unlock(&tdm_mutex_check_lock);
+	return ret;
+}
 
 #ifdef __cplusplus
 }

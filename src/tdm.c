@@ -42,6 +42,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_private.h"
 #include "tdm_helper.h"
 
+pthread_mutex_t tdm_mutex_check_lock = PTHREAD_MUTEX_INITIALIZER;
+int tdm_mutex_locked;
+
 static tdm_private_layer *
 _tdm_display_find_private_layer(tdm_private_output *private_output,
                                 tdm_layer *layer_backend)
@@ -784,6 +787,8 @@ tdm_display_init(tdm_error *error)
 		goto failed_mutex_init;
 	}
 
+	_pthread_mutex_lock(&private_display->lock);
+
 	ret = tdm_event_loop_init(private_display);
 	if (ret != TDM_ERROR_NONE)
 		goto failed_event;
@@ -821,6 +826,7 @@ tdm_display_init(tdm_error *error)
 	if (error)
 		*error = TDM_ERROR_NONE;
 
+	_pthread_mutex_unlock(&private_display->lock);
 	_pthread_mutex_unlock(&gLock);
 
 	return (tdm_display *)private_display;
@@ -830,6 +836,7 @@ failed_update:
 failed_load:
 	tdm_event_loop_deinit(private_display);
 failed_event:
+	_pthread_mutex_unlock(&private_display->lock);
 	pthread_mutex_destroy(&private_display->lock);
 failed_mutex_init:
 	free(private_display);
@@ -881,5 +888,7 @@ tdm_display_deinit(tdm_display *dpy)
 	tdm_debug_buffer = 0;
 
 	_pthread_mutex_unlock(&gLock);
+
+	TDM_INFO("done");
 }
 
