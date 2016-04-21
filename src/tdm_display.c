@@ -1444,7 +1444,8 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	/* dump buffer */
-	_tdm_layer_dump_buffer(layer, buffer);
+	if (tdm_dump_enable)
+		_tdm_layer_dump_buffer(layer, buffer);
 
 	if (ret == TDM_ERROR_NONE) {
 		/* FIXME: should save to pending_buffer first. And after committing

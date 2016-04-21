@@ -16,6 +16,7 @@
 
 static const char *dump_prefix[2] = {"png", "yuv"};
 
+int tdm_dump_enable;
 static int *tdm_helper_dump_count;
 static char *tdm_helper_dump_path;
 
@@ -258,6 +259,8 @@ tdm_helper_dump_start(char *dumppath, int *count)
 	tdm_helper_dump_count = count;
 	tdm_helper_dump_path = dumppath;
 
+	tdm_dump_enable = 1;
+
 	TDM_DBG("tdm_helper_dump start.(path : %s)", tdm_helper_dump_path);
 }
 
@@ -266,6 +269,8 @@ tdm_helper_dump_stop(void)
 {
 	tdm_helper_dump_path = NULL;
 	tdm_helper_dump_count = NULL;
+
+	tdm_dump_enable = 0;
 
 	TDM_DBG("tdm_helper_dump stop.");
 }
