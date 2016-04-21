@@ -251,8 +251,8 @@ tdm_helper_dump_start(char *dumppath, int *count)
 		return;
 	}
 
-	if (dumppath == NULL) {
-		TDM_DBG("tdm_helper_dump dumppath is null.");
+	if (dumppath == NULL || count == NULL) {
+		TDM_DBG("tdm_helper_dump dumppath or count is null.");
 		return;
 	}
 
