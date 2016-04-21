@@ -43,6 +43,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_private.h"
 #include "tdm_list.h"
 
+static tdm_private_thread *keep_private_thread;
+
 struct _tdm_private_thread {
 	tdm_private_loop *private_loop;
 
@@ -124,6 +126,7 @@ tdm_thread_init(tdm_private_loop *private_loop)
 	tdm_private_thread *private_thread;
 	const char *thread;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(private_loop->dpy, TDM_ERROR_OPERATION_FAILED);
 
 	private_display = private_loop->dpy;
@@ -159,6 +162,8 @@ tdm_thread_init(tdm_private_loop *private_loop)
 	pthread_create(&private_thread->event_thread, NULL, _tdm_thread_main,
 	               private_thread);
 
+	keep_private_thread = private_thread;
+
 	TDM_INFO("using a TDM event thread. pipe(%d,%d)",
 	         private_thread->pipe[0], private_thread->pipe[1]);
 
@@ -168,6 +173,8 @@ tdm_thread_init(tdm_private_loop *private_loop)
 INTERN void
 tdm_thread_deinit(tdm_private_loop *private_loop)
 {
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
+
 	if (!private_loop->private_thread)
 		return;
 
@@ -181,6 +188,7 @@ tdm_thread_deinit(tdm_private_loop *private_loop)
 
 	free(private_loop->private_thread);
 	private_loop->private_thread = NULL;
+	keep_private_thread = NULL;
 
 	TDM_INFO("Finish a TDM event thread");
 }
@@ -190,6 +198,7 @@ tdm_thread_get_fd(tdm_private_loop *private_loop)
 {
 	tdm_private_thread *private_thread;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(private_loop, -1);
 	TDM_RETURN_VAL_IF_FAIL(private_loop->private_thread, -1);
 
@@ -204,6 +213,7 @@ tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base)
 	tdm_private_thread *private_thread;
 	ssize_t len;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 	TDM_RETURN_VAL_IF_FAIL(base, TDM_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(private_loop, TDM_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(private_loop->private_thread, TDM_ERROR_INVALID_PARAMETER);
@@ -226,15 +236,19 @@ tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base)
 INTERN tdm_error
 tdm_thread_handle_cb(tdm_private_loop *private_loop)
 {
+	tdm_private_display *private_display;
 	tdm_private_thread *private_thread;
 	tdm_thread_cb_base *base;
 	char buffer[1024];
 	int len, i;
 
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
+
 	TDM_RETURN_VAL_IF_FAIL(private_loop, TDM_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(private_loop->private_thread, TDM_ERROR_INVALID_PARAMETER);
 
 	private_thread = private_loop->private_thread;
+	private_display = private_loop->dpy;
 
 	len = read(private_thread->pipe[0], buffer, sizeof buffer);
 
@@ -248,6 +262,8 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 		TDM_NEVER_GET_HERE();
 		return TDM_ERROR_OPERATION_FAILED;
 	}
+
+	_pthread_mutex_lock(&private_display->lock);
 
 	i = 0;
 	while (i < len) {
@@ -326,22 +342,28 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 		i += base->length;
 	}
 
+	_pthread_mutex_unlock(&private_display->lock);
+
 	tdm_event_loop_flush(private_loop->dpy);
 
 	return TDM_ERROR_NONE;
 }
 
 INTERN int
-tdm_thread_in_display_thread(tdm_private_loop *private_loop, pid_t tid)
+tdm_thread_in_display_thread(pid_t tid)
 {
-	tdm_private_thread *private_thread;
-
-	TDM_RETURN_VAL_IF_FAIL(private_loop, 1);
-
-	if (!private_loop->private_thread)
+	if (!keep_private_thread)
 		return 1;
 
-	private_thread = private_loop->private_thread;
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
 
-	return (private_thread->display_tid == tid) ? 1 : 0;
+	return (keep_private_thread->display_tid == tid) ? 1 : 0;
+}
+
+INTERN int
+tdm_thread_is_running(void)
+{
+	/* DON'T check TDM_MUTEX_IS_LOCKED here */
+
+	return (keep_private_thread) ? 1 : 0;
 }

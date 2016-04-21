@@ -43,7 +43,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm-server-protocol.h"
 
 /* CAUTION:
- * - tdm server doesn't care about multi-thread.
+ * - tdm server doesn't care about thread things.
  * - DO NOT use the TDM internal functions here.
  */
 
@@ -57,7 +57,7 @@ typedef struct _tdm_server_vblank_info {
 	tdm_private_server *private_server;
 } tdm_server_vblank_info;
 
-static tdm_private_loop *keep_private_loop;
+static tdm_private_server *keep_private_server;
 
 static void
 _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
@@ -67,10 +67,10 @@ _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
 	tdm_server_vblank_info *vblank_info = (tdm_server_vblank_info*)user_data;
 	tdm_server_vblank_info *found;
 
-	if (!keep_private_loop || !keep_private_loop->private_server)
+	if (!keep_private_server)
 		return;
 
-	LIST_FIND_ITEM(vblank_info, &keep_private_loop->private_server->vblank_list,
+	LIST_FIND_ITEM(vblank_info, &keep_private_server->vblank_list,
 	               tdm_server_vblank_info, link, found);
 	if (!found) {
 		TDM_DBG("vblank_info(%p) is destroyed", vblank_info);
@@ -227,7 +227,7 @@ tdm_server_init(tdm_private_loop *private_loop)
 	}
 
 	private_loop->private_server = private_server;
-	keep_private_loop = private_loop;
+	keep_private_server = private_server;
 
 	return TDM_ERROR_NONE;
 }
@@ -249,5 +249,5 @@ tdm_server_deinit(tdm_private_loop *private_loop)
 
 	free(private_server);
 	private_loop->private_server = NULL;
-	keep_private_loop = NULL;
+	keep_private_server = NULL;
 }
