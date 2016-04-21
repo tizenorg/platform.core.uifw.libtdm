@@ -43,6 +43,7 @@ extern "C" {
 
 #include <unistd.h>
 #include <time.h>
+#include <assert.h>
 #include <sys/syscall.h>
 
 
@@ -59,6 +60,15 @@ extern "C" {
 extern int tdm_debug;
 
 //#define TDM_CONFIG_DLOG
+//#define TDM_CONFIG_ASSERT
+
+#undef TDM_ASSERT
+#ifdef TDM_CONFIG_ASSERT
+#define TDM_ASSERT(o) assert(o)
+#else
+#define TDM_ASSERT(o)
+#endif
+
 #ifdef TDM_CONFIG_DLOG
 
 #include <dlog.h>
@@ -137,6 +147,7 @@ extern int tdm_debug;
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
 		printf(COLOR_YELLOW"[TDM_WRN]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
 			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
+		TDM_ASSERT(0); \
 	} while (0);
 
 #define TDM_ERR(fmt, args...) \
@@ -145,6 +156,7 @@ extern int tdm_debug;
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
 		printf(COLOR_RED"[TDM_ERR]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
 			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
+		TDM_ASSERT(0); \
 	} while (0);
 
 #endif /* TDM_CONFIG_DLOG */
