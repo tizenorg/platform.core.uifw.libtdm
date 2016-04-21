@@ -96,8 +96,8 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	tdm_private_display *private_display = private_pp->private_display;
 	tdm_buffer_info *buf_info;
 	tbm_surface_h first_entry;
-	int lock_after_cb_done = 0;
-	int ret;
+
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
 	if (private_pp->owner_tid != syscall(SYS_gettid)) {
 		tdm_thread_cb_pp_done pp_done;
@@ -136,25 +136,18 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	if ((buf_info = tdm_buffer_get_info(dst)))
 		LIST_DEL(&buf_info->link);
 
-	ret = pthread_mutex_trylock(&private_display->lock);
-	if (ret == 0)
-		_pthread_mutex_unlock(&private_display->lock);
-	else  if (ret == EBUSY) {
-		_pthread_mutex_unlock(&private_display->lock);
-		lock_after_cb_done = 1;
-	}
-
+	_pthread_mutex_unlock(&private_display->lock);
 	tdm_buffer_unref_backend(src);
 	tdm_buffer_unref_backend(dst);
-
-	if (lock_after_cb_done)
-		_pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 }
 
 INTERN tdm_private_pp *
 tdm_pp_find_stamp(tdm_private_display *private_display, unsigned long stamp)
 {
 	tdm_private_pp *private_pp = NULL;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), NULL);
 
 	LIST_FOR_EACH_ENTRY(private_pp, &private_display->pp_list, link) {
 		if (private_pp->stamp == stamp)
@@ -172,6 +165,8 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 	tdm_private_pp *private_pp = NULL;
 	tdm_pp *pp_backend = NULL;
 	tdm_error ret = TDM_ERROR_NONE;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), NULL);
 
 	func_display = &private_display->func_display;
 	func_pp = &private_display->func_pp;
@@ -235,6 +230,8 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 	tdm_func_pp *func_pp;
 	tdm_buffer_info *b = NULL, *bb = NULL;
 
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
+
 	if (!private_pp)
 		return;
 
@@ -246,7 +243,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 	func_pp->pp_destroy(private_pp->pp_backend);
 
 	if (!LIST_IS_EMPTY(&private_pp->src_pending_buffer_list)) {
-		TDM_ERR("pp(%p) not finished:", private_pp);
+		TDM_WRN("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->src_pending_buffer_list);
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link) {
@@ -258,7 +255,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 	}
 
 	if (!LIST_IS_EMPTY(&private_pp->dst_pending_buffer_list)) {
-		TDM_ERR("pp(%p) not finished:", private_pp);
+		TDM_WRN("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->dst_pending_buffer_list);
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link) {
@@ -270,7 +267,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 	}
 
 	if (!LIST_IS_EMPTY(&private_pp->src_buffer_list)) {
-		TDM_ERR("pp(%p) not finished:", private_pp);
+		TDM_WRN("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->src_buffer_list);
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_buffer_list, link) {
@@ -282,7 +279,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 	}
 
 	if (!LIST_IS_EMPTY(&private_pp->dst_buffer_list)) {
-		TDM_ERR("pp(%p) not finished:", private_pp);
+		TDM_WRN("pp(%p) not finished:", private_pp);
 		tdm_buffer_list_dump(&private_pp->dst_buffer_list);
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_buffer_list, link) {

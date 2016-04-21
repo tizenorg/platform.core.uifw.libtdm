@@ -16,31 +16,6 @@
 
 static const char *dump_prefix[2] = {"png", "yuv"};
 
-INTERN int
-tdm_helper_unlock_in_cb(tdm_private_display *private_display)
-{
-	int ret = pthread_mutex_trylock(&private_display->lock);
-	int need_lock = 0;
-
-	if (ret == 0)
-		_pthread_mutex_unlock(&private_display->lock);
-	else  if (ret == EBUSY) {
-		_pthread_mutex_unlock(&private_display->lock);
-		need_lock = 1;
-	}
-
-	return need_lock;
-}
-
-INTERN void
-tdm_helper_lock_in_cb(tdm_private_display *private_display, int need_lock)
-{
-	if (!need_lock)
-		return;
-
-	_pthread_mutex_lock(&private_display->lock);
-}
-
 INTERN unsigned long
 tdm_helper_get_time_in_millis(void)
 {

@@ -82,8 +82,8 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 	tdm_private_display *private_display = private_capture->private_display;
 	tdm_buffer_info *buf_info;
 	tbm_surface_h first_entry;
-	int lock_after_cb_done = 0;
-	int ret;
+
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
 	if (private_capture->owner_tid != syscall(SYS_gettid)) {
 		tdm_thread_cb_capture_done capture_done;
@@ -114,24 +114,17 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 	if ((buf_info = tdm_buffer_get_info(buffer)))
 		LIST_DEL(&buf_info->link);
 
-	ret = pthread_mutex_trylock(&private_display->lock);
-	if (ret == 0)
-		_pthread_mutex_unlock(&private_display->lock);
-	else  if (ret == EBUSY) {
-		_pthread_mutex_unlock(&private_display->lock);
-		lock_after_cb_done = 1;
-	}
-
+	_pthread_mutex_unlock(&private_display->lock);
 	tdm_buffer_unref_backend(buffer);
-
-	if (lock_after_cb_done)
-		_pthread_mutex_lock(&private_display->lock);
+	_pthread_mutex_lock(&private_display->lock);
 }
 
 INTERN tdm_private_capture *
 tdm_capture_find_stamp(tdm_private_display *private_display, unsigned long stamp)
 {
 	tdm_private_capture *private_capture = NULL;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), NULL);
 
 	LIST_FOR_EACH_ENTRY(private_capture, &private_display->capture_list, link) {
 		if (private_capture->stamp == stamp)
@@ -151,6 +144,8 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 	tdm_private_capture *private_capture = NULL;
 	tdm_capture *capture_backend = NULL;
 	tdm_error ret = TDM_ERROR_NONE;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), NULL);
 
 	if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE)) {
 		TDM_ERR("no capture capability");
@@ -221,6 +216,8 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 	tdm_capture *capture_backend = NULL;
 	tdm_error ret = TDM_ERROR_NONE;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), NULL);
+
 	if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE)) {
 		TDM_ERR("no capture capability");
 		if (error)
@@ -272,6 +269,8 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 	tdm_func_capture *func_capture;
 	tdm_buffer_info *b = NULL, *bb = NULL;
 
+	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
+
 	if (!private_capture)
 		return;
 
@@ -282,7 +281,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 	func_capture->capture_destroy(private_capture->capture_backend);
 
 	if (!LIST_IS_EMPTY(&private_capture->pending_buffer_list)) {
-		TDM_ERR("capture(%p) not finished:", private_capture);
+		TDM_WRN("capture(%p) not finished:", private_capture);
 		tdm_buffer_list_dump(&private_capture->pending_buffer_list);
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->pending_buffer_list, link) {
@@ -294,7 +293,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 	}
 
 	if (!LIST_IS_EMPTY(&private_capture->buffer_list)) {
-		TDM_ERR("capture(%p) not finished:", private_capture);
+		TDM_WRN("capture(%p) not finished:", private_capture);
 		tdm_buffer_list_dump(&private_capture->buffer_list);
 
 		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_capture->buffer_list, link) {

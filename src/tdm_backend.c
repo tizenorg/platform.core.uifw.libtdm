@@ -69,6 +69,8 @@ tdm_backend_register_func_display(tdm_display *dpy,
 {
 	tdm_backend_module *module;
 
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
+
 	BACKEND_FUNC_ENTRY();
 
 	TDM_RETURN_VAL_IF_FAIL(func_display != NULL, TDM_ERROR_INVALID_PARAMETER);
@@ -78,9 +80,7 @@ tdm_backend_register_func_display(tdm_display *dpy,
 	if (_check_abi_version(module, 1, 1) < 0)
 		return TDM_ERROR_BAD_MODULE;
 
-	_pthread_mutex_lock(&private_display->lock);
 	private_display->func_display = *func_display;
-	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -89,6 +89,8 @@ EXTERN tdm_error
 tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
 {
 	tdm_backend_module *module;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 
 	BACKEND_FUNC_ENTRY();
 
@@ -99,9 +101,7 @@ tdm_backend_register_func_output(tdm_display *dpy, tdm_func_output *func_output)
 	if (_check_abi_version(module, 1, 1) < 0)
 		return TDM_ERROR_BAD_MODULE;
 
-	_pthread_mutex_lock(&private_display->lock);
 	private_display->func_output = *func_output;
-	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -110,6 +110,8 @@ EXTERN tdm_error
 tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
 {
 	tdm_backend_module *module;
+
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
 
 	BACKEND_FUNC_ENTRY();
 
@@ -120,9 +122,7 @@ tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
 	if (_check_abi_version(module, 1, 1) < 0)
 		return TDM_ERROR_BAD_MODULE;
 
-	_pthread_mutex_lock(&private_display->lock);
 	private_display->func_layer = *func_layer;
-	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -130,15 +130,15 @@ tdm_backend_register_func_layer(tdm_display *dpy, tdm_func_layer *func_layer)
 EXTERN tdm_error
 tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp)
 {
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
+
 	BACKEND_FUNC_ENTRY();
 
 	if (!func_pp)
 		return TDM_ERROR_NONE;
 
-	_pthread_mutex_lock(&private_display->lock);
 	private_display->capabilities |= TDM_DISPLAY_CAPABILITY_PP;
 	private_display->func_pp = *func_pp;
-	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
@@ -147,15 +147,15 @@ EXTERN tdm_error
 tdm_backend_register_func_capture(tdm_display *dpy,
                                   tdm_func_capture *func_capture)
 {
+	TDM_RETURN_VAL_IF_FAIL(TDM_MUTEX_IS_LOCKED(), TDM_ERROR_OPERATION_FAILED);
+
 	BACKEND_FUNC_ENTRY();
 
 	if (!func_capture)
 		return TDM_ERROR_NONE;
 
-	_pthread_mutex_lock(&private_display->lock);
 	private_display->capabilities |= TDM_DISPLAY_CAPABILITY_CAPTURE;
 	private_display->func_capture = *func_capture;
-	_pthread_mutex_unlock(&private_display->lock);
 
 	return TDM_ERROR_NONE;
 }
