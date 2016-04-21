@@ -109,6 +109,11 @@ extern int tdm_debug;
 
 #include <stdio.h>
 
+#define COLOR_RED "\x1b[31m"      /* for error */
+#define COLOR_YELLOW "\x1b[33m"   /* for warning */
+#define COLOR_GREEN "\x1b[32m"    /* for info */
+#define COLOR_RESET "\x1b[0m"
+
 #define TDM_DBG(fmt, args...) \
     if (tdm_debug) \
 	do { \
@@ -122,7 +127,7 @@ extern int tdm_debug;
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_INF][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+		printf(COLOR_GREEN"[TDM_INF]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
 			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
@@ -130,7 +135,7 @@ extern int tdm_debug;
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_WRN][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+		printf(COLOR_YELLOW"[TDM_WRN]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
 			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
@@ -138,7 +143,7 @@ extern int tdm_debug;
 	do { \
 		struct timespec ts;	\
 		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf("[TDM_ERR][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
+		printf(COLOR_RED"[TDM_ERR]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
 			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
 	} while (0);
 
