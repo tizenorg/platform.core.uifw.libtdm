@@ -47,7 +47,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_list.h"
 #include "tdm-client-protocol.h"
 
-extern int tdm_debug;
+int tdm_debug;
 
 typedef struct _tdm_private_client {
 	struct wl_display *display;
@@ -95,6 +95,11 @@ tdm_client*
 tdm_client_create(tdm_client_error *error)
 {
 	tdm_private_client *private_client;
+	const char *debug;
+
+	debug = getenv("TDM_DEBUG");
+	if (debug && (strstr(debug, "1")))
+		tdm_debug = 1;
 
 	private_client = calloc(1, sizeof *private_client);
 	if (!private_client) {
@@ -194,6 +199,11 @@ _tdm_client_cb_vblank_done(void *data, struct wl_tdm_vblank *vblank,
 
 	TDM_RETURN_IF_FAIL(vblank_info != NULL);
 
+	if (vblank_info->vblank != vblank)
+		TDM_NEVER_GET_HERE();
+
+	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info, wl_proxy_get_id((struct wl_proxy *)vblank));
+
 	if (vblank_info->func) {
 		vblank_info->func(sequence, tv_sec, tv_usec, vblank_info->user_data);
 	}
@@ -231,6 +241,8 @@ tdm_client_wait_vblank(tdm_client *client, char *name, int interval, int sync,
 		free(vblank_info);
 		return TDM_CLIENT_ERROR_OUT_OF_MEMORY;
 	}
+
+	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info, wl_proxy_get_id((struct wl_proxy *)vblank_info->vblank));
 
 	wl_tdm_vblank_add_listener(vblank_info->vblank,
 	                           &tdm_client_vblank_listener, vblank_info);
