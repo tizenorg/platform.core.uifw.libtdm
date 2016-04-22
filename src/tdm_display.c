@@ -1097,8 +1097,9 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 
 	if (!func_output->output_set_dpms) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
-		return TDM_ERROR_NOT_IMPLEMENTED;
+		private_output->current_dpms_value = dpms_value;
+		TDM_DBG("not implemented!!");
+		return TDM_ERROR_NONE;
 	}
 
 	ret = func_output->output_set_dpms(private_output->output_backend, dpms_value);
@@ -1132,9 +1133,10 @@ tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value)
 	func_output = &private_display->func_output;
 
 	if (!func_output->output_get_dpms) {
+		*dpms_value = private_output->current_dpms_value;
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
-		return TDM_ERROR_NOT_IMPLEMENTED;
+		TDM_DBG("not implemented!!");
+		return TDM_ERROR_NONE;
 	}
 
 	ret = func_output->output_get_dpms(private_output->output_backend, dpms_value);
