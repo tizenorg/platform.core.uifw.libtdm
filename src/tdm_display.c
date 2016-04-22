@@ -497,7 +497,7 @@ tdm_output_add_change_handler(tdm_output *output,
 
 	if (!private_output->regist_change_cb) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -757,7 +757,7 @@ tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
 
 	if (!func_output->output_set_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -783,7 +783,7 @@ tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value)
 
 	if (!func_output->output_get_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -918,7 +918,7 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 	_pthread_mutex_lock(&private_display->lock);
 
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
-		TDM_WRN("output(%d) dpms: %s", private_output->pipe,
+		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
 		        dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_BAD_REQUEST;
@@ -928,7 +928,7 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 
 	if (!func_output->output_wait_vblank) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -974,7 +974,7 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 	func_output = &private_display->func_output;
 
 	if (!func_output->output_commit) {
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1012,7 +1012,7 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 	_pthread_mutex_lock(&private_display->lock);
 
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
-		TDM_WRN("output(%d) dpms: %s", private_output->pipe,
+		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
 		        dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_BAD_REQUEST;
@@ -1039,7 +1039,7 @@ tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode)
 
 	if (!func_output->output_set_mode) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1064,7 +1064,7 @@ tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
 
 	if (!func_output->output_get_mode) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1098,7 +1098,7 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 	if (!func_output->output_set_dpms) {
 		_pthread_mutex_unlock(&private_display->lock);
 		private_output->current_dpms_value = dpms_value;
-		TDM_DBG("not implemented!!");
+		TDM_WRN("not implemented!!");
 		return TDM_ERROR_NONE;
 	}
 
@@ -1135,7 +1135,7 @@ tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value)
 	if (!func_output->output_get_dpms) {
 		*dpms_value = private_output->current_dpms_value;
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("not implemented!!");
+		TDM_WRN("not implemented!!");
 		return TDM_ERROR_NONE;
 	}
 
@@ -1281,7 +1281,7 @@ tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value)
 
 	if (!func_layer->layer_set_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1306,7 +1306,7 @@ tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value)
 
 	if (!func_layer->layer_get_property) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1333,7 +1333,7 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 
 	if (!func_layer->layer_set_info) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1368,7 +1368,7 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 
 	if (!func_layer->layer_get_info) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1438,7 +1438,7 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 
 	if (!func_layer->layer_set_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1506,7 +1506,7 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 
 	if (!func_layer->layer_unset_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1609,7 +1609,7 @@ tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 
 	if (!func_layer->layer_set_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1686,7 +1686,7 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 
 	if (!func_layer->layer_unset_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
@@ -1731,7 +1731,7 @@ tdm_layer_set_video_pos(tdm_layer *layer, int zpos)
 
 	if (!func_layer->layer_set_video_pos) {
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_DBG("failed: not implemented!!");
+		TDM_ERR("not implemented!!");
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
