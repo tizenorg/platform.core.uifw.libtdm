@@ -182,7 +182,7 @@ tdm_event_loop_create_backend_source(tdm_private_display *private_display)
 
 	ret = func_display->display_get_fd(private_display->bdata, &fd);
 	if (fd < 0) {
-		TDM_WRN("TDM backend module returns fd(%d)", fd);
+		TDM_ERR("TDM backend module returns fd(%d)", fd);
 		return;
 	}
 

@@ -99,11 +99,11 @@ tdm_buffer_get_info(tbm_surface_h buffer)
 		LIST_INITHEAD(&buf_info->link);
 
 		if (!tbm_surface_internal_add_user_data(buffer, TDM_BUFFER_KEY, _tdm_buffer_destroy_info)) {
-			TDM_WRN("FAIL to create user_data for surface %p", buffer);
+			TDM_ERR("FAIL to create user_data for surface %p", buffer);
 			return NULL;
 		}
 		if (!tbm_surface_internal_set_user_data(buffer, TDM_BUFFER_KEY, buf_info)) {
-			TDM_WRN("FAIL to set user_data for surface %p", buffer);
+			TDM_ERR("FAIL to set user_data for surface %p", buffer);
 			return NULL;
 		}
 
