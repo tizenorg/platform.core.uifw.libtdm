@@ -539,7 +539,9 @@ tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value);
 /**
  * @brief Set the geometry information to a layer object
  * @details The geometry information will be applied when the output object
- * of a layer object is committed.
+ * of a layer object is committed. If a layer has TDM_LAYER_CAPABILITY_NO_CROP
+ * capability, a layer will ignore the pos(crop) information of #tdm_info_layer's
+ * src_config.
  * @param[in] layer A layer object
  * @param[in] info The geometry information
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
