@@ -306,7 +306,9 @@ tdm_pp_destroy(tdm_pp *pp)
 	private_display = private_pp->private_display;
 
 	_pthread_mutex_lock(&private_display->lock);
+	TDM_TRACE_BEGIN(Destroy_PP);
 	tdm_pp_destroy_internal(private_pp);
+	TDM_TRACE_END();
 	_pthread_mutex_unlock(&private_display->lock);
 }
 
@@ -336,7 +338,9 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 	         FOURCC_STR(info->dst_config.format),
 	         info->transform, info->sync, info->flags);
 
+	TDM_TRACE_BEGIN(PP_Set_Info);
 	ret = func_pp->pp_set_info(private_pp->pp_backend, info);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -366,7 +370,9 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 		return ret;
 	}
 
+	TDM_TRACE_BEGIN(PP_Attach);
 	ret = func_pp->pp_attach(private_pp->pp_backend, src, dst);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	if (ret == TDM_ERROR_NONE) {
@@ -405,7 +411,9 @@ tdm_pp_commit(tdm_pp *pp)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(PP_Commit);
 	ret = func_pp->pp_commit(private_pp->pp_backend);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	if (ret == TDM_ERROR_NONE) {

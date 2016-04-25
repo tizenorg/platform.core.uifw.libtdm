@@ -320,7 +320,9 @@ tdm_capture_destroy(tdm_capture *capture)
 	private_display = private_capture->private_display;
 
 	_pthread_mutex_lock(&private_display->lock);
+	TDM_TRACE_BEGIN(Capture_Destroy);
 	tdm_capture_destroy_internal(private_capture);
+	TDM_TRACE_END();
 	_pthread_mutex_unlock(&private_display->lock);
 }
 
@@ -339,7 +341,9 @@ tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Capture_Set_Info);
 	ret = func_capture->capture_set_info(private_capture->capture_backend, info);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -368,7 +372,9 @@ tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer)
 		return ret;
 	}
 
+	TDM_TRACE_BEGIN(Capture_Attach);
 	ret = func_capture->capture_attach(private_capture->capture_backend, buffer);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	if (ret == TDM_ERROR_NONE) {
@@ -412,7 +418,9 @@ tdm_capture_commit(tdm_capture *capture)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Capture_Commit);
 	ret = func_capture->capture_commit(private_capture->capture_backend);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	if (ret == TDM_ERROR_NONE) {
