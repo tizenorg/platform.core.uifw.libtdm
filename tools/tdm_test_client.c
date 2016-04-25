@@ -38,12 +38,12 @@ DEALINGS IN THE SOFTWARE.
 #include <tdm_helper.h>
 
 static int
-get_time_in_millis(void)
+get_time_in_micros(void)
 {
 	struct timespec tp;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &tp) == 0)
-		return (int)(tp.tv_sec * 1000) + (tp.tv_nsec / 1000000L);
+		return (int)(tp.tv_sec * 1000000) + (tp.tv_nsec / 1000L);
 
 	return 0;
 }
@@ -52,12 +52,19 @@ static void
 _client_vblank_handler(unsigned int sequence, unsigned int tv_sec,
                        unsigned int tv_usec, void *user_data)
 {
-	int temp1, temp2;
+	int client, vblank;
+	static int prev = 0;
 
-	temp1 = (intptr_t)user_data;
-	temp2 = get_time_in_millis();
+	client = get_time_in_micros();
+	vblank = tv_sec * 1000000 + tv_usec;
 
-	printf("%d ms\n", temp2 - temp1);
+	if (vblank - prev > 16966 || vblank - prev < 16366) /* +0.3 ~ -0.3 ms */
+		printf("vblank              : %d us\n", vblank - prev);
+
+	if (client - vblank > 3000) /* 3ms */
+		printf("kernel -> tdm-client: %d us\n", client - vblank);
+
+	prev = vblank;
 }
 
 
@@ -89,8 +96,7 @@ main(int argc, char *argv[])
 		int ret;
 
 		error = tdm_client_wait_vblank(client, "unknown-0", 1, 0,
-		                               _client_vblank_handler,
-		                               (void*)(intptr_t)get_time_in_millis());
+		                               _client_vblank_handler, NULL);
 		if (error != TDM_CLIENT_ERROR_NONE) {
 			printf("tdm_client_wait_vblank failed\n");
 			goto done;
