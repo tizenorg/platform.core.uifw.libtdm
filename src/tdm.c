@@ -483,7 +483,7 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 	tdm_output *output_hdmia = NULL;
 	tdm_output *output_hdmib = NULL;
 	int i, output_count = 0, output_connected_count = 0;
-	int index_dsi, index_lvds, index_hdmia, index_hdmib;
+	int index_dsi = 0, index_lvds = 0, index_hdmia = 0, index_hdmib = 0;
 	tdm_error ret;
 
 	outputs = func_display->display_get_outputs(private_display->bdata,
