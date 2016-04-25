@@ -398,7 +398,9 @@ tdm_display_create_pp(tdm_display *dpy, tdm_error *error)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	TDM_TRACE_BEGIN(Create_PP);
 	pp = (tdm_pp *)tdm_pp_create_internal(private_display, error);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -761,8 +763,10 @@ tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Output_Set_Prop);
 	ret = func_output->output_set_property(private_output->output_backend, id,
 	                                       value);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -787,8 +791,10 @@ tdm_output_get_property(tdm_output *output, unsigned int id, tdm_value *value)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Output_Get_Prop);
 	ret = func_output->output_get_property(private_output->output_backend, id,
 	                                       value);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -830,8 +836,10 @@ tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
 
 	if (vblank_handler->func) {
 		_pthread_mutex_unlock(&private_display->lock);
+		TDM_TRACE_BEGIN(VBlank_User_Handler);
 		vblank_handler->func(vblank_handler->private_output, sequence,
 		                     tv_sec, tv_usec, vblank_handler->user_data);
+		TDM_TRACE_END();
 		_pthread_mutex_lock(&private_display->lock);
 	}
 
@@ -898,8 +906,10 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 
 	if (commit_handler->func) {
 		_pthread_mutex_unlock(&private_display->lock);
+		TDM_TRACE_BEGIN(Commit_User_Handler);
 		commit_handler->func(private_output, sequence,
 		                     tv_sec, tv_usec, commit_handler->user_data);
+		TDM_TRACE_END();
 		_pthread_mutex_lock(&private_display->lock);
 	}
 
@@ -945,8 +955,10 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 	vblank_handler->user_data = user_data;
 	vblank_handler->owner_tid = syscall(SYS_gettid);
 
+	TDM_TRACE_BEGIN(Output_Wait_Vblank);
 	ret = func_output->output_wait_vblank(private_output->output_backend, interval,
 	                                      sync, vblank_handler);
+	TDM_TRACE_END();
 	if (ret != TDM_ERROR_NONE) {
 		_pthread_mutex_unlock(&private_display->lock);
 		return ret;
@@ -990,8 +1002,10 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 	commit_handler->user_data = user_data;
 	commit_handler->owner_tid = syscall(SYS_gettid);
 
+	TDM_TRACE_BEGIN(Output_Commit);
 	ret = func_output->output_commit(private_output->output_backend, sync,
 	                                 commit_handler);
+	TDM_TRACE_END();
 	TDM_RETURN_VAL_IF_FAIL(ret == TDM_ERROR_NONE, ret);
 
 	if (!private_output->regist_commit_cb) {
@@ -1043,7 +1057,9 @@ tdm_output_set_mode(tdm_output *output, const tdm_output_mode *mode)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Output_Set_Mode);
 	ret = func_output->output_set_mode(private_output->output_backend, mode);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1068,7 +1084,9 @@ tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Output_Get_Mode);
 	ret = func_output->output_get_mode(private_output->output_backend, mode);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1102,7 +1120,9 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 		return TDM_ERROR_NONE;
 	}
 
+	TDM_TRACE_BEGIN(Output_Set_Dpms);
 	ret = func_output->output_set_dpms(private_output->output_backend, dpms_value);
+	TDM_TRACE_END();
 	if (ret == TDM_ERROR_NONE) {
 		tdm_value value;
 
@@ -1139,7 +1159,9 @@ tdm_output_get_dpms(tdm_output *output, tdm_output_dpms *dpms_value)
 		return TDM_ERROR_NONE;
 	}
 
+	TDM_TRACE_BEGIN(Output_Get_Dpms);
 	ret = func_output->output_get_dpms(private_output->output_backend, dpms_value);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1155,8 +1177,10 @@ tdm_output_create_capture(tdm_output *output, tdm_error *error)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	TDM_TRACE_BEGIN(Create_Capture);
 	capture = (tdm_capture *)tdm_capture_create_output_internal(private_output,
 	                error);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1193,8 +1217,10 @@ tdm_output_call_change_handler_internal(tdm_private_output *private_output,
 			TDM_NEVER_GET_HERE();
 
 		_pthread_mutex_unlock(&private_display->lock);
+		TDM_TRACE_BEGIN(Change_User_Handler);
 		change_handler->func(private_output, type,
 		                     value, change_handler->user_data);
+		TDM_TRACE_END();
 		_pthread_mutex_lock(&private_display->lock);
 	}
 }
@@ -1285,7 +1311,9 @@ tdm_layer_set_property(tdm_layer *layer, unsigned int id, tdm_value value)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Set_Prop);
 	ret = func_layer->layer_set_property(private_layer->layer_backend, id, value);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1310,7 +1338,9 @@ tdm_layer_get_property(tdm_layer *layer, unsigned int id, tdm_value *value)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Get_Prop);
 	ret = func_layer->layer_get_property(private_layer->layer_backend, id, value);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1346,7 +1376,9 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 	         info->dst_pos.w, info->dst_pos.h,
 	         info->transform);
 
+	TDM_TRACE_BEGIN(Layer_Set_Info);
 	ret = func_layer->layer_set_info(private_layer->layer_backend, info);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -1372,7 +1404,9 @@ tdm_layer_get_info(tdm_layer *layer, tdm_info_layer *info)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Get_Info);
 	ret = func_layer->layer_get_info(private_layer->layer_backend, info);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1442,7 +1476,9 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Set_Buffer);
 	ret = func_layer->layer_set_buffer(private_layer->layer_backend, buffer);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	/* dump buffer */
@@ -1510,7 +1546,9 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Unset_Buffer);
 	ret = func_layer->layer_unset_buffer(private_layer->layer_backend);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -1544,7 +1582,9 @@ _tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
 		return;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Set_Buffer);
 	ret = func_layer->layer_set_buffer(private_layer->layer_backend, surface);
+	TDM_TRACE_END();
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	if (ret == TDM_ERROR_NONE) {
@@ -1690,7 +1730,9 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Unset_Buffer);
 	ret = func_layer->layer_unset_buffer(private_layer->layer_backend);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1735,7 +1777,9 @@ tdm_layer_set_video_pos(tdm_layer *layer, int zpos)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	TDM_TRACE_BEGIN(Layer_Set_Video_Pos);
 	ret = func_layer->layer_set_video_pos(private_layer->layer_backend, zpos);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
@@ -1751,8 +1795,10 @@ tdm_layer_create_capture(tdm_layer *layer, tdm_error *error)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	TDM_TRACE_BEGIN(Create_Capture);
 	capture = (tdm_capture *)tdm_capture_create_layer_internal(private_layer,
 	                error);
+	TDM_TRACE_END();
 
 	_pthread_mutex_unlock(&private_display->lock);
 
