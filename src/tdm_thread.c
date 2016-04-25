@@ -344,8 +344,6 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 
 	_pthread_mutex_unlock(&private_display->lock);
 
-	tdm_event_loop_flush(private_loop->dpy);
-
 	return TDM_ERROR_NONE;
 }
 

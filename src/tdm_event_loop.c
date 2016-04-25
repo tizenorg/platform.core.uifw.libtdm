@@ -230,6 +230,11 @@ tdm_event_loop_dispatch(tdm_private_display *private_display)
 	if (tdm_debug_thread)
 		TDM_INFO("dispatch");
 
+	if (tdm_thread_in_display_thread(syscall(SYS_gettid))) {
+		TDM_NEVER_GET_HERE();
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
 	/* Don't set timeout to -1. It can make deadblock by two mutex locks.
 	 * If need to set -1, use poll() and call tdm_event_loop_dispatch() after
 	 * escaping polling.
@@ -249,6 +254,11 @@ tdm_event_loop_flush(tdm_private_display *private_display)
 	/* DON'T check TDM_MUTEX_IS_LOCKED here */
 
 	TDM_RETURN_IF_FAIL(private_loop->wl_display != NULL);
+
+	if (tdm_thread_in_display_thread(syscall(SYS_gettid))) {
+		TDM_NEVER_GET_HERE();
+		return;
+	}
 
 	wl_display_flush_clients(private_loop->wl_display);
 }
