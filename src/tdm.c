@@ -410,7 +410,7 @@ _tdm_display_update_output(tdm_private_display *private_display,
 		while (tdm_display_find_output_stamp(private_display, private_output->stamp))
 			private_output->stamp++;
 
-		LIST_ADD(&private_output->link, &private_display->output_list);
+		LIST_ADDTAIL(&private_output->link, &private_display->output_list);
 
 		private_output->private_display = private_display;
 		private_output->current_dpms_value = TDM_OUTPUT_DPMS_OFF;
@@ -456,11 +456,139 @@ failed_update:
 	return ret;
 }
 
+static tdm_output **
+_tdm_display_set_main_first(tdm_output **outputs, int index)
+{
+	tdm_output *output_tmp = NULL;
+
+	if (index == 0)
+		return outputs;
+
+	output_tmp = outputs[0];
+	outputs[0] = outputs[index];
+	outputs[index] = output_tmp;
+
+	return outputs;
+}
+
+static tdm_output **
+_tdm_display_get_ordered_outputs(tdm_private_display *private_display,
+                           int *count, int init)
+{
+	tdm_func_display *func_display = &private_display->func_display;
+	tdm_output **outputs = NULL;
+	tdm_output **new_outputs = NULL;
+	tdm_output *output_dsi = NULL;
+	tdm_output *output_lvds = NULL;
+	tdm_output *output_hdmia = NULL;
+	tdm_output *output_hdmib = NULL;
+	int i, output_count = 0, output_connected_count = 0;
+	int index_dsi, index_lvds, index_hdmia, index_hdmib;
+	tdm_error ret;
+
+	outputs = func_display->display_get_outputs(private_display->bdata,
+	                &output_count, &ret);
+	if (ret != TDM_ERROR_NONE)
+		goto failed_get_outputs;
+
+	*count = output_count;
+
+	if (output_count == 0)
+		goto failed_get_outputs;
+	else if (output_count == 1)
+		return outputs;
+
+	/* don't change list order if not init time */
+	if (init != 0)
+		return outputs;
+
+	/* count connected outputs */
+	for (i = 0; i < output_count; i++) {
+		tdm_func_output *func_output = &private_display->func_output;
+		tdm_caps_output caps;
+		memset(&caps, 0, sizeof(tdm_caps_output));
+
+		if (!func_output->output_get_capability) {
+			TDM_ERR("no output_get_capability()");
+			return outputs;
+		}
+
+		ret = func_output->output_get_capability(outputs[i], &caps);
+		if (ret != TDM_ERROR_NONE) {
+			TDM_ERR("output_get_capability() failed");
+			return outputs;
+		}
+
+		if (caps.status == TDM_OUTPUT_CONN_STATUS_CONNECTED) {
+			output_connected_count++;
+
+			switch (caps.type) {
+			case TDM_OUTPUT_TYPE_DSI:
+				output_dsi = outputs[i];
+				index_dsi = i;
+				break;
+			case TDM_OUTPUT_TYPE_LVDS:
+				output_lvds = outputs[i];
+				index_lvds = i;
+				break;
+			case TDM_OUTPUT_TYPE_HDMIA:
+				output_hdmia = outputs[i];
+				index_hdmia = i;
+				break;
+			case TDM_OUTPUT_TYPE_HDMIB:
+				output_hdmib = outputs[i];
+				index_hdmib = i;
+				break;
+			default :
+				break;
+			}
+		}
+	}
+
+	/* ordering : main output is first */
+	/* If there is no connected output, lvds or dsi cannot be main display. (cannot connect after booting)
+	  * But hdmi is possible, so set hdmi to main display.
+	  * If connected only one output, it is main output.
+	  * If connected outputs over 2, has priority like below.
+	  * (dsi > lvds > hdmi > else)
+	  */
+	if (output_connected_count == 0) {
+		/* hdmi > dsi > lvds > else */
+		if (output_hdmia != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_hdmia);
+		else if (output_hdmib != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_hdmib);
+		else if (output_dsi != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_dsi);
+		else if (output_lvds != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_lvds);
+		else
+			new_outputs = outputs;
+	} else { /* (output_connected_count > 1) */
+		/* dsi > lvds > hdmi > else */
+		if (output_dsi != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_dsi);
+		else if (output_lvds != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_lvds);
+		else if (output_hdmia != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_hdmia);
+		else if (output_hdmib != NULL)
+			new_outputs = _tdm_display_set_main_first(outputs, index_hdmib);
+		else
+			new_outputs = outputs;
+	}
+
+	return new_outputs;
+
+failed_get_outputs:
+	*count = 0;
+	return NULL;
+}
+
 static tdm_error
 _tdm_display_update_internal(tdm_private_display *private_display,
                              int only_display)
 {
-	tdm_func_display *func_display = &private_display->func_display;
 	tdm_output **outputs = NULL;
 	int output_count = 0, i;
 	tdm_error ret;
@@ -480,9 +608,8 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 			goto failed_update;
 	}
 
-	outputs = func_display->display_get_outputs(private_display->bdata,
-	                &output_count, &ret);
-	if (ret != TDM_ERROR_NONE)
+	outputs = _tdm_display_get_ordered_outputs(private_display, &output_count, only_display);
+	if (!outputs)
 		goto failed_update;
 
 	for (i = 0; i < output_count; i++) {
