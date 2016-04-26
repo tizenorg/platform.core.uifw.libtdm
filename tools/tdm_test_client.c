@@ -61,7 +61,7 @@ _client_vblank_handler(unsigned int sequence, unsigned int tv_sec,
 	if (vblank - prev > 16966 || vblank - prev < 16366) /* +0.3 ~ -0.3 ms */
 		printf("vblank              : %d us\n", vblank - prev);
 
-	if (client - vblank > 3000) /* 3ms */
+	if (client - vblank > 2000) /* 2ms */
 		printf("kernel -> tdm-client: %d us\n", client - vblank);
 
 	prev = vblank;

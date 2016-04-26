@@ -58,6 +58,7 @@ typedef struct _tdm_server_vblank_info {
 } tdm_server_vblank_info;
 
 static tdm_private_server *keep_private_server;
+static int tdm_debug_server;
 
 static void
 _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
@@ -75,6 +76,13 @@ _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
 	if (!found) {
 		TDM_DBG("vblank_info(%p) is destroyed", vblank_info);
 		return;
+	}
+
+	if (tdm_debug_server) {
+		unsigned long curr = tdm_helper_get_time_in_micros();
+		unsigned long vtime = (tv_sec * 1000000) + tv_usec;
+		if (curr - vtime > 1000) /* 1ms */
+			TDM_WRN("delay: %d us", (int)(curr - vtime));
 	}
 
 	TDM_DBG("wl_tdm_vblank@%d done", wl_resource_get_id(vblank_info->resource));
@@ -199,6 +207,11 @@ INTERN tdm_error
 tdm_server_init(tdm_private_loop *private_loop)
 {
 	tdm_private_server *private_server;
+	const char *debug;
+
+	debug = getenv("TDM_DEBUG_SERVER");
+	if (debug && (strstr(debug, "1")))
+		tdm_debug_server = 1;
 
 	if (private_loop->private_server)
 		return TDM_ERROR_NONE;

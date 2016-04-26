@@ -443,6 +443,8 @@ tdm_server_deinit(tdm_private_loop *private_loop);
 
 unsigned long
 tdm_helper_get_time_in_millis(void);
+unsigned long
+tdm_helper_get_time_in_micros(void);
 
 extern pthread_mutex_t tdm_mutex_check_lock;
 extern int tdm_mutex_locked;
