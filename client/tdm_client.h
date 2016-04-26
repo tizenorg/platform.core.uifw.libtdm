@@ -77,7 +77,8 @@ tdm_client_error
 tdm_client_handle_events(tdm_client *client);
 
 tdm_client_error
-tdm_client_wait_vblank(tdm_client *client, char *name, int interval, int sync,
+tdm_client_wait_vblank(tdm_client *client, char *name,
+                       int sw_timer, int interval, int sync,
                        tdm_client_vblank_handler func, void *user_data);
 
 #ifdef __cplusplus

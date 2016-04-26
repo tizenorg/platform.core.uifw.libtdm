@@ -95,7 +95,7 @@ main(int argc, char *argv[])
 	while (1) {
 		int ret;
 
-		error = tdm_client_wait_vblank(client, "unknown-0", 1, 0,
+		error = tdm_client_wait_vblank(client, "unknown-0", 1, 1, 0,
 		                               _client_vblank_handler, NULL);
 		if (error != TDM_CLIENT_ERROR_NONE) {
 			printf("tdm_client_wait_vblank failed\n");

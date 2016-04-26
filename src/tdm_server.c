@@ -102,8 +102,8 @@ destroy_vblank_callback(struct wl_resource *resource)
 static void
 _tdm_server_cb_wait_vblank(struct wl_client *client,
                            struct wl_resource *resource,
-                           uint32_t id, const char *name, int32_t interval,
-                           uint32_t req_sec, uint32_t req_usec)
+                           uint32_t id, const char *name, int32_t sw_timer,
+                           int32_t interval, uint32_t req_sec, uint32_t req_usec)
 {
 	tdm_private_loop *private_loop = wl_resource_get_user_data(resource);
 	tdm_private_server *private_server = private_loop->private_server;
@@ -143,6 +143,8 @@ _tdm_server_cb_wait_vblank(struct wl_client *client,
 		TDM_ERR("There is no '%s' output", name);
 		return;
 	}
+
+	/* TODO: need to implement things related with sw_timer */
 
 	vblank_resource =
 		wl_resource_create(client, &wl_tdm_vblank_interface,
