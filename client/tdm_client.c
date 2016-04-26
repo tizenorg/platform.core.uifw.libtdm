@@ -205,7 +205,8 @@ _tdm_client_cb_vblank_done(void *data, struct wl_tdm_vblank *vblank,
 	if (vblank_info->vblank != vblank)
 		TDM_NEVER_GET_HERE();
 
-	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info, wl_proxy_get_id((struct wl_proxy *)vblank));
+	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info,
+	        wl_proxy_get_id((struct wl_proxy *)vblank));
 
 	if (vblank_info->func) {
 		vblank_info->func(sequence, tv_sec, tv_usec, vblank_info->user_data);
@@ -254,7 +255,8 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 		return TDM_CLIENT_ERROR_OUT_OF_MEMORY;
 	}
 
-	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info, wl_proxy_get_id((struct wl_proxy *)vblank_info->vblank));
+	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info,
+	        wl_proxy_get_id((struct wl_proxy *)vblank_info->vblank));
 
 	wl_tdm_vblank_add_listener(vblank_info->vblank,
 	                           &tdm_client_vblank_listener, vblank_info);
