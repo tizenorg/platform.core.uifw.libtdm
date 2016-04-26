@@ -123,6 +123,6 @@ rm -f %{_unitdir_user}/default.target.wants/tdm-socket-user.path
 
 %files tools
 %manifest %{name}.manifest
-%{_bindir}/tdm-client
+%{_bindir}/tdm-test-client
 
 %changelog

@@ -40,6 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "tdm_client.h"
 #include "tdm_log.h"
@@ -61,6 +62,8 @@ typedef struct _tdm_client_vblank_info {
 	struct list_head link;
 	struct wl_tdm_vblank *vblank;
 	tdm_client_vblank_handler func;
+	unsigned int req_sec;
+	unsigned int req_usec;
 	void *user_data;
 } tdm_client_vblank_info;
 
@@ -222,6 +225,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name, int interval, int sync,
 {
 	tdm_private_client *private_client = (tdm_private_client*)client;
 	tdm_client_vblank_info *vblank_info;
+	struct timespec tp;
 
 	TDM_RETURN_VAL_IF_FAIL(name != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(interval > 0, TDM_CLIENT_ERROR_INVALID_PARAMETER);
@@ -235,7 +239,14 @@ tdm_client_wait_vblank(tdm_client *client, char *name, int interval, int sync,
 		return TDM_CLIENT_ERROR_OUT_OF_MEMORY;
 	}
 
-	vblank_info->vblank = wl_tdm_wait_vblank(private_client->tdm, name, interval);
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+
+	vblank_info->req_sec = (unsigned int)tp.tv_sec;
+	vblank_info->req_usec = (unsigned int)(tp.tv_nsec/1000L);
+
+	vblank_info->vblank =
+		wl_tdm_wait_vblank(private_client->tdm, name, interval,
+		                   vblank_info->req_sec, vblank_info->req_usec);
 	if (!vblank_info->vblank) {
 		TDM_ERR("couldn't create vblank resource");
 		free(vblank_info);

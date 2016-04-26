@@ -58,6 +58,7 @@ typedef struct _tdm_server_vblank_info {
 } tdm_server_vblank_info;
 
 static tdm_private_server *keep_private_server;
+static int tdm_debug_server;
 
 static void
 _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
@@ -77,6 +78,13 @@ _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
 		return;
 	}
 
+	if (tdm_debug_server) {
+		unsigned long curr = tdm_helper_get_time_in_micros();
+		unsigned long vtime = (tv_sec * 1000000) + tv_usec;
+		if (curr - vtime > 1000) /* 1ms */
+			TDM_WRN("delay: %d us", (int)(curr - vtime));
+	}
+
 	TDM_DBG("wl_tdm_vblank@%d done", wl_resource_get_id(vblank_info->resource));
 
 	wl_tdm_vblank_send_done(vblank_info->resource, sequence, tv_sec, tv_usec);
@@ -94,7 +102,8 @@ destroy_vblank_callback(struct wl_resource *resource)
 static void
 _tdm_server_cb_wait_vblank(struct wl_client *client,
                            struct wl_resource *resource,
-                           uint32_t id, const char *name, int32_t interval)
+                           uint32_t id, const char *name, int32_t interval,
+                           uint32_t req_sec, uint32_t req_usec)
 {
 	tdm_private_loop *private_loop = wl_resource_get_user_data(resource);
 	tdm_private_server *private_server = private_loop->private_server;
@@ -165,6 +174,13 @@ _tdm_server_cb_wait_vblank(struct wl_client *client,
 		return;
 	}
 
+	if (tdm_debug_server) {
+		unsigned long curr = tdm_helper_get_time_in_micros();
+		unsigned long reqtime = (req_sec * 1000000) + req_usec;
+		if (curr - reqtime > 1000) /* 1ms */
+			TDM_WRN("delay(req): %d us", (int)(curr - reqtime));
+	}
+
 	vblank_info->resource = vblank_resource;
 	vblank_info->private_server = private_server;
 
@@ -199,6 +215,11 @@ INTERN tdm_error
 tdm_server_init(tdm_private_loop *private_loop)
 {
 	tdm_private_server *private_server;
+	const char *debug;
+
+	debug = getenv("TDM_DEBUG_SERVER");
+	if (debug && (strstr(debug, "1")))
+		tdm_debug_server = 1;
 
 	if (private_loop->private_server)
 		return TDM_ERROR_NONE;

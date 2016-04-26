@@ -23,6 +23,8 @@
             <arg name="id" type="new_id" interface="wl_tdm_vblank"/>
             <arg name="name" type="string"/>
             <arg name="interval" type="int"/>
+            <arg name="req_sec" type="uint"/>
+            <arg name="req_usec" type="uint"/>
         </request>
 
     </interface>

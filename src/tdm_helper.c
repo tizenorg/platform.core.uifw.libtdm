@@ -31,6 +31,17 @@ tdm_helper_get_time_in_millis(void)
 	return 0;
 }
 
+INTERN unsigned long
+tdm_helper_get_time_in_micros(void)
+{
+	struct timespec tp;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &tp) == 0)
+		return (tp.tv_sec * 1000000) + (tp.tv_nsec / 1000L);
+
+	return 0;
+}
+
 static void
 _tdm_helper_dump_raw(const char *file, void *data1, int size1, void *data2,
                      int size2, void *data3, int size3)
