@@ -220,7 +220,8 @@ static const struct wl_tdm_vblank_listener tdm_client_vblank_listener = {
 };
 
 tdm_client_error
-tdm_client_wait_vblank(tdm_client *client, char *name, int interval, int sync,
+tdm_client_wait_vblank(tdm_client *client, char *name,
+                       int sw_timer, int interval, int sync,
                        tdm_client_vblank_handler func, void *user_data)
 {
 	tdm_private_client *private_client = (tdm_private_client*)client;
@@ -245,7 +246,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name, int interval, int sync,
 	vblank_info->req_usec = (unsigned int)(tp.tv_nsec/1000L);
 
 	vblank_info->vblank =
-		wl_tdm_wait_vblank(private_client->tdm, name, interval,
+		wl_tdm_wait_vblank(private_client->tdm, name, sw_timer, interval,
 		                   vblank_info->req_sec, vblank_info->req_usec);
 	if (!vblank_info->vblank) {
 		TDM_ERR("couldn't create vblank resource");
