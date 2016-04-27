@@ -65,6 +65,7 @@ typedef struct _tdm_client_vblank_info {
 	unsigned int req_sec;
 	unsigned int req_usec;
 	void *user_data;
+	int need_free;
 } tdm_client_vblank_info;
 
 static void
@@ -212,8 +213,12 @@ _tdm_client_cb_vblank_done(void *data, struct wl_tdm_vblank *vblank,
 		vblank_info->func(sequence, tv_sec, tv_usec, vblank_info->user_data);
 	}
 
-	LIST_DEL(&vblank_info->link);
-	free(vblank_info);
+	if (vblank_info->need_free) {
+		LIST_DEL(&vblank_info->link);
+		free(vblank_info);
+	} else {
+		vblank_info->need_free = 1;
+	}
 }
 
 static const struct wl_tdm_vblank_listener tdm_client_vblank_listener = {
@@ -228,6 +233,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	tdm_private_client *private_client = (tdm_private_client*)client;
 	tdm_client_vblank_info *vblank_info;
 	struct timespec tp;
+	int ret = 0;
 
 	TDM_RETURN_VAL_IF_FAIL(name != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(interval > 0, TDM_CLIENT_ERROR_INVALID_PARAMETER);
@@ -245,6 +251,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 
 	vblank_info->req_sec = (unsigned int)tp.tv_sec;
 	vblank_info->req_usec = (unsigned int)(tp.tv_nsec/1000L);
+	vblank_info->need_free = (sync) ? 0 : 1;
 
 	vblank_info->vblank =
 		wl_tdm_wait_vblank(private_client->tdm, name, sw_timer, interval,
@@ -265,10 +272,21 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	vblank_info->user_data = user_data;
 	LIST_ADDTAIL(&vblank_info->link, &private_client->vblank_list);
 
-	if (sync)
-		wl_display_roundtrip(private_client->display);
-	else
+	if (!sync) {
 		wl_display_flush(private_client->display);
+		return TDM_CLIENT_ERROR_NONE;
+	}
+
+	while (ret != -1 && !vblank_info->need_free)
+		ret = wl_display_dispatch(private_client->display);
+
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+	TDM_DBG("block during %d us",
+	        ((unsigned int)(tp.tv_sec * 1000000) + (unsigned int)(tp.tv_nsec/1000L))
+	        - (vblank_info->req_sec * 1000000 + vblank_info->req_usec));
+
+	LIST_DEL(&vblank_info->link);
+	free(vblank_info);
 
 	return TDM_CLIENT_ERROR_NONE;
 }

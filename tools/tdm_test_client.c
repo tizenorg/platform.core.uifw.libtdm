@@ -75,6 +75,16 @@ main(int argc, char *argv[])
 	tdm_client_error error;
 	int fd = -1;
 	struct pollfd fds;
+	int sync;
+
+	if (argc < 2) {
+		printf("Usage: %s\n", argv[0]);
+		printf("\t%s 0 : non-sync\n", argv[0]);
+		printf("\t%s 1 : sync\n", argv[0]);
+		exit(1);
+	}
+
+	sync = atoi(argv[1]);
 
 	client = tdm_client_create(&error);
 	if (error != TDM_CLIENT_ERROR_NONE) {
@@ -95,26 +105,28 @@ main(int argc, char *argv[])
 	while (1) {
 		int ret;
 
-		error = tdm_client_wait_vblank(client, "unknown-0", 1, 1, 0,
+		error = tdm_client_wait_vblank(client, "unknown-0", 1, 1, sync,
 		                               _client_vblank_handler, NULL);
 		if (error != TDM_CLIENT_ERROR_NONE) {
 			printf("tdm_client_wait_vblank failed\n");
 			goto done;
 		}
 
-		ret = poll(&fds, 1, -1);
-		if (ret < 0) {
-			if (errno == EBUSY)  /* normal case */
-				continue;
-			else {
-				printf("poll failed: %m\n");
-				goto done;
+		if (!sync) {
+			ret = poll(&fds, 1, -1);
+			if (ret < 0) {
+				if (errno == EBUSY)  /* normal case */
+					continue;
+				else {
+					printf("poll failed: %m\n");
+					goto done;
+				}
 			}
-		}
 
-		error = tdm_client_handle_events(client);
-		if (error != TDM_CLIENT_ERROR_NONE)
-			printf("tdm_client_handle_events failed\n");
+			error = tdm_client_handle_events(client);
+			if (error != TDM_CLIENT_ERROR_NONE)
+				printf("tdm_client_handle_events failed\n");
+		}
 	}
 
 done:

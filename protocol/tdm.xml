@@ -17,6 +17,7 @@
         <enum name="error">
             <entry name="invalid_name" value="0"/>
             <entry name="operation_failed" value="1"/>
+            <entry name="dpms_off" value="2"/>
         </enum>
 
         <request name="wait_vblank">

@@ -59,6 +59,7 @@ typedef enum
 	TDM_CLIENT_ERROR_INVALID_PARAMETER     = -2, /**< wrong input parameter */
 	TDM_CLIENT_ERROR_PERMISSION_DENIED     = -3, /**< access denied */
 	TDM_CLIENT_ERROR_OUT_OF_MEMORY         = -4, /**< no free memory */
+	TDM_CLIENT_ERROR_DPMS_OFF              = -5, /**< dpms off */
 } tdm_client_error;
 
 /**
@@ -142,8 +143,8 @@ tdm_client_handle_events(tdm_client *client);
 /**
  * @brief Wait for VBLANK
  * @details After interval vblanks, a client vblank handler will be called.
- * If 'sw_timer' param is 1, TDM will use the SW timer and call a client vblank
- * handler when DPMS off.
+ * If 'sw_timer' param is 1 in case of DPMS off, TDM will use the SW timer and
+ * call a client vblank handler. Otherwise, this function will return error.
  * @param[in] client A TDM client object
  * @param[in] name The name of a TDM output
  * @param[in] sw_timer 0: not using SW timer, 1: using SW timer

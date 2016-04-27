@@ -136,6 +136,12 @@ struct type_name status_names[] = {
 
 INTERN type_name_fn(status)
 
+INTERN const char*
+tdm_get_dpms_str(tdm_output_dpms dpms_value)
+{
+	return dpms_str(dpms_value);
+}
+
 EXTERN tdm_error
 tdm_display_get_capabilities(tdm_display *dpy,
                              tdm_display_capability *capabilities)

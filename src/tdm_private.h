@@ -303,6 +303,9 @@ typedef struct _tdm_buffer_info {
 	struct list_head link;
 } tdm_buffer_info;
 
+const char*
+tdm_get_dpms_str(tdm_output_dpms dpms_value);
+
 tdm_private_output *
 tdm_display_find_output_stamp(tdm_private_display *private_display,
                               unsigned long stamp);
