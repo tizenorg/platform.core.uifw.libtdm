@@ -12,7 +12,7 @@
 
     </interface>
 
-    <interface name="wl_tdm" version="1">
+    <interface name="wl_tdm_client" version="1">
 
         <enum name="error">
             <entry name="invalid_name" value="0"/>
@@ -20,6 +20,7 @@
             <entry name="dpms_off" value="2"/>
         </enum>
 
+        <request name="destroy" type="destructor"/>
         <request name="wait_vblank">
             <arg name="id" type="new_id" interface="wl_tdm_vblank"/>
             <arg name="name" type="string"/>
@@ -27,6 +28,14 @@
             <arg name="interval" type="int"/>
             <arg name="req_sec" type="uint"/>
             <arg name="req_usec" type="uint"/>
+        </request>
+
+    </interface>
+
+    <interface name="wl_tdm" version="1">
+
+        <request name="create_client">
+            <arg name="id" type="new_id" interface="wl_tdm_client"/>
         </request>
 
     </interface>

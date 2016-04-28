@@ -48,13 +48,21 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 struct _tdm_private_server {
+	tdm_private_loop *private_loop;
+	struct list_head client_list;
 	struct list_head vblank_list;
 };
 
+typedef struct _tdm_server_client_info {
+	struct list_head link;
+	tdm_private_server *private_server;
+	struct wl_resource *resource;
+} tdm_server_client_info;
+
 typedef struct _tdm_server_vblank_info {
 	struct list_head link;
+	tdm_server_client_info *client_info;
 	struct wl_resource *resource;
-	tdm_private_server *private_server;
 } tdm_server_vblank_info;
 
 static tdm_private_server *keep_private_server;
@@ -100,13 +108,21 @@ destroy_vblank_callback(struct wl_resource *resource)
 }
 
 static void
-_tdm_server_cb_wait_vblank(struct wl_client *client,
-                           struct wl_resource *resource,
-                           uint32_t id, const char *name, int32_t sw_timer,
-                           int32_t interval, uint32_t req_sec, uint32_t req_usec)
+_tdm_server_client_cb_destroy(struct wl_client *client, struct wl_resource *resource)
 {
-	tdm_private_loop *private_loop = wl_resource_get_user_data(resource);
-	tdm_private_server *private_server = private_loop->private_server;
+	wl_resource_destroy(resource);
+}
+
+static void
+_tdm_server_client_cb_wait_vblank(struct wl_client *client,
+                                  struct wl_resource *resource,
+                                  uint32_t id, const char *name,
+                                  int32_t sw_timer, int32_t interval,
+                                  uint32_t req_sec, uint32_t req_usec)
+{
+	tdm_server_client_info *client_info = wl_resource_get_user_data(resource);
+	tdm_private_server *private_server = client_info->private_server;
+	tdm_private_loop *private_loop = private_server->private_loop;
 	tdm_server_vblank_info *vblank_info;
 	struct wl_resource *vblank_resource;
 	tdm_output *found = NULL;
@@ -146,7 +162,7 @@ _tdm_server_cb_wait_vblank(struct wl_client *client,
 	}
 
 	if (!found) {
-		wl_resource_post_error(resource, WL_TDM_ERROR_INVALID_NAME,
+		wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_INVALID_NAME,
 		                       "There is no '%s' output", name);
 		TDM_ERR("There is no '%s' output", name);
 		return;
@@ -155,7 +171,7 @@ _tdm_server_cb_wait_vblank(struct wl_client *client,
 	tdm_output_get_dpms(found, &dpms_value);
 
 	if (dpms_value != TDM_OUTPUT_DPMS_ON && !sw_timer) {
-		wl_resource_post_error(resource, WL_TDM_ERROR_DPMS_OFF,
+		wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_DPMS_OFF,
 		                       "dpms '%s'", tdm_get_dpms_str(dpms_value));
 		TDM_ERR("dpms '%s'", tdm_get_dpms_str(dpms_value));
 		return;
@@ -183,7 +199,7 @@ _tdm_server_cb_wait_vblank(struct wl_client *client,
 		ret = tdm_output_wait_vblank(found, interval, 0,
 		                             _tdm_server_cb_output_vblank, vblank_info);
 		if (ret != TDM_ERROR_NONE) {
-			wl_resource_post_error(resource, WL_TDM_ERROR_OPERATION_FAILED,
+			wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_OPERATION_FAILED,
 			                       "couldn't wait vblank for %s", name);
 			TDM_ERR("couldn't wait vblank for %s", name);
 			goto destroy_resource;
@@ -191,20 +207,20 @@ _tdm_server_cb_wait_vblank(struct wl_client *client,
 	} else if (sw_timer) {
 		/* TODO: need to implement things related with sw_timer */
 		if (ret != TDM_ERROR_NONE) {
-			wl_resource_post_error(resource, WL_TDM_ERROR_OPERATION_FAILED,
+			wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_OPERATION_FAILED,
 			                       "not implemented yet");
 			TDM_ERR("not implemented yet");
 			goto destroy_resource;
 		}
 	} else {
-		wl_resource_post_error(resource, WL_TDM_ERROR_OPERATION_FAILED,
+		wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_OPERATION_FAILED,
 		                       "bad implementation");
 		TDM_NEVER_GET_HERE();
 		goto destroy_resource;
 	}
 
 	vblank_info->resource = vblank_resource;
-	vblank_info->private_server = private_server;
+	vblank_info->client_info = client_info;
 
 	wl_resource_set_implementation(vblank_resource, NULL, vblank_info,
 	                               destroy_vblank_callback);
@@ -217,8 +233,56 @@ free_info:
 	free(vblank_info);
 }
 
+static const struct wl_tdm_client_interface tdm_client_implementation = {
+	_tdm_server_client_cb_destroy,
+	_tdm_server_client_cb_wait_vblank,
+};
+
+static void
+destroy_client_callback(struct wl_resource *resource)
+{
+	tdm_server_client_info *client_info = wl_resource_get_user_data(resource);
+
+	LIST_DEL(&client_info->link);
+	free(client_info);
+}
+
+static void
+_tdm_server_cb_create_client(struct wl_client *client,
+                             struct wl_resource *resource, uint32_t id)
+{
+	tdm_private_server *private_server = wl_resource_get_user_data(resource);
+	tdm_server_client_info *client_info;
+	struct wl_resource *client_resource;
+
+	client_info = calloc(1, sizeof *client_info);
+	if (!client_info) {
+		wl_resource_post_no_memory(resource);
+		TDM_ERR("alloc failed");
+		return;
+	}
+
+	client_resource =
+		wl_resource_create(client, &wl_tdm_client_interface,
+		                   wl_resource_get_version(resource), id);
+	if (!client_resource) {
+		wl_resource_post_no_memory(resource);
+		free(client_info);
+		TDM_ERR("wl_resource_create failed");
+		return;
+	}
+
+	client_info->private_server = private_server;
+	client_info->resource = client_resource;
+
+	wl_resource_set_implementation(client_resource, &tdm_client_implementation,
+	                               client_info, destroy_client_callback);
+
+	LIST_ADDTAIL(&client_info->link, &private_server->client_list);
+}
+
 static const struct wl_tdm_interface tdm_implementation = {
-	_tdm_server_cb_wait_vblank,
+	_tdm_server_cb_create_client,
 };
 
 static void
@@ -265,15 +329,17 @@ tdm_server_init(tdm_private_loop *private_loop)
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
+	LIST_INITHEAD(&private_server->client_list);
 	LIST_INITHEAD(&private_server->vblank_list);
 
 	if (!wl_global_create(private_loop->wl_display, &wl_tdm_interface, 1,
-	                      private_loop, _tdm_server_bind)) {
+	                      private_server, _tdm_server_bind)) {
 		TDM_ERR("creating a global resource failed");
 		free(private_server);
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
+	private_server->private_loop = private_loop;
 	private_loop->private_server = private_server;
 	keep_private_server = private_server;
 
@@ -284,6 +350,7 @@ INTERN void
 tdm_server_deinit(tdm_private_loop *private_loop)
 {
 	tdm_server_vblank_info *v = NULL, *vv = NULL;
+	tdm_server_client_info *c = NULL, *cc = NULL;
 	tdm_private_server *private_server;
 
 	if (!private_loop->private_server)
@@ -293,6 +360,10 @@ tdm_server_deinit(tdm_private_loop *private_loop)
 
 	LIST_FOR_EACH_ENTRY_SAFE(v, vv, &private_server->vblank_list, link) {
 		wl_resource_destroy(v->resource);
+	}
+
+	LIST_FOR_EACH_ENTRY_SAFE(c, cc, &private_server->client_list, link) {
+		wl_resource_destroy(c->resource);
 	}
 
 	free(private_server);

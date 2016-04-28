@@ -54,7 +54,7 @@ typedef struct _tdm_private_client {
 	struct wl_display *display;
 	struct wl_registry *registry;
 	struct wl_tdm *tdm;
-
+	struct wl_tdm_client *tdm_client;
 	struct list_head vblank_list;
 } tdm_private_client;
 
@@ -128,6 +128,9 @@ tdm_client_create(tdm_client_error *error)
 
 	LIST_INITHEAD(&private_client->vblank_list);
 
+	private_client->tdm_client = wl_tdm_create_client(private_client->tdm);
+	TDM_GOTO_IF_FAIL(private_client->tdm_client != NULL, create_failed);
+
 	if (error)
 		*error = TDM_CLIENT_ERROR_NONE;
 
@@ -154,6 +157,8 @@ tdm_client_destroy(tdm_client *client)
 		free(v);
 	}
 
+	if (private_client->tdm_client)
+		wl_tdm_client_destroy(private_client->tdm_client);
 	if (private_client->tdm)
 		wl_tdm_destroy(private_client->tdm);
 	if (private_client->registry)
@@ -239,7 +244,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	TDM_RETURN_VAL_IF_FAIL(interval > 0, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(private_client != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
-	TDM_RETURN_VAL_IF_FAIL(private_client->tdm != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(private_client->tdm_client != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 
 	vblank_info = calloc(1, sizeof *vblank_info);
 	if (!vblank_info) {
@@ -254,8 +259,9 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	vblank_info->need_free = (sync) ? 0 : 1;
 
 	vblank_info->vblank =
-		wl_tdm_wait_vblank(private_client->tdm, name, sw_timer, interval,
-		                   vblank_info->req_sec, vblank_info->req_usec);
+		wl_tdm_client_wait_vblank(private_client->tdm_client,
+		                          name, sw_timer, interval,
+		                          vblank_info->req_sec, vblank_info->req_usec);
 	if (!vblank_info->vblank) {
 		TDM_ERR("couldn't create vblank resource");
 		free(vblank_info);
