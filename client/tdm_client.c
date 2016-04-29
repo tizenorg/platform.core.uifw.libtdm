@@ -255,7 +255,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 
 	vblank_info->req_sec = (unsigned int)tp.tv_sec;
-	vblank_info->req_usec = (unsigned int)(tp.tv_nsec/1000L);
+	vblank_info->req_usec = (unsigned int)(tp.tv_nsec/1000);
 	vblank_info->need_free = (sync) ? 0 : 1;
 
 	vblank_info->vblank =
@@ -288,7 +288,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 	TDM_DBG("block during %d us",
-	        ((unsigned int)(tp.tv_sec * 1000000) + (unsigned int)(tp.tv_nsec/1000L))
+	        ((unsigned int)(tp.tv_sec * 1000000) + (unsigned int)(tp.tv_nsec/1000))
 	        - (vblank_info->req_sec * 1000000 + vblank_info->req_usec));
 
 	LIST_DEL(&vblank_info->link);

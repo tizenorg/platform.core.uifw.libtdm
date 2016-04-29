@@ -45,6 +45,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* CAUTION:
  * - tdm server doesn't care about thread things.
  * - DO NOT use the TDM internal functions here.
+ *     However, the internal function which does lock/unlock the mutex of
+ *     private_display in itself can be called.
+ * - DO NOT use the tdm_private_display structure here.
  */
 
 struct _tdm_private_server {
@@ -57,24 +60,117 @@ typedef struct _tdm_server_client_info {
 	struct list_head link;
 	tdm_private_server *private_server;
 	struct wl_resource *resource;
+
+	tdm_output *vblank_output;
+	double vblank_gap;
+	unsigned int last_tv_sec;
+	unsigned int last_tv_usec;
 } tdm_server_client_info;
 
 typedef struct _tdm_server_vblank_info {
 	struct list_head link;
 	tdm_server_client_info *client_info;
 	struct wl_resource *resource;
+
+	unsigned int req_sec;
+	unsigned int req_usec;
+
+	tdm_event_loop_source *timer_source;
+	unsigned int timer_target_sec;
+	unsigned int timer_target_usec;
 } tdm_server_vblank_info;
 
 static tdm_private_server *keep_private_server;
 static int tdm_debug_server;
 
 static void
-_tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
-                             unsigned int tv_sec, unsigned int tv_usec,
-                             void *user_data)
+_tdm_server_send_done(tdm_server_vblank_info *vblank_info, unsigned int sequence,
+                      unsigned int tv_sec, unsigned int tv_usec);
+
+static tdm_error
+_tdm_server_cb_timer(void *user_data)
 {
 	tdm_server_vblank_info *vblank_info = (tdm_server_vblank_info*)user_data;
+
+	_tdm_server_send_done(vblank_info, 0,
+	                      vblank_info->timer_target_sec,
+	                      vblank_info->timer_target_usec);
+
+	return TDM_ERROR_NONE;
+}
+
+static tdm_error
+_tdm_server_update_timer(tdm_server_vblank_info *vblank_info, int interval)
+{
+	tdm_server_client_info *client_info = vblank_info->client_info;
+	tdm_private_server *private_server = client_info->private_server;
+	tdm_private_loop *private_loop = private_server->private_loop;
+	unsigned long last, prev_req, req, curr, next;
+	int ms_delay;
+	tdm_error ret;
+
+	ret = tdm_display_lock(private_loop->dpy);
+	TDM_RETURN_VAL_IF_FAIL(ret == TDM_ERROR_NONE, ret);
+
+	if (!vblank_info->timer_source) {
+		vblank_info->timer_source =
+			tdm_event_loop_add_timer_handler(private_loop->dpy,
+			                                 _tdm_server_cb_timer,
+			                                 vblank_info,
+			                                 NULL);
+		if (!vblank_info->timer_source) {
+			TDM_ERR("couldn't add timer");
+			tdm_display_unlock(private_loop->dpy);
+			return TDM_ERROR_OPERATION_FAILED;
+		}
+	}
+
+	last = (unsigned long)client_info->last_tv_sec * 1000000 + client_info->last_tv_usec;
+	req = (unsigned long)vblank_info->req_sec * 1000000 + vblank_info->req_usec;
+	curr = tdm_helper_get_time_in_micros();
+
+	prev_req = last + (unsigned int)((req - last) / client_info->vblank_gap) * client_info->vblank_gap;
+	next = prev_req + (unsigned long)(client_info->vblank_gap * interval);
+
+	while (next < curr)
+		next += (unsigned long)client_info->vblank_gap;
+
+	TDM_DBG("last(%.6lu) req(%.6lu) curr(%.6lu) prev_req(%.6lu) next(%.6lu)",
+	        last, req, curr, prev_req, next);
+
+	ms_delay = (int)ceil((double)(next - curr) / 1000);
+	if (ms_delay == 0)
+		ms_delay = 1;
+
+	TDM_DBG("delay(%lu) ms_delay(%d)", next - curr, ms_delay);
+
+	ret = tdm_event_loop_source_timer_update(vblank_info->timer_source, ms_delay);
+	if (ret != TDM_ERROR_NONE) {
+		tdm_event_loop_source_remove(vblank_info->timer_source);
+		vblank_info->timer_source = NULL;
+		tdm_display_unlock(private_loop->dpy);
+		TDM_ERR("couldn't update timer");
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	TDM_DBG("timer tick: %d us", (int)(next - last));
+
+	vblank_info->timer_target_sec = next / 1000000;
+	vblank_info->timer_target_usec = next % 1000000;
+
+	tdm_display_unlock(private_loop->dpy);
+
+	return TDM_ERROR_NONE;
+}
+
+static void
+_tdm_server_send_done(tdm_server_vblank_info *vblank_info, unsigned int sequence,
+                      unsigned int tv_sec, unsigned int tv_usec)
+{
 	tdm_server_vblank_info *found;
+	tdm_server_client_info *client_info;
+	unsigned long vtime = (tv_sec * 1000000) + tv_usec;
+	unsigned long curr = tdm_helper_get_time_in_micros();
 
 	if (!keep_private_server)
 		return;
@@ -86,23 +182,45 @@ _tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
 		return;
 	}
 
+	client_info = vblank_info->client_info;
+	client_info->last_tv_sec = tv_sec;
+	client_info->last_tv_usec = tv_usec;
+
+	TDM_DBG("wl_tdm_vblank@%d done. tv(%lu) curr(%lu)",
+	        wl_resource_get_id(vblank_info->resource), vtime, curr);
+
 	if (tdm_debug_server) {
-		unsigned long curr = tdm_helper_get_time_in_micros();
-		unsigned long vtime = (tv_sec * 1000000) + tv_usec;
 		if (curr - vtime > 1000) /* 1ms */
 			TDM_WRN("delay: %d us", (int)(curr - vtime));
 	}
-
-	TDM_DBG("wl_tdm_vblank@%d done", wl_resource_get_id(vblank_info->resource));
 
 	wl_tdm_vblank_send_done(vblank_info->resource, sequence, tv_sec, tv_usec);
 	wl_resource_destroy(vblank_info->resource);
 }
 
 static void
+_tdm_server_cb_output_vblank(tdm_output *output, unsigned int sequence,
+                             unsigned int tv_sec, unsigned int tv_usec,
+                             void *user_data)
+{
+	tdm_server_vblank_info *vblank_info = (tdm_server_vblank_info*)user_data;
+
+	_tdm_server_send_done(vblank_info, sequence, tv_sec, tv_usec);
+}
+
+static void
 destroy_vblank_callback(struct wl_resource *resource)
 {
 	tdm_server_vblank_info *vblank_info = wl_resource_get_user_data(resource);
+
+	if (vblank_info->timer_source) {
+		tdm_private_server *private_server = vblank_info->client_info->private_server;
+
+		tdm_display_lock(private_server->private_loop->dpy);
+		tdm_event_loop_source_remove(vblank_info->timer_source);
+		tdm_display_unlock(private_server->private_loop->dpy);
+	}
+
 	LIST_DEL(&vblank_info->link);
 	free(vblank_info);
 }
@@ -127,8 +245,8 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 	struct wl_resource *vblank_resource;
 	tdm_output *found = NULL;
 	tdm_output_dpms dpms_value = TDM_OUTPUT_DPMS_ON;
-	int count = 0, i;
 	tdm_error ret;
+	const char *model;
 
 	TDM_DBG("The tdm client requests vblank");
 
@@ -139,26 +257,37 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 			TDM_WRN("delay(req): %d us", (int)(curr - reqtime));
 	}
 
-	tdm_display_get_output_count(private_loop->dpy, &count);
+	if (client_info->vblank_output) {
+		model = NULL;
+		ret = tdm_output_get_model_info(client_info->vblank_output, NULL, &model, NULL);
+		if (model && !strncmp(model, name, TDM_NAME_LEN))
+			found = client_info->vblank_output;
+	}
 
-	for (i = 0; i < count; i++) {
-		tdm_output *output= tdm_display_get_output(private_loop->dpy, i, NULL);
-		tdm_output_conn_status status;
-		const char *model = NULL;
+	if (!found) {
+		int count = 0, i;
 
-		ret = tdm_output_get_conn_status(output, &status);
-		if (ret || status == TDM_OUTPUT_CONN_STATUS_DISCONNECTED)
-			continue;
+		tdm_display_get_output_count(private_loop->dpy, &count);
 
-		ret = tdm_output_get_model_info(output, NULL, &model, NULL);
-		if (ret || !model)
-			continue;
+		for (i = 0; i < count; i++) {
+			tdm_output *output= tdm_display_get_output(private_loop->dpy, i, NULL);
+			tdm_output_conn_status status;
 
-		if (strncmp(model, name, TDM_NAME_LEN))
-			continue;
+			ret = tdm_output_get_conn_status(output, &status);
+			if (ret || status == TDM_OUTPUT_CONN_STATUS_DISCONNECTED)
+				continue;
 
-		found = output;
-		break;
+			model = NULL;
+			ret = tdm_output_get_model_info(output, NULL, &model, NULL);
+			if (ret || !model)
+				continue;
+
+			if (strncmp(model, name, TDM_NAME_LEN))
+				continue;
+
+			found = output;
+			break;
+		}
 	}
 
 	if (!found) {
@@ -166,6 +295,23 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 		                       "There is no '%s' output", name);
 		TDM_ERR("There is no '%s' output", name);
 		return;
+	}
+
+	if (client_info->vblank_output != found) {
+		const tdm_output_mode *mode = NULL;
+
+		client_info->vblank_output = found;
+
+		tdm_output_get_mode(client_info->vblank_output, &mode);
+		if (!mode || mode->vrefresh <= 0) {
+			wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_OPERATION_FAILED,
+			                       "couldn't get mode of %s", name);
+			TDM_ERR("couldn't get mode of %s", name);
+			return;
+		}
+
+		client_info->vblank_gap = (double)1000000 / mode->vrefresh;
+		TDM_INFO("vblank_gap(%.6lf)", client_info->vblank_gap);
 	}
 
 	tdm_output_get_dpms(found, &dpms_value);
@@ -195,6 +341,11 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 		goto free_info;
 	}
 
+	vblank_info->resource = vblank_resource;
+	vblank_info->client_info = client_info;
+	vblank_info->req_sec = req_sec;
+	vblank_info->req_usec = req_usec;
+
 	if (dpms_value == TDM_OUTPUT_DPMS_ON) {
 		ret = tdm_output_wait_vblank(found, interval, 0,
 		                             _tdm_server_cb_output_vblank, vblank_info);
@@ -205,11 +356,11 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 			goto destroy_resource;
 		}
 	} else if (sw_timer) {
-		/* TODO: need to implement things related with sw_timer */
+		ret = _tdm_server_update_timer(vblank_info, interval);
 		if (ret != TDM_ERROR_NONE) {
 			wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_OPERATION_FAILED,
-			                       "not implemented yet");
-			TDM_ERR("not implemented yet");
+			                       "couldn't update timer for %s", name);
+			TDM_ERR("couldn't update timer for %s", name);
 			goto destroy_resource;
 		}
 	} else {
@@ -218,9 +369,6 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 		TDM_NEVER_GET_HERE();
 		goto destroy_resource;
 	}
-
-	vblank_info->resource = vblank_resource;
-	vblank_info->client_info = client_info;
 
 	wl_resource_set_implementation(vblank_resource, NULL, vblank_info,
 	                               destroy_vblank_callback);
@@ -242,7 +390,6 @@ static void
 destroy_client_callback(struct wl_resource *resource)
 {
 	tdm_server_client_info *client_info = wl_resource_get_user_data(resource);
-
 	LIST_DEL(&client_info->link);
 	free(client_info);
 }

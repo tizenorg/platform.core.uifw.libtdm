@@ -507,6 +507,14 @@ static inline int TDM_MUTEX_IS_LOCKED(void)
 	return ret;
 }
 
+tdm_error
+_tdm_display_lock(tdm_display *dpy, const char *func);
+void
+_tdm_display_unlock(tdm_display *dpy, const char *func);
+
+#define tdm_display_lock(dpy)   _tdm_display_lock(dpy, __FUNCTION__)
+#define tdm_display_unlock(dpy)   _tdm_display_unlock(dpy, __FUNCTION__)
+
 #ifdef __cplusplus
 }
 #endif
