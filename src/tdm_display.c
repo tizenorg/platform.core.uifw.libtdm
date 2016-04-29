@@ -142,6 +142,47 @@ tdm_get_dpms_str(tdm_output_dpms dpms_value)
 	return dpms_str(dpms_value);
 }
 
+INTERN tdm_error
+_tdm_display_lock(tdm_display *dpy, const char *func)
+{
+	tdm_private_display *private_display = (tdm_private_display*)dpy;
+	int ret;
+
+	if (tdm_debug_mutex)
+		TDM_INFO("mutex lock: %s", func);
+
+	ret = pthread_mutex_trylock(&private_display->lock);
+	if (ret < 0) {
+		if (ret == EBUSY) {
+			TDM_ERR("mutex lock busy: %s", func);
+		} else {
+			TDM_ERR("mutex lock failed: %s(%m)", func);
+		}
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	pthread_mutex_lock(&tdm_mutex_check_lock);
+	tdm_mutex_locked = 1;
+	pthread_mutex_unlock(&tdm_mutex_check_lock);
+
+	return TDM_ERROR_NONE;
+}
+
+INTERN void
+_tdm_display_unlock(tdm_display *dpy, const char *func)
+{
+	tdm_private_display *private_display = (tdm_private_display*)dpy;
+
+	if (tdm_debug_mutex)
+		TDM_INFO("mutex unlock: %s", func);
+
+	pthread_mutex_lock(&tdm_mutex_check_lock);
+	tdm_mutex_locked = 0;
+	pthread_mutex_unlock(&tdm_mutex_check_lock);
+
+	pthread_mutex_unlock(&private_display->lock);
+}
+
 EXTERN tdm_error
 tdm_display_get_capabilities(tdm_display *dpy,
                              tdm_display_capability *capabilities)
