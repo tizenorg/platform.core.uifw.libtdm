@@ -90,30 +90,42 @@ tdm_display_find_output_stamp(tdm_private_display *private_display,
 static void
 _tdm_display_destroy_caps_pp(tdm_caps_pp *caps_pp)
 {
-	free(caps_pp->formats);
+        if (caps_pp->formats)
+		free(caps_pp->formats);
+
 	memset(caps_pp, 0, sizeof(tdm_caps_pp));
 }
 
 static void
 _tdm_display_destroy_caps_capture(tdm_caps_capture *caps_capture)
 {
-	free(caps_capture->formats);
+        if (caps_capture->formats)
+		free(caps_capture->formats);
+
 	memset(caps_capture, 0, sizeof(tdm_caps_capture));
 }
 
 static void
 _tdm_display_destroy_caps_layer(tdm_caps_layer *caps_layer)
 {
-	free(caps_layer->formats);
-	free(caps_layer->props);
+	if (caps_layer->formats)
+		free(caps_layer->formats);
+
+	if (caps_layer->props)
+		free(caps_layer->props);
+
 	memset(caps_layer, 0, sizeof(tdm_caps_layer));
 }
 
 static void
 _tdm_display_destroy_caps_output(tdm_caps_output *caps_output)
 {
-	free(caps_output->modes);
-	free(caps_output->props);
+	if (caps_output->modes)
+		free(caps_output->modes);
+
+	if (caps_output->props)
+		free(caps_output->props);
+
 	memset(caps_output, 0, sizeof(tdm_caps_output));
 }
 
