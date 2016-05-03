@@ -265,7 +265,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 INTERN void
 tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 {
-	tdm_private_display *private_display = private_capture->private_display;
+	tdm_private_display *private_display;
 	tdm_func_capture *func_capture;
 	tdm_buffer_info *b = NULL, *bb = NULL;
 
@@ -273,6 +273,8 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 
 	if (!private_capture)
 		return;
+
+        private_display = private_capture->private_display;
 
 	LIST_DEL(&private_capture->link);
 	LIST_DEL(&private_capture->display_link);
