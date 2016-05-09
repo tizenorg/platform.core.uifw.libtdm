@@ -59,7 +59,7 @@ extern "C" {
  */
 extern int tdm_debug;
 
-//#define TDM_CONFIG_DLOG
+#define TDM_CONFIG_DLOG
 //#define TDM_CONFIG_ASSERT
 
 #undef TDM_ASSERT
