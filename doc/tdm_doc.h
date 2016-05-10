@@ -76,35 +76,36 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @code
     #include <tdm_backend.h>
 
-    static tdm_func_display drm_func_display = {
-        drm_display_get_capabilitiy,
-        ...
-    };
-
-    static tdm_func_output drm_func_output = {
-        drm_output_get_capability,
-        ...
-    };
-
-    static tdm_func_layer drm_func_layer = {
-        drm_layer_get_capability,
-        ...
-    };
-
     static tdm_drm_data *drm_data;
 
     tdm_backend_data*
     tdm_drm_init(tdm_display *dpy, tdm_error *error)
     {
+        tdm_func_display drm_func_display;
+        tdm_func_output drm_func_output;
+        tdm_func_layer drm_func_layer;
+
         ...
         drm_data = calloc(1, sizeof(tdm_drm_data));
+        ...
+
+        memset(&drm_func_display, 0, sizeof(drm_func_display));
+        drm_func_display.display_get_capabilitiy = drm_display_get_capabilitiy;
         ...
         ret = tdm_backend_register_func_display(dpy, &drm_func_display);
         if (ret != TDM_ERROR_NONE)
             goto failed;
+
+        memset(&drm_func_output, 0, sizeof(drm_func_output));
+        drm_func_output.output_get_capability = drm_output_get_capability;
+        ...
         ret = tdm_backend_register_func_output(dpy, &drm_func_output);
         if (ret != TDM_ERROR_NONE)
             goto failed;
+
+        memset(&drm_func_layer, 0, sizeof(drm_func_layer));
+        drm_func_layer.layer_get_capability = drm_layer_get_capability;
+        ...
         ret = tdm_backend_register_func_layer(dpy, &drm_func_layer);
         if (ret != TDM_ERROR_NONE)
             goto failed;
