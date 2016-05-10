@@ -90,7 +90,7 @@ tdm_display_find_output_stamp(tdm_private_display *private_display,
 static void
 _tdm_display_destroy_caps_pp(tdm_caps_pp *caps_pp)
 {
-        if (caps_pp->formats)
+	if (caps_pp->formats)
 		free(caps_pp->formats);
 
 	memset(caps_pp, 0, sizeof(tdm_caps_pp));
@@ -99,7 +99,7 @@ _tdm_display_destroy_caps_pp(tdm_caps_pp *caps_pp)
 static void
 _tdm_display_destroy_caps_capture(tdm_caps_capture *caps_capture)
 {
-        if (caps_capture->formats)
+	if (caps_capture->formats)
 		free(caps_capture->formats);
 
 	memset(caps_capture, 0, sizeof(tdm_caps_capture));

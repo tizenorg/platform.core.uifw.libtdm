@@ -274,7 +274,7 @@ tdm_capture_destroy_internal(tdm_private_capture *private_capture)
 	if (!private_capture)
 		return;
 
-        private_display = private_capture->private_display;
+	private_display = private_capture->private_display;
 
 	LIST_DEL(&private_capture->link);
 	LIST_DEL(&private_capture->display_link);
