@@ -470,8 +470,9 @@ typedef struct _tdm_func_output {
 
 	/**
 	 * @brief Set a output connection status handler
-	 * @details The handler will be called when the connection status of a
-	 * output object is changed.
+	 * @details A backend module need to call the output status handler when the
+	 * output connection status has been changed to let the TDM frontend know
+	 * the change.
 	 * @param[in] output A output object
 	 * @param[in] func A output status handler
 	 * @param[in] user_data The user data
@@ -938,22 +939,58 @@ void
 tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
                                   tdm_buffer_destroy_handler func, void *user_data);
 
-
+/**
+ * @brief Add a FD handler for activity on the given file descriptor
+ * @param[in] dpy A display object
+ * @param[in] fd A file descriptor
+ * @param[in] mask to monitor FD
+ * @param[in] func A FD handler function
+ * @param[in] user_data user data
+ * @param[out] error #TDM_ERROR_NONE if success. Otherwise, error value.
+ * @return A FD event source
+ * @see #tdm_event_loop_source_fd_update, #tdm_event_loop_source_remove
+ */
 tdm_event_loop_source*
 tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask,
                          tdm_event_loop_fd_handler func, void *user_data,
                          tdm_error *error);
 
+/**
+ * @brief Update the mask of the given FD event source
+ * @param[in] source The given FD event source
+ * @param[in] mask to monitor FD
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
 tdm_error
 tdm_event_loop_source_fd_update(tdm_event_loop_source *source, tdm_event_loop_mask mask);
 
+/**
+ * @brief Add a timer handler
+ * @param[in] dpy A display object
+ * @param[in] func A timer handler function
+ * @param[in] user_data user data
+ * @param[out] error #TDM_ERROR_NONE if success. Otherwise, error value.
+ * @return A timer event source
+ * @see #tdm_event_loop_source_timer_update, #tdm_event_loop_source_remove
+ */
 tdm_event_loop_source*
 tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler func,
                             void *user_data, tdm_error *error);
 
+/**
+ * @brief Update the millisecond delay time of the given timer event source.
+ * @param[in] source The given timer event source
+ * @param[in] ms_delay The millisecond delay time. zero "0" disarms the timer.
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
 tdm_error
 tdm_event_loop_source_timer_update(tdm_event_loop_source *source, int ms_delay);
 
+/**
+ * @brief Remove the given event source
+ * @param[in] source The given event source
+ * @see #tdm_event_loop_add_fd_handler, #tdm_event_loop_add_timer_handler
+ */
 void
 tdm_event_loop_source_remove(tdm_event_loop_source *source);
 
