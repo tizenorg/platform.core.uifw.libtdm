@@ -106,7 +106,7 @@ _tdm_server_update_timer(tdm_server_vblank_info *vblank_info, int interval)
 	tdm_private_server *private_server = client_info->private_server;
 	tdm_private_loop *private_loop = private_server->private_loop;
 	unsigned long last, prev_req, req, curr, next;
-	int ms_delay;
+	unsigned int ms_delay;
 	tdm_error ret;
 
 	ret = tdm_display_lock(private_loop->dpy);
@@ -138,7 +138,7 @@ _tdm_server_update_timer(tdm_server_vblank_info *vblank_info, int interval)
 	TDM_DBG("last(%.6lu) req(%.6lu) curr(%.6lu) prev_req(%.6lu) next(%.6lu)",
 	        last, req, curr, prev_req, next);
 
-	ms_delay = (int)ceil((double)(next - curr) / 1000);
+	ms_delay = (unsigned int)ceil((double)(next - curr) / 1000);
 	if (ms_delay == 0)
 		ms_delay = 1;
 

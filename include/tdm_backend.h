@@ -991,7 +991,7 @@ tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler 
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  */
 tdm_error
-tdm_event_loop_source_timer_update(tdm_event_loop_source *source, int ms_delay);
+tdm_event_loop_source_timer_update(tdm_event_loop_source *source, unsigned int ms_delay);
 
 /**
  * @brief Remove the given event source
