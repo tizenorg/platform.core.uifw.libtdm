@@ -156,6 +156,11 @@ typedef struct _tdm_caps_pp {
 	int max_w;              /**< The maximum width. -1 means "not defined" */
 	int max_h;              /**< The maximum height. -1 means "not defined" */
 	int preferred_align;    /**< The prefered align. -1 means "not defined" */
+
+	int max_attach_count;   /**< The attach count which a PP object can handle.
+	                         *   -1 means "not defined".
+	                         * @since 1.2.0
+	                         */
 } tdm_caps_pp;
 
 /**
@@ -174,6 +179,11 @@ typedef struct _tdm_caps_capture {
 	int max_w;              /**< The maximum width. -1 means "not defined" */
 	int max_h;              /**< The maximum height. -1 means "not defined" */
 	int preferred_align;    /**< The prefered align. -1 means "not defined" */
+
+	int max_attach_count;   /**< The attach count which a capture object can handle.
+	                         *   -1 means "not defined".
+	                         * @since 1.2.0
+	                         */
 } tdm_caps_capture;
 
 /**

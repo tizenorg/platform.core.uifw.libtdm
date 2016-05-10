@@ -360,6 +360,18 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	if (tdm_display_check_module_abi(private_display, 1, 2) &&
+		private_display->caps_pp.max_attach_count > 0) {
+		int length = LIST_LENGTH(&private_pp->src_pending_buffer_list) +
+		             LIST_LENGTH(&private_pp->src_buffer_list);
+		if (length >= private_display->caps_pp.max_attach_count) {
+			_pthread_mutex_unlock(&private_display->lock);
+			TDM_DBG("failed: too many attached!! max_attach_count(%d)",
+			        private_display->caps_pp.max_attach_count);
+			return TDM_ERROR_BAD_REQUEST;
+		}
+	}
+
 	ret = _tdm_pp_check_if_exist(private_pp, src, dst);
 	if (ret != TDM_ERROR_NONE) {
 		_pthread_mutex_unlock(&private_display->lock);
