@@ -430,7 +430,7 @@ tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler 
 }
 
 EXTERN tdm_error
-tdm_event_loop_source_timer_update(tdm_event_loop_source *source, int ms_delay)
+tdm_event_loop_source_timer_update(tdm_event_loop_source *source, unsigned int ms_delay)
 {
 	tdm_event_loop_source_timer *timer_source = source;
 
