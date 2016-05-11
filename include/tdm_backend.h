@@ -782,23 +782,39 @@ typedef struct _tdm_func_capture {
 	void (*reserved8)(void);
 } tdm_func_capture;
 
-/*
- * ABI versions.  Each version has a major and minor revision.  Modules
- * using lower minor revisions must work with servers of a higher minor
- * revision.  There is no compatibility between different major revisions.
- * Whenever the ABI_ANSIC_VERSION is changed, the others must also be
- * changed.  The minor revision mask is 0x0000FFFF and the major revision
- * mask is 0xFFFF0000.
- */
 #define TDM_BACKEND_MINOR_VERSION_MASK  0x0000FFFF
 #define TDM_BACKEND_MAJOR_VERSION_MASK  0xFFFF0000
 #define TDM_BACKEND_GET_ABI_MINOR(v)    ((v) & TDM_BACKEND_MINOR_VERSION_MASK)
 #define TDM_BACKEND_GET_ABI_MAJOR(v)    (((v) & TDM_BACKEND_MAJOR_VERSION_MASK) >> 16)
 
-#define SET_TDM_BACKEND_ABI_VERSION(major, minor) \
+/**
+ * @brief 
+ * The ABI version of TDM backend module. It has a major and minor revision.
+ * Modules using lower minor revisions will work with TDM frontend of a higher
+ * minor revision. There is no compatibility between different major revisions.
+ * The minor revision mask is 0x0000FFFF and the major revision mask is 0xFFFF0000.
+ * @par Example
+ * @code
+    tdm_backend_module tdm_backend_module_data = {
+        "drm",
+        "Samsung",
+        TDM_BACKEND_SET_ABI_VERSION(1,1),
+        tdm_drm_init,
+        tdm_drm_deinit
+    };
+ * @endcode
+ */
+#define TDM_BACKEND_SET_ABI_VERSION(major, minor) \
         (((major) << 16) & TDM_BACKEND_MAJOR_VERSION_MASK) | \
         ((major) & TDM_BACKEND_MINOR_VERSION_MASK)
-#define TDM_BACKEND_ABI_VERSION     SET_TDM_BACKEND_ABI_VERSION(1, 1)
+
+/**
+ * @brief
+ * This MACRO is deprecated since 1.2.0. Use TDM_BACKEND_SET_ABI_VERSION instead of this.
+ * @deprecated
+ * Use #TDM_BACKEND_SET_ABI_VERSION macro instead of this macro.
+ */
+#define TDM_BACKEND_ABI_VERSION     TDM_BACKEND_SET_ABI_VERSION(1, 1)
 
 /**
  * @brief The backend module information of the entry point to initialize a TDM
