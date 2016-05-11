@@ -76,7 +76,6 @@ AC_SUBST(WARN_CFLAGS)
 AC_OUTPUT([
 	Makefile
 	libtdm.pc
-	doc/tdm_doc.h
 	include/Makefile
 	protocol/Makefile
 	client/libtdm-client.pc
