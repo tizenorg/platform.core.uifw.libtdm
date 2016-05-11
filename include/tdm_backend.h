@@ -737,8 +737,8 @@ typedef struct _tdm_func_capture {
 
 	/**
 	 * @brief Attach a TDM buffer to a capture object
-	 * @details When capture_commit() function is called, a backend module dumps
-	 * a output or a layer to a TDM buffer.
+	 * @details When capture_commit() function is called, a backend module starts
+	 * to dump a output or a layer to a TDM buffer.
 	 * @param[in] capture A capture object
 	 * @param[in] buffer A TDM buffer
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
@@ -746,7 +746,7 @@ typedef struct _tdm_func_capture {
 	 * @see capture_commit() function of #tdm_func_capture
 	 * @see capture_set_done_handler, tdm_capture_done_handler
 	 * @remark
-	 * A backend module dumps a output or a layer to to a TDM buffer when
+	 * A backend module starts to dump a output or a layer to to a TDM buffer when
 	 * committed. The size/crop/transform information is set via #capture_set_info()
 	 * of #tdm_func_capture. When done, a backend module @b SHOULD return the TDM
 	 * buffer via tdm_capture_done_handler.
