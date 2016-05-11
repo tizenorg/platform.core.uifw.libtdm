@@ -87,12 +87,27 @@ static inline void list_delinit(struct list_head *item)
 	item->prev = item;
 }
 
+static inline int list_length(struct list_head *item)
+{
+	struct list_head *next;
+	int length = 0;
+
+	next = item->next;
+	while (next != item) {
+		length++;
+		next = next->next;
+	}
+
+	return length;
+}
+
 #define LIST_INITHEAD(__item) list_inithead(__item)
 #define LIST_ADD(__item, __list) list_add(__item, __list)
 #define LIST_ADDTAIL(__item, __list) list_addtail(__item, __list)
 #define LIST_REPLACE(__from, __to) list_replace(__from, __to)
 #define LIST_DEL(__item) list_del(__item)
 #define LIST_DELINIT(__item) list_delinit(__item)
+#define LIST_LENGTH(__item) list_length(__item)
 
 #define LIST_ENTRY(__type, __item, __field)   \
     ((__type *)(((char *)(__item)) - offsetof(__type, __field)))
