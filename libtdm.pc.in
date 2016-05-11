@@ -5,7 +5,7 @@ includedir=@includedir@
 
 Name: libtdm
 Description: Tizen Display Manager Library
-Version: @PACKAGE_VERSION@
+Version: @TDM_VERSION@
 Requires: libtbm
 Libs: -L${libdir} -ltdm
 Cflags: -I${includedir}

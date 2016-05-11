@@ -1,6 +1,13 @@
 AC_PREREQ([2.60])
+
+m4_define([tdm_major_version],  [1])
+m4_define([tdm_minor_version],  [1])
+m4_define([tdm_micro_version],  [0])
+m4_define([tdm_version],
+          [tdm_major_version.tdm_minor_version.tdm_micro_version])
+
 AC_INIT([libtdm],
-        [1.1.0],
+        [tdm_version],
         [https://www.tizen.org],
         [libtdm])
 
@@ -55,11 +62,21 @@ AC_ARG_WITH(tdm-module-path, AS_HELP_STRING([--with-tdm-module-path=PATH], [tdm 
 				[ TDM_MODULE_PATH="${DEFAULT_TDM_MODULE_PATH}" ])
 AC_DEFINE_UNQUOTED(TDM_MODULE_PATH, "${TDM_MODULE_PATH}", [Directory for the modules of tdm])
 
+AC_SUBST([TDM_MAJOR_VERSION], [tdm_major_version])
+AC_SUBST([TDM_MINOR_VERSION], [tdm_minor_version])
+AC_SUBST([TDM_MICRO_VERSION], [tdm_micro_version])
+AC_SUBST([TDM_VERSION], [tdm_version])
+
+AC_DEFINE([TDM_MAJOR_VERSION], [tdm_major_version], [tdm ABI major version])
+AC_DEFINE([TDM_MINOR_VERSION], [tdm_minor_version], [tdm ABI minor version])
+AC_DEFINE([TDM_MICRO_VERSION], [tdm_micro_version], [tdm ABI macro version])
+
 # For enumerating devices in test case
 AC_SUBST(WARN_CFLAGS)
 AC_OUTPUT([
 	Makefile
 	libtdm.pc
+	doc/tdm_doc.h
 	include/Makefile
 	protocol/Makefile
 	client/libtdm-client.pc

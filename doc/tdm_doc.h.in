@@ -39,8 +39,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /**
  * @mainpage TDM
  * @author     Boram Park, boram1288.park@samsung.com
- * @date       Mar 17, 2016
- * @version    1.1.0
+ * @version    @TDM_VERSION@ 
  * @par Introduction
  * TDM stands for Tizen Display Manager. It's the display HAL layer for tizen
  * display server. It offers the frontend APIs(@ref tdm.h) for a frontend user

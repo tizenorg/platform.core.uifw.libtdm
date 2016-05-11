@@ -675,12 +675,9 @@ _tdm_display_check_module(tdm_backend_module *module)
 	const char *name;
 	const char *vendor;
 	int major, minor;
-	int abimaj, abimin;
 
-	abimaj = TDM_BACKEND_GET_ABI_MAJOR(TDM_BACKEND_ABI_VERSION);
-	abimin = TDM_BACKEND_GET_ABI_MINOR(TDM_BACKEND_ABI_VERSION);
-
-	TDM_INFO("TDM module ABI version : %d.%d", abimaj, abimin);
+	TDM_INFO("TDM ABI version : %d.%d",
+	         TDM_MAJOR_VERSION, TDM_MINOR_VERSION);
 
 	name = module->name ? module->name : "unknown";
 	vendor = module->vendor ? module->vendor : "unknown";
@@ -691,13 +688,15 @@ _tdm_display_check_module(tdm_backend_module *module)
 	TDM_INFO("'%s' vendor: %s", name, vendor);
 	TDM_INFO("'%s' version: %d.%d", name, major, minor);
 
-	if (major != abimaj) {
-		TDM_ERR("'%s' major version mismatch, %d != %d", name, major, abimaj);
+	if (major != TDM_MAJOR_VERSION) {
+		TDM_ERR("'%s' major version mismatch, %d != %d",
+		        name, major, TDM_MAJOR_VERSION);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
-	if (minor > abimin) {
-		TDM_ERR("'%s' minor version(%d) is newer than %d", name, minor, abimin);
+	if (minor > TDM_MINOR_VERSION) {
+		TDM_ERR("'%s' minor version(%d) is newer than %d",
+		        name, minor, TDM_MINOR_VERSION);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
