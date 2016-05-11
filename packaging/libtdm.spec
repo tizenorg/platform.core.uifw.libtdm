@@ -1,5 +1,5 @@
 Name:           libtdm
-Version:        1.1.0
+Version:        1.2.0
 Release:        0
 Summary:        User Library of Tizen Display Manager
 Group:          Development/Libraries
