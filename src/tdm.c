@@ -1031,3 +1031,17 @@ tdm_display_deinit(tdm_display *dpy)
 	TDM_INFO("done");
 }
 
+INTERN int
+tdm_display_check_module_abi(tdm_private_display *private_display, int abimaj, int abimin)
+{
+	tdm_backend_module *module = private_display->module_data;
+
+	if (TDM_BACKEND_GET_ABI_MAJOR(module->abi_version) < abimaj)
+		return 0;
+
+	if (TDM_BACKEND_GET_ABI_MINOR(module->abi_version) < abimin)
+		return 0;
+
+	return 1;
+}
+
