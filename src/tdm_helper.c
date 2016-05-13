@@ -286,19 +286,3 @@ tdm_helper_dump_stop(void)
 	TDM_DBG("tdm_helper_dump stop.");
 }
 
-INTERN int
-tdm_helper_get_dump_count(void)
-{
-	if ((tdm_helper_dump_count != NULL) && (tdm_helper_dump_path != NULL)) {
-		if (*tdm_helper_dump_count == 1000)
-			*tdm_helper_dump_count = 1;
-		return (*tdm_helper_dump_count)++;
-	} else
-		return 0;
-}
-
-INTERN char *
-tdm_helper_get_dump_path(void)
-{
-	return tdm_helper_dump_path;
-}

@@ -456,11 +456,6 @@ extern pthread_mutex_t tdm_mutex_check_lock;
 extern int tdm_mutex_locked;
 extern int tdm_dump_enable;
 
-int
-tdm_helper_get_dump_count(void);
-char *
-tdm_helper_get_dump_path(void);
-
 #define _pthread_mutex_unlock(l) \
 	do { \
 		if (tdm_debug_mutex) \
