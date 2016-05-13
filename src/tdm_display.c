@@ -1431,39 +1431,17 @@ _tdm_layer_dump_buffer(tdm_layer *layer, tbm_surface_h buffer)
 {
 	tdm_private_layer *private_layer = (tdm_private_layer*)layer;
 	tdm_private_output *private_output = private_layer->private_output;
-	char *path = NULL;
-	int count;
 	unsigned int pipe;
 	int zpos;
-	char fullpath[PATH_MAX];
-	tbm_surface_info_s info;
-	tbm_surface_error_e err;
-
-	path = tdm_helper_get_dump_path();
-	if (!path)
-		return;
-
-	count = tdm_helper_get_dump_count();
-	if (count <= 0)
-		return;
-
-	err = tbm_surface_map(buffer, TBM_SURF_OPTION_READ, &info);
-	TDM_RETURN_IF_FAIL(err == TBM_SURFACE_ERROR_NONE);
+	char fname[PATH_MAX];
 
 	pipe = private_output->pipe;
 	zpos = private_layer->caps.zpos;
 
-	if (info.format == TBM_FORMAT_ARGB8888 || info.format == TBM_FORMAT_XRGB8888)
-		snprintf(fullpath, sizeof(fullpath), "%s/%03d_out_%d_lyr_%d.png",
-			path, count, pipe, zpos);
-	else
-		snprintf(fullpath, sizeof(fullpath), "%s/%03d_out_%d_lyr_%d_%dx%d_%c%c%c%c.yuv",
-			path, count, pipe, zpos, info.planes[0].stride, info.height, FOURCC_STR(info.format));
+	snprintf(fname, sizeof(fname), "tdm_%d_lyr_%d", pipe, zpos);
 
-	tbm_surface_unmap(buffer);
-
-	tdm_helper_dump_buffer(buffer, fullpath);
-	TDM_DBG("%d, %s dump excute", count, fullpath);
+	tbm_internal_surface_dump_buffer(buffer, fname);
+	TDM_DBG("%s dump excute", fname);
 
 	return;
 }
