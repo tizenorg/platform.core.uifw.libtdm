@@ -1543,6 +1543,32 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 	return ret;
 }
 
+EXTERN tbm_surface_h
+tdm_layer_get_displaying_buffer(tdm_layer *layer, tdm_error *error)
+{
+	tbm_surface_h buffer;
+	LAYER_FUNC_ENTRY_ERROR();
+
+	_pthread_mutex_lock(&private_display->lock);
+
+	if (error)
+		*error = TDM_ERROR_NONE;
+
+	if (private_layer->showing_buffer) {
+		buffer = private_layer->showing_buffer;
+	}
+	else {
+		*error = TDM_ERROR_OPERATION_FAILED;
+		_pthread_mutex_unlock(&private_display->lock);
+		TDM_ERR("layer(%p) showing_buffer is null",
+		        private_layer);
+		return NULL;
+	}
+	_pthread_mutex_unlock(&private_display->lock);
+
+	return buffer;
+}
+
 static void
 _tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
 {
