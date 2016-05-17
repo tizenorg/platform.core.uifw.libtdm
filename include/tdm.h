@@ -508,6 +508,12 @@ tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props,
  * - A frontend user only can set the relative zpos to VIDEO layers via #tdm_layer_set_video_pos
  * - The zpos of video layers is less than GRAPHIC layers or more than GRAPHIC
  * layers. ie, ..., -2, -1, 4, 5, ... (if 0 <= GRAPHIC layer's zpos < 4).
+ *   -------------------------------- graphic layer  3 <-- top most layer
+ *   -------------------------------- graphic layer  2
+ *   -------------------------------- graphic layer  1
+ *   -------------------------------- graphic layer  0
+ *   -------------------------------- video   layer -1
+ *   -------------------------------- video   layer -2 <-- lowest layer
  * @param[in] layer A layer object
  * @param[out] zpos The zpos
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
