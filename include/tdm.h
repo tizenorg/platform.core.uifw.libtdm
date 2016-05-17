@@ -582,6 +582,16 @@ tdm_error
 tdm_layer_unset_buffer(tdm_layer *layer);
 
 /**
+ * @brief Get a displaying TDM buffer from a layer object
+ * @details A displaying TDM buffer is a current showing buffer on screen
+ * that is set to layer object and applied output object of a layer object.
+ * @param[in] layer A layer object
+ * @return A TDM buffer if success. Otherwise, NULL.
+ */
+tbm_surface_h
+tdm_layer_get_displaying_buffer(tdm_layer *layer, tdm_error *error);
+
+/**
  * @brief Set a TBM surface_queue to a layer object
  * @details A TBM surface_queue will be applied when the output object
  * of a layer object is committed. and TDM layer will be automatically updated
