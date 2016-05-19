@@ -1557,7 +1557,8 @@ tdm_layer_get_displaying_buffer(tdm_layer *layer, tdm_error *error)
 	if (private_layer->showing_buffer) {
 		buffer = private_layer->showing_buffer;
 	} else {
-		*error = TDM_ERROR_OPERATION_FAILED;
+		if (error)
+			*error = TDM_ERROR_OPERATION_FAILED;
 		_pthread_mutex_unlock(&private_display->lock);
 		TDM_ERR("layer(%p) showing_buffer is null",
 		        private_layer);
