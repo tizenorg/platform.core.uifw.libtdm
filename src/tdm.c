@@ -402,8 +402,8 @@ failed_update:
 	return ret;
 }
 
-static tdm_error
-_tdm_display_update_output(tdm_private_display *private_display,
+INTERN tdm_error
+tdm_display_update_output(tdm_private_display *private_display,
                            tdm_output *output_backend, int pipe)
 {
 	tdm_func_output *func_output = &private_display->func_output;
@@ -436,10 +436,12 @@ _tdm_display_update_output(tdm_private_display *private_display,
 		LIST_INITHEAD(&private_output->change_handler_list_main);
 		LIST_INITHEAD(&private_output->change_handler_list_sub);
 
-		if (func_output->output_set_status_handler)
+		if (func_output->output_set_status_handler) {
 			func_output->output_set_status_handler(private_output->output_backend,
 			                                       tdm_output_cb_status,
 			                                       private_output);
+			private_output->regist_change_cb = 1;
+		}
 
 	} else
 		_tdm_display_destroy_caps_output(&private_output->caps);
@@ -625,7 +627,7 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 		goto failed_update;
 
 	for (i = 0; i < output_count; i++) {
-		ret = _tdm_display_update_output(private_display, outputs[i], i);
+		ret = tdm_display_update_output(private_display, outputs[i], i);
 		if (ret != TDM_ERROR_NONE)
 			goto failed_update;
 	}

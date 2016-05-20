@@ -513,6 +513,10 @@ _tdm_display_unlock(tdm_display *dpy, const char *func);
 #define tdm_display_lock(dpy)   _tdm_display_lock(dpy, __FUNCTION__)
 #define tdm_display_unlock(dpy)   _tdm_display_unlock(dpy, __FUNCTION__)
 
+tdm_error
+tdm_display_update_output(tdm_private_display *private_display,
+                          tdm_output *output_backend, int pipe);
+
 #ifdef __cplusplus
 }
 #endif

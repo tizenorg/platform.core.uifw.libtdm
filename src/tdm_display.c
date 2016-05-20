@@ -488,6 +488,21 @@ tdm_output_get_conn_status(tdm_output *output, tdm_output_conn_status *status)
 	return ret;
 }
 
+static void
+_tdm_output_update(tdm_output *output_backend, void *user_data)
+{
+	tdm_private_display *private_display;
+	tdm_private_output *private_output = user_data;
+	tdm_error ret;
+
+	TDM_RETURN_IF_FAIL(private_output);
+
+	private_display = private_output->private_display;
+
+	ret = tdm_display_update_output(private_display, output_backend, private_output->pipe);
+	TDM_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+}
+
 INTERN void
 tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
                      void *user_data)
@@ -504,6 +519,8 @@ tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
 	if (!tdm_thread_in_display_thread(syscall(SYS_gettid))) {
 		tdm_thread_cb_output_status output_status;
 		tdm_error ret;
+
+		_tdm_output_update(output_backend, user_data);
 
 		output_status.base.type = TDM_THREAD_CB_OUTPUT_STATUS;
 		output_status.base.length = sizeof output_status;
@@ -522,6 +539,9 @@ tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
 
 		return;
 	}
+
+	if (!tdm_thread_is_running())
+		_tdm_output_update(output_backend, user_data);
 
 	value.u32 = status;
 	tdm_output_call_change_handler_internal(private_output,
