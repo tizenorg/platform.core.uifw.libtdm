@@ -196,6 +196,10 @@ _tdm_display_destroy_private_display(tdm_private_display *private_display)
 	tdm_private_pp *p = NULL, *pp = NULL;
 
 	free(private_display->outputs_ptr);
+	if (private_display->outputs) {
+		free(private_display->outputs);
+		private_display->outputs = NULL;
+	}
 
 	LIST_FOR_EACH_ENTRY_SAFE(p, pp, &private_display->pp_list, link)
 	tdm_pp_destroy_internal(p);
@@ -486,8 +490,7 @@ _tdm_display_set_main_first(tdm_output **outputs, int index)
 }
 
 static tdm_output **
-_tdm_display_get_ordered_outputs(tdm_private_display *private_display,
-                           int *count, int init)
+_tdm_display_get_ordered_outputs(tdm_private_display *private_display, int *count)
 {
 	tdm_func_display *func_display = &private_display->func_display;
 	tdm_output **outputs = NULL;
@@ -500,6 +503,10 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 	int index_dsi = 0, index_lvds = 0, index_hdmia = 0, index_hdmib = 0;
 	tdm_error ret;
 
+	/* don't change list order if not init time */
+	if (private_display->outputs)
+		return private_display->outputs;
+
 	outputs = func_display->display_get_outputs(private_display->bdata,
 	                &output_count, &ret);
 	if (ret != TDM_ERROR_NONE)
@@ -509,12 +516,10 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 
 	if (output_count == 0)
 		goto failed_get_outputs;
-	else if (output_count == 1)
+	else if (output_count == 1) {
+		private_display->outputs = outputs;
 		return outputs;
-
-	/* don't change list order if not init time */
-	if (init != 0)
-		return outputs;
+	}
 
 	/* count connected outputs */
 	for (i = 0; i < output_count; i++) {
@@ -524,13 +529,13 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 
 		if (!func_output->output_get_capability) {
 			TDM_ERR("no output_get_capability()");
-			return outputs;
+			goto failed_get_outputs;
 		}
 
 		ret = func_output->output_get_capability(outputs[i], &caps);
 		if (ret != TDM_ERROR_NONE) {
 			TDM_ERR("output_get_capability() failed");
-			return outputs;
+			goto failed_get_outputs;
 		}
 
 		if (caps.status == TDM_OUTPUT_CONN_STATUS_CONNECTED) {
@@ -592,9 +597,12 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 			new_outputs = outputs;
 	}
 
+	private_display->outputs = new_outputs;
+
 	return new_outputs;
 
 failed_get_outputs:
+	free(outputs);
 	*count = 0;
 	return NULL;
 }
@@ -622,7 +630,7 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 			goto failed_update;
 	}
 
-	outputs = _tdm_display_get_ordered_outputs(private_display, &output_count, only_display);
+	outputs = _tdm_display_get_ordered_outputs(private_display, &output_count);
 	if (!outputs)
 		goto failed_update;
 
@@ -632,13 +640,10 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 			goto failed_update;
 	}
 
-	free(outputs);
-
 	return TDM_ERROR_NONE;
 
 failed_update:
 	_tdm_display_destroy_private_display(private_display);
-	free(outputs);
 	return ret;
 }
 
