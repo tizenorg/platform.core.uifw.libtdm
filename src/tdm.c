@@ -196,6 +196,7 @@ _tdm_display_destroy_private_display(tdm_private_display *private_display)
 	tdm_private_pp *p = NULL, *pp = NULL;
 
 	free(private_display->outputs_ptr);
+	free(private_display->outputs);
 
 	LIST_FOR_EACH_ENTRY_SAFE(p, pp, &private_display->pp_list, link)
 	tdm_pp_destroy_internal(p);
@@ -514,7 +515,7 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 
 	/* don't change list order if not init time */
 	if (init != 0)
-		return outputs;
+		return private_display->outputs;
 
 	/* count connected outputs */
 	for (i = 0; i < output_count; i++) {
@@ -592,6 +593,8 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display,
 			new_outputs = outputs;
 	}
 
+	private_display->outputs = new_outputs;
+
 	return new_outputs;
 
 failed_get_outputs:
@@ -631,8 +634,6 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 		if (ret != TDM_ERROR_NONE)
 			goto failed_update;
 	}
-
-	free(outputs);
 
 	return TDM_ERROR_NONE;
 
