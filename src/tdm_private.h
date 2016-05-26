@@ -141,6 +141,9 @@ struct _tdm_private_display {
 
 	/* for event handling */
 	tdm_private_loop *private_loop;
+
+	/* output order */
+	tdm_output **outputs;
 };
 
 struct _tdm_private_output {
