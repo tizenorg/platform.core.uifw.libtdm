@@ -1057,15 +1057,15 @@ _tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 	commit_handler->user_data = user_data;
 	commit_handler->owner_tid = syscall(SYS_gettid);
 
-	ret = func_output->output_commit(private_output->output_backend, sync,
-	                                 commit_handler);
-	TDM_RETURN_VAL_IF_FAIL(ret == TDM_ERROR_NONE, ret);
-
 	if (!private_output->regist_commit_cb) {
 		private_output->regist_commit_cb = 1;
 		ret = func_output->output_set_commit_handler(private_output->output_backend,
 		                tdm_output_cb_commit);
 	}
+
+	ret = func_output->output_commit(private_output->output_backend, sync,
+	                                 commit_handler);
+	TDM_RETURN_VAL_IF_FAIL(ret == TDM_ERROR_NONE, ret);
 
 	return ret;
 }
