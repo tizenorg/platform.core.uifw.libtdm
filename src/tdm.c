@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -47,7 +47,7 @@ int tdm_mutex_locked;
 
 static tdm_private_layer *
 _tdm_display_find_private_layer(tdm_private_output *private_output,
-                                tdm_layer *layer_backend)
+								tdm_layer *layer_backend)
 {
 	tdm_private_layer *private_layer = NULL;
 
@@ -61,7 +61,7 @@ _tdm_display_find_private_layer(tdm_private_output *private_output,
 
 static tdm_private_output *
 _tdm_display_find_private_output(tdm_private_display *private_display,
-                                 tdm_output *output_backend)
+								 tdm_output *output_backend)
 {
 	tdm_private_output *private_output = NULL;
 
@@ -75,7 +75,7 @@ _tdm_display_find_private_output(tdm_private_display *private_display,
 
 INTERN tdm_private_output *
 tdm_display_find_output_stamp(tdm_private_display *private_display,
-                              unsigned long stamp)
+							  unsigned long stamp)
 {
 	tdm_private_output *private_output = NULL;
 
@@ -216,7 +216,7 @@ _tdm_display_destroy_private_display(tdm_private_display *private_display)
 
 static tdm_error
 _tdm_display_update_caps_pp(tdm_private_display *private_display,
-                            tdm_caps_pp *caps)
+							tdm_caps_pp *caps)
 {
 	tdm_func_display *func_display = &private_display->func_display;
 	char buf[1024];
@@ -254,7 +254,7 @@ _tdm_display_update_caps_pp(tdm_private_display *private_display,
 
 static tdm_error
 _tdm_display_update_caps_capture(tdm_private_display *private_display,
-                                 tdm_caps_capture *caps)
+								 tdm_caps_capture *caps)
 {
 	tdm_func_display *func_display = &private_display->func_display;
 	char buf[1024];
@@ -272,8 +272,7 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display,
 		return TDM_ERROR_BAD_MODULE;
 	}
 
-	ret = func_display->display_get_capture_capability(private_display->bdata,
-	                caps);
+	ret = func_display->display_get_capture_capability(private_display->bdata, caps);
 	if (ret != TDM_ERROR_NONE) {
 		TDM_ERR("display_get_capture_capability() failed");
 		return TDM_ERROR_BAD_MODULE;
@@ -289,7 +288,7 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display,
 
 static tdm_error
 _tdm_display_update_caps_layer(tdm_private_display *private_display,
-                               tdm_layer *layer_backend, tdm_caps_layer *caps)
+							   tdm_layer *layer_backend, tdm_caps_layer *caps)
 {
 	tdm_func_layer *func_layer = &private_display->func_layer;
 	char buf[1024];
@@ -324,7 +323,7 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display,
 
 static tdm_error
 _tdm_display_update_caps_output(tdm_private_display *private_display, int pipe,
-                                tdm_output *output_backend, tdm_caps_output *caps)
+								tdm_output *output_backend, tdm_caps_output *caps)
 {
 	tdm_func_output *func_output = &private_display->func_output;
 	char temp[TDM_NAME_LEN];
@@ -355,14 +354,14 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, int pipe,
 		TDM_DBG("output props: %d, %s", caps->props[i].id, caps->props[i].name);
 	for (i = 0; i < caps->mode_count; i++) {
 		TDM_DBG("output modes: name(%s), clock(%d) vrefresh(%d), flags(%x), type(%d)",
-		        caps->modes[i].name, caps->modes[i].clock, caps->modes[i].vrefresh,
-		        caps->modes[i].flags, caps->modes[i].type);
+				caps->modes[i].name, caps->modes[i].clock, caps->modes[i].vrefresh,
+				caps->modes[i].flags, caps->modes[i].type);
 		TDM_DBG("\t\t %d, %d, %d, %d, %d",
-		        caps->modes[i].hdisplay, caps->modes[i].hsync_start, caps->modes[i].hsync_end,
-		        caps->modes[i].htotal, caps->modes[i].hskew);
+				caps->modes[i].hdisplay, caps->modes[i].hsync_start, caps->modes[i].hsync_end,
+				caps->modes[i].htotal, caps->modes[i].hskew);
 		TDM_DBG("\t\t %d, %d, %d, %d, %d",
-		        caps->modes[i].vdisplay, caps->modes[i].vsync_start, caps->modes[i].vsync_end,
-		        caps->modes[i].vtotal, caps->modes[i].vscan);
+				caps->modes[i].vdisplay, caps->modes[i].vsync_start, caps->modes[i].vsync_end,
+				caps->modes[i].vtotal, caps->modes[i].vscan);
 	}
 	TDM_DBG("output min  : %dx%d", caps->min_w, caps->min_h);
 	TDM_DBG("output max  : %dx%d", caps->max_w, caps->max_h);
@@ -373,8 +372,8 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, int pipe,
 
 static tdm_error
 _tdm_display_update_layer(tdm_private_display *private_display,
-                          tdm_private_output *private_output,
-                          tdm_layer *layer_backend)
+						  tdm_private_output *private_output,
+						  tdm_layer *layer_backend)
 {
 	tdm_private_layer *private_layer;
 	tdm_error ret;
@@ -396,7 +395,7 @@ _tdm_display_update_layer(tdm_private_display *private_display,
 		_tdm_display_destroy_caps_layer(&private_layer->caps);
 
 	ret = _tdm_display_update_caps_layer(private_display, layer_backend,
-	                                     &private_layer->caps);
+										 &private_layer->caps);
 	if (ret != TDM_ERROR_NONE)
 		goto failed_update;
 
@@ -408,7 +407,7 @@ failed_update:
 
 INTERN tdm_error
 tdm_display_update_output(tdm_private_display *private_display,
-                           tdm_output *output_backend, int pipe)
+						  tdm_output *output_backend, int pipe)
 {
 	tdm_func_output *func_output = &private_display->func_output;
 	tdm_private_output *private_output = NULL;
@@ -416,8 +415,7 @@ tdm_display_update_output(tdm_private_display *private_display,
 	int layer_count = 0, i;
 	tdm_error ret;
 
-	private_output = _tdm_display_find_private_output(private_display,
-	                 output_backend);
+	private_output = _tdm_display_find_private_output(private_display, output_backend);
 	if (!private_output) {
 		private_output = calloc(1, sizeof(tdm_private_output));
 		TDM_RETURN_VAL_IF_FAIL(private_output != NULL, TDM_ERROR_OUT_OF_MEMORY);
@@ -442,8 +440,8 @@ tdm_display_update_output(tdm_private_display *private_display,
 
 		if (func_output->output_set_status_handler) {
 			func_output->output_set_status_handler(private_output->output_backend,
-			                                       tdm_output_cb_status,
-			                                       private_output);
+												   tdm_output_cb_status,
+												   private_output);
 			private_output->regist_change_cb = 1;
 		}
 
@@ -451,7 +449,7 @@ tdm_display_update_output(tdm_private_display *private_display,
 		_tdm_display_destroy_caps_output(&private_output->caps);
 
 	ret = _tdm_display_update_caps_output(private_display, pipe, output_backend,
-	                                      &private_output->caps);
+										  &private_output->caps);
 	if (ret != TDM_ERROR_NONE)
 		return ret;
 
@@ -507,8 +505,7 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display, int *coun
 	if (private_display->outputs)
 		return private_display->outputs;
 
-	outputs = func_display->display_get_outputs(private_display->bdata,
-	                &output_count, &ret);
+	outputs = func_display->display_get_outputs(private_display->bdata, &output_count, &ret);
 	if (ret != TDM_ERROR_NONE)
 		goto failed_get_outputs;
 
@@ -558,7 +555,7 @@ _tdm_display_get_ordered_outputs(tdm_private_display *private_display, int *coun
 				output_hdmib = outputs[i];
 				index_hdmib = i;
 				break;
-			default :
+			default:
 				break;
 			}
 		}
@@ -609,7 +606,7 @@ failed_get_outputs:
 
 static tdm_error
 _tdm_display_update_internal(tdm_private_display *private_display,
-                             int only_display)
+							 int only_display)
 {
 	tdm_output **outputs = NULL;
 	int output_count = 0, i;
@@ -625,7 +622,7 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 			goto failed_update;
 
 		ret = _tdm_display_update_caps_capture(private_display,
-		                                       &private_display->caps_capture);
+											   &private_display->caps_capture);
 		if (ret != TDM_ERROR_NONE)
 			goto failed_update;
 	}
@@ -684,7 +681,7 @@ _tdm_display_check_module(tdm_backend_module *module)
 	int major, minor;
 
 	TDM_INFO("TDM ABI version : %d.%d",
-	         TDM_MAJOR_VERSION, TDM_MINOR_VERSION);
+			 TDM_MAJOR_VERSION, TDM_MINOR_VERSION);
 
 	name = module->name ? module->name : "unknown";
 	vendor = module->vendor ? module->vendor : "unknown";
@@ -697,13 +694,13 @@ _tdm_display_check_module(tdm_backend_module *module)
 
 	if (major != TDM_MAJOR_VERSION) {
 		TDM_ERR("'%s' major version mismatch, %d != %d",
-		        name, major, TDM_MAJOR_VERSION);
+				name, major, TDM_MAJOR_VERSION);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
 	if (minor > TDM_MINOR_VERSION) {
 		TDM_ERR("'%s' minor version(%d) is newer than %d",
-		        name, minor, TDM_MINOR_VERSION);
+				name, minor, TDM_MINOR_VERSION);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
@@ -731,16 +728,13 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
 	/* below functions should be implemented in backend side */
 
 	TDM_RETURN_VAL_IF_FAIL(func_display != NULL, TDM_ERROR_BAD_MODULE);
-	TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capabilitiy,
-	                       TDM_ERROR_BAD_MODULE);
+	TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capabilitiy, TDM_ERROR_BAD_MODULE);
 	TDM_RETURN_VAL_IF_FAIL(func_display->display_get_outputs, TDM_ERROR_BAD_MODULE);
-	TDM_RETURN_VAL_IF_FAIL(func_output->output_get_capability,
-	                       TDM_ERROR_BAD_MODULE);
+	TDM_RETURN_VAL_IF_FAIL(func_output->output_get_capability, TDM_ERROR_BAD_MODULE);
 	TDM_RETURN_VAL_IF_FAIL(func_output->output_get_layers, TDM_ERROR_BAD_MODULE);
 	TDM_RETURN_VAL_IF_FAIL(func_layer->layer_get_capability, TDM_ERROR_BAD_MODULE);
 
-	ret = func_display->display_get_capabilitiy(private_display->bdata,
-	                &private_display->caps_display);
+	ret = func_display->display_get_capabilitiy(private_display->bdata, &private_display->caps_display);
 	if (ret != TDM_ERROR_NONE) {
 		TDM_ERR("display_get_capabilitiy() failed");
 		return TDM_ERROR_BAD_MODULE;
@@ -748,8 +742,7 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
 
 	if (private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP) {
 		tdm_func_pp *func_pp = &private_display->func_pp;
-		TDM_RETURN_VAL_IF_FAIL(func_display->display_get_pp_capability,
-		                       TDM_ERROR_BAD_MODULE);
+		TDM_RETURN_VAL_IF_FAIL(func_display->display_get_pp_capability, TDM_ERROR_BAD_MODULE);
 		TDM_RETURN_VAL_IF_FAIL(func_display->display_create_pp, TDM_ERROR_BAD_MODULE);
 		TDM_RETURN_VAL_IF_FAIL(func_pp->pp_destroy, TDM_ERROR_BAD_MODULE);
 		TDM_RETURN_VAL_IF_FAIL(func_pp->pp_commit, TDM_ERROR_BAD_MODULE);
@@ -758,15 +751,12 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
 
 	if (private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE) {
 		tdm_func_capture *func_capture = &private_display->func_capture;
-		TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capture_capability,
-		                       TDM_ERROR_BAD_MODULE);
-		TDM_RETURN_VAL_IF_FAIL(func_output->output_create_capture,
-		                       TDM_ERROR_BAD_MODULE);
+		TDM_RETURN_VAL_IF_FAIL(func_display->display_get_capture_capability, TDM_ERROR_BAD_MODULE);
+		TDM_RETURN_VAL_IF_FAIL(func_output->output_create_capture, TDM_ERROR_BAD_MODULE);
 		TDM_RETURN_VAL_IF_FAIL(func_layer->layer_create_capture, TDM_ERROR_BAD_MODULE);
 		TDM_RETURN_VAL_IF_FAIL(func_capture->capture_destroy, TDM_ERROR_BAD_MODULE);
 		TDM_RETURN_VAL_IF_FAIL(func_capture->capture_commit, TDM_ERROR_BAD_MODULE);
-		TDM_RETURN_VAL_IF_FAIL(func_capture->capture_set_done_handler,
-		                       TDM_ERROR_BAD_MODULE);
+		TDM_RETURN_VAL_IF_FAIL(func_capture->capture_set_done_handler, TDM_ERROR_BAD_MODULE);
 	}
 
 	return TDM_ERROR_NONE;
@@ -774,7 +764,7 @@ _tdm_display_check_backend_functions(tdm_private_display *private_display)
 
 static tdm_error
 _tdm_display_load_module_with_file(tdm_private_display *private_display,
-                                   const char *file)
+								   const char *file)
 {
 	char path[PATH_MAX] = {0,};
 	tdm_backend_module *module_data;
@@ -812,8 +802,7 @@ _tdm_display_load_module_with_file(tdm_private_display *private_display,
 
 	/* We don't care if backend_data is NULL or not. It's up to backend. */
 	TDM_TRACE_BEGIN(Init_Backend);
-	private_display->bdata = module_data->init((tdm_display *)private_display,
-	                         &ret);
+	private_display->bdata = module_data->init((tdm_display *)private_display, &ret);
 	TDM_TRACE_END();
 	if (ret != TDM_ERROR_NONE) {
 		TDM_ERR("'%s' init failed", file);

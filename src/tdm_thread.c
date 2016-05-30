@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -73,7 +73,7 @@ _tdm_thread_main(void *data)
 	private_thread->thread_tid = syscall(SYS_gettid);
 
 	TDM_INFO("display_tid:%d, thread_tid: %d",
-	         private_thread->display_tid, private_thread->thread_tid);
+			 private_thread->display_tid, private_thread->thread_tid);
 
 	fd = tdm_event_loop_get_fd(private_loop->dpy);
 	if (fd < 0) {
@@ -138,11 +138,11 @@ tdm_thread_init(tdm_private_loop *private_loop)
 	/* enable as default */
 	thread = getenv("TDM_THREAD");
 	if (!thread || strncmp(thread, "1", 1)) {
-		TDM_INFO("not using a TDM event thread: %s", (thread)?thread:"none");
+		TDM_INFO("not using a TDM event thread: %s", (thread) ? thread : "none");
 		return TDM_ERROR_NONE;
 	}
 
-	private_thread = calloc(1, sizeof *private_thread);
+	private_thread = calloc(1, sizeof * private_thread);
 	if (!private_thread) {
 		TDM_ERR("alloc failed");
 		return TDM_ERROR_OUT_OF_MEMORY;
@@ -160,12 +160,12 @@ tdm_thread_init(tdm_private_loop *private_loop)
 	private_thread->display_tid = syscall(SYS_gettid);
 
 	pthread_create(&private_thread->event_thread, NULL, _tdm_thread_main,
-	               private_thread);
+				   private_thread);
 
 	keep_private_thread = private_thread;
 
 	TDM_INFO("using a TDM event thread. pipe(%d,%d)",
-	         private_thread->pipe[0], private_thread->pipe[1]);
+			 private_thread->pipe[0], private_thread->pipe[1]);
 
 	return TDM_ERROR_NONE;
 }
@@ -222,7 +222,7 @@ tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base)
 
 	if (tdm_debug_thread)
 		TDM_INFO("fd(%d) type(%d), length(%d)",
-		         private_thread->pipe[1], base->type, base->length);
+				 private_thread->pipe[1], base->type, base->length);
 
 	len = write(private_thread->pipe[1], base, base->length);
 	if (len != base->length) {
@@ -258,7 +258,7 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 	if (len == 0)
 		return TDM_ERROR_NONE;
 
-	if (len < sizeof *base) {
+	if (len < sizeof * base) {
 		TDM_NEVER_GET_HERE();
 		return TDM_ERROR_OPERATION_FAILED;
 	}
@@ -271,8 +271,7 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 		if (tdm_debug_thread)
 			TDM_INFO("type(%d), length(%d)", base->type, base->length);
 		switch (base->type) {
-		case TDM_THREAD_CB_OUTPUT_COMMIT:
-		{
+		case TDM_THREAD_CB_OUTPUT_COMMIT: {
 			tdm_thread_cb_output_commit *output_commit = (tdm_thread_cb_output_commit*)base;
 			tdm_output *output_backend =
 				tdm_display_find_output_stamp(private_loop->dpy, output_commit->output_stamp);
@@ -281,12 +280,11 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 				break;
 			}
 			tdm_output_cb_commit(output_backend, output_commit->sequence,
-			                     output_commit->tv_sec, output_commit->tv_usec,
-			                     output_commit->user_data);
+								 output_commit->tv_sec, output_commit->tv_usec,
+								 output_commit->user_data);
 			break;
 		}
-		case TDM_THREAD_CB_OUTPUT_VBLANK:
-		{
+		case TDM_THREAD_CB_OUTPUT_VBLANK: {
 			tdm_thread_cb_output_vblank *output_vblank = (tdm_thread_cb_output_vblank*)base;
 			tdm_output *output_backend =
 				tdm_display_find_output_stamp(private_loop->dpy, output_vblank->output_stamp);
@@ -295,12 +293,11 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 				break;
 			}
 			tdm_output_cb_vblank(output_backend, output_vblank->sequence,
-			                     output_vblank->tv_sec, output_vblank->tv_usec,
-			                     output_vblank->user_data);
+								 output_vblank->tv_sec, output_vblank->tv_usec,
+								 output_vblank->user_data);
 			break;
 		}
-		case TDM_THREAD_CB_OUTPUT_STATUS:
-		{
+		case TDM_THREAD_CB_OUTPUT_STATUS: {
 			tdm_thread_cb_output_status *output_status = (tdm_thread_cb_output_status*)base;
 			tdm_output *output_backend =
 				tdm_display_find_output_stamp(private_loop->dpy, output_status->output_stamp);
@@ -309,11 +306,10 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 				break;
 			}
 			tdm_output_cb_status(output_backend, output_status->status,
-			                     output_status->user_data);
+								 output_status->user_data);
 			break;
 		}
-		case TDM_THREAD_CB_PP_DONE:
-		{
+		case TDM_THREAD_CB_PP_DONE: {
 			tdm_thread_cb_pp_done *pp_done = (tdm_thread_cb_pp_done*)base;
 			tdm_pp *pp_backend =
 				tdm_pp_find_stamp(private_loop->dpy, pp_done->pp_stamp);
@@ -324,8 +320,7 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 			tdm_pp_cb_done(pp_backend, pp_done->src, pp_done->dst, pp_done->user_data);
 			break;
 		}
-		case TDM_THREAD_CB_CAPTURE_DONE:
-		{
+		case TDM_THREAD_CB_CAPTURE_DONE: {
 			tdm_thread_cb_capture_done *capture_done = (tdm_thread_cb_capture_done*)base;
 			tdm_capture *capture_backend =
 				tdm_capture_find_stamp(private_loop->dpy, capture_done->capture_stamp);

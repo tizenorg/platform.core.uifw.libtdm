@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -42,18 +42,18 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_private.h"
 
 #define PP_FUNC_ENTRY() \
-    tdm_func_pp *func_pp; \
-    tdm_private_display *private_display; \
-    tdm_private_pp *private_pp; \
-    tdm_error ret = TDM_ERROR_NONE; \
-    TDM_RETURN_VAL_IF_FAIL(pp != NULL, TDM_ERROR_INVALID_PARAMETER); \
-    private_pp = (tdm_private_pp*)pp; \
-    private_display = private_pp->private_display; \
-    func_pp = &private_display->func_pp
+	tdm_func_pp *func_pp; \
+	tdm_private_display *private_display; \
+	tdm_private_pp *private_pp; \
+	tdm_error ret = TDM_ERROR_NONE; \
+	TDM_RETURN_VAL_IF_FAIL(pp != NULL, TDM_ERROR_INVALID_PARAMETER); \
+	private_pp = (tdm_private_pp*)pp; \
+	private_display = private_pp->private_display; \
+	func_pp = &private_display->func_pp
 
 static tdm_error
 _tdm_pp_check_if_exist(tdm_private_pp *private_pp,
-                       tbm_surface_h src, tbm_surface_h dst)
+					   tbm_surface_h src, tbm_surface_h dst)
 {
 	tdm_buffer_info *buf_info = NULL;
 
@@ -90,7 +90,7 @@ _tdm_pp_check_if_exist(tdm_private_pp *private_pp,
 
 INTERN void
 tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
-               void *user_data)
+			   void *user_data)
 {
 	tdm_private_pp *private_pp = user_data;
 	tdm_private_display *private_display = private_pp->private_display;
@@ -326,15 +326,15 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 	}
 
 	TDM_INFO("pp(%p) info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%dx%d %d,%d %dx%d %c%c%c%c) trans(%d) sync(%d) flags(%x)",
-	         private_pp, info->src_config.size.h, info->src_config.size.v,
-	         info->src_config.pos.x, info->src_config.pos.y,
-	         info->src_config.pos.w, info->src_config.pos.h,
-	         FOURCC_STR(info->src_config.format),
-	         info->dst_config.size.h, info->dst_config.size.v,
-	         info->dst_config.pos.x, info->dst_config.pos.y,
-	         info->dst_config.pos.w, info->dst_config.pos.h,
-	         FOURCC_STR(info->dst_config.format),
-	         info->transform, info->sync, info->flags);
+			 private_pp, info->src_config.size.h, info->src_config.size.v,
+			 info->src_config.pos.x, info->src_config.pos.y,
+			 info->src_config.pos.w, info->src_config.pos.h,
+			 FOURCC_STR(info->src_config.format),
+			 info->dst_config.size.h, info->dst_config.size.v,
+			 info->dst_config.pos.x, info->dst_config.pos.y,
+			 info->dst_config.pos.w, info->dst_config.pos.h,
+			 FOURCC_STR(info->dst_config.format),
+			 info->transform, info->sync, info->flags);
 
 	ret = func_pp->pp_set_info(private_pp->pp_backend, info);
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
@@ -363,11 +363,11 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 	if (tdm_display_check_module_abi(private_display, 1, 2) &&
 		private_display->caps_pp.max_attach_count > 0) {
 		int length = LIST_LENGTH(&private_pp->src_pending_buffer_list) +
-		             LIST_LENGTH(&private_pp->src_buffer_list);
+					 LIST_LENGTH(&private_pp->src_buffer_list);
 		if (length >= private_display->caps_pp.max_attach_count) {
 			_pthread_mutex_unlock(&private_display->lock);
 			TDM_DBG("failed: too many attached!! max_attach_count(%d)",
-			        private_display->caps_pp.max_attach_count);
+					private_display->caps_pp.max_attach_count);
 			return TDM_ERROR_BAD_REQUEST;
 		}
 	}

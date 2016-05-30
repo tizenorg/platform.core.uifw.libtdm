@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -88,7 +88,7 @@ tdm_buffer_get_info(tbm_surface_h buffer)
 {
 	tdm_buffer_info *buf_info = NULL;
 
-	if (!tbm_surface_internal_get_user_data(buffer, TDM_BUFFER_KEY,(void **)&buf_info)) {
+	if (!tbm_surface_internal_get_user_data(buffer, TDM_BUFFER_KEY, (void **)&buf_info)) {
 		buf_info = calloc(1, sizeof(tdm_buffer_info));
 		TDM_RETURN_VAL_IF_FAIL(buf_info != NULL, NULL);
 
@@ -116,7 +116,7 @@ tdm_buffer_get_info(tbm_surface_h buffer)
 
 EXTERN tdm_error
 tdm_buffer_add_release_handler(tbm_surface_h buffer,
-                               tdm_buffer_release_handler func, void *user_data)
+							   tdm_buffer_release_handler func, void *user_data)
 {
 	tdm_buffer_info *buf_info;
 	tdm_buffer_func_info *func_info;
@@ -140,7 +140,7 @@ tdm_buffer_add_release_handler(tbm_surface_h buffer,
 
 EXTERN void
 tdm_buffer_remove_release_handler(tbm_surface_h buffer,
-                                  tdm_buffer_release_handler func, void *user_data)
+								  tdm_buffer_release_handler func, void *user_data)
 {
 	tdm_buffer_info *buf_info;
 	tdm_buffer_func_info *func_info = NULL, *next = NULL;
@@ -210,7 +210,7 @@ tdm_buffer_unref_backend(tbm_surface_h buffer)
 
 EXTERN tdm_error
 tdm_buffer_add_destroy_handler(tbm_surface_h buffer,
-                               tdm_buffer_destroy_handler func, void *user_data)
+							   tdm_buffer_destroy_handler func, void *user_data)
 {
 	tdm_buffer_info *buf_info;
 	tdm_buffer_func_info *func_info;
@@ -234,7 +234,7 @@ tdm_buffer_add_destroy_handler(tbm_surface_h buffer,
 
 EXTERN void
 tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
-                                  tdm_buffer_destroy_handler func, void *user_data)
+								  tdm_buffer_destroy_handler func, void *user_data)
 {
 	tdm_buffer_info *buf_info;
 	tdm_buffer_func_info *func_info = NULL, *next = NULL;
@@ -273,7 +273,7 @@ tdm_buffer_list_dump(struct list_head *list)
 {
 	tdm_buffer_info *buf_info = NULL;
 	char str[256], *p;
-	int len = sizeof (str);
+	int len = sizeof(str);
 
 	TDM_RETURN_IF_FAIL(list != NULL);
 
@@ -283,8 +283,7 @@ tdm_buffer_list_dump(struct list_head *list)
 			int l = snprintf(p, len, " %p", buf_info->buffer);
 			p += l;
 			len -= l;
-		}
-		else
+		} else
 			break;
 	}
 

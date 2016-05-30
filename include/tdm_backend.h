@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifndef _TDM_BACKEND_H_
@@ -49,7 +49,7 @@ extern "C" {
  * @brief The backend header file of TDM to implement a TDM backend module.
  * @par Example
  * @code
-   #include <tdm_backend.h>
+ * #include <tdm_backend.h>
  * @endcode
  */
 
@@ -68,8 +68,8 @@ typedef void tdm_backend_data;
  * changed in runtime.
  */
 typedef void (*tdm_output_status_handler)(tdm_output *output,
-                                          tdm_output_conn_status status,
-                                          void *user_data);
+										  tdm_output_conn_status status,
+										  void *user_data);
 
 /**
  * @brief The display capabilities structure of a backend module
@@ -157,10 +157,11 @@ typedef struct _tdm_caps_pp {
 	int max_h;              /**< The maximum height. -1 means "not defined" */
 	int preferred_align;    /**< The prefered align. -1 means "not defined" */
 
-	int max_attach_count;   /**< The attach count which a PP object can handle.
-	                         *   -1 means "not defined".
-	                         * @since 1.2.0
-	                         */
+	/**< The attach count which a PP object can handle.
+	 *   -1 means "not defined".
+	 * @since 1.2.0
+	 */
+	int max_attach_count;
 } tdm_caps_pp;
 
 /**
@@ -180,10 +181,11 @@ typedef struct _tdm_caps_capture {
 	int max_h;              /**< The maximum height. -1 means "not defined" */
 	int preferred_align;    /**< The prefered align. -1 means "not defined" */
 
-	int max_attach_count;   /**< The attach count which a capture object can handle.
-	                         *   -1 means "not defined".
-	                         * @since 1.2.0
-	                         */
+	/**< The attach count which a capture object can handle.
+	 *   -1 means "not defined".
+	 * @since 1.2.0
+	 */
+	int max_attach_count;
 } tdm_caps_capture;
 
 /**
@@ -203,8 +205,7 @@ typedef struct _tdm_func_display {
 	 * a backend module can set the max count to max_layer_count of #tdm_caps_display
 	 * structure. Otherwise, set -1.
 	 */
-	tdm_error (*display_get_capabilitiy)(tdm_backend_data *bdata,
-	                                     tdm_caps_display *caps);
+	tdm_error (*display_get_capabilitiy)(tdm_backend_data *bdata, tdm_caps_display *caps);
 
 	/**
 	 * @brief Get the pp capabilities of a backend module
@@ -220,8 +221,7 @@ typedef struct _tdm_func_display {
 	 * @b SHOULD fill the #tdm_caps_pp data. #tdm_caps_pp contains the hardware
 	 * restriction information which a converting device can handle. ie, format, size, etc.
 	 */
-	tdm_error (*display_get_pp_capability)(tdm_backend_data *bdata,
-	                                       tdm_caps_pp *caps);
+	tdm_error (*display_get_pp_capability)(tdm_backend_data *bdata, tdm_caps_pp *caps);
 
 	/**
 	 * @brief Get the capture capabilities of a backend module
@@ -237,8 +237,7 @@ typedef struct _tdm_func_display {
 	 * #tdm_caps_capture data. #tdm_caps_capture contains the hardware restriction
 	 * information which a capture device can handle. ie, format, size, etc.
 	 */
-	tdm_error (*display_get_capture_capability)(tdm_backend_data *bdata,
-	                tdm_caps_capture *caps);
+	tdm_error (*display_get_capture_capability)(tdm_backend_data *bdata, tdm_caps_capture *caps);
 
 	/**
 	 * @brief Get a output array of a backend module
@@ -255,45 +254,45 @@ typedef struct _tdm_func_display {
 	 * "tdm_output*" data. It will be freed in frontend.
 	 * @par Example
 	 * @code
-	    tdm_output**
-	    drm_display_get_outputs(tdm_backend_data *bdata, int *count, tdm_error *error)
-	    {
-	        tdm_drm_data *drm_data = bdata;
-	        tdm_drm_output_data *output_data = NULL;
-	        tdm_output **outputs;
-	        int i;
-
-	        (*count) = 0;
-	        LIST_FOR_EACH_ENTRY(output_data, &drm_data->output_list, link)
-	            (*count)++;
-
-	        if ((*count) == 0)
-	        {
-	            if (error) *error = TDM_ERROR_NONE;
-	            return NULL;
-	        }
-
-	        // will be freed in frontend
-	        outputs = calloc(*count, sizeof(tdm_drm_output_data*));
-	        if (!outputs)
-	        {
-	            (*count) = 0;
-	            if (error) *error = TDM_ERROR_OUT_OF_MEMORY;
-	            return NULL;
-	        }
-
-	        i = 0;
-	        LIST_FOR_EACH_ENTRY(output_data, &drm_data->output_list, link)
-	            outputs[i++] = output_data;
-
-	        if (error) *error = TDM_ERROR_NONE;
-
-	        return outputs;
-	    }
+	 *  tdm_output**
+	 *  drm_display_get_outputs(tdm_backend_data *bdata, int *count, tdm_error *error)
+	 *  {
+	 *      tdm_drm_data *drm_data = bdata;
+	 *      tdm_drm_output_data *output_data = NULL;
+	 *      tdm_output **outputs;
+	 *      int i;
+	 *
+	 *      (*count) = 0;
+	 *      LIST_FOR_EACH_ENTRY(output_data, &drm_data->output_list, link)
+	 *          (*count)++;
+	 *
+	 *      if ((*count) == 0)
+	 *      {
+	 *          if (error) *error = TDM_ERROR_NONE;
+	 *          return NULL;
+	 *      }
+	 *
+	 *      // will be freed in frontend
+	 *      outputs = calloc(*count, sizeof(tdm_drm_output_data*));
+	 *      if (!outputs)
+	 *      {
+	 *          (*count) = 0;
+	 *          if (error) *error = TDM_ERROR_OUT_OF_MEMORY;
+	 *          return NULL;
+	 *      }
+	 *
+	 *      i = 0;
+	 *      LIST_FOR_EACH_ENTRY(output_data, &drm_data->output_list, link)
+	 *          outputs[i++] = output_data;
+	 *
+	 *      if (error) *error = TDM_ERROR_NONE;
+	 *
+	 *      return outputs;
+	 *  }
 	 * @endcode
 	 */
 	tdm_output **(*display_get_outputs)(tdm_backend_data *bdata, int *count,
-	                                    tdm_error *error);
+										tdm_error *error);
 
 	/**
 	 * @brief Get the file descriptor of a backend module
@@ -367,7 +366,7 @@ typedef struct _tdm_func_output {
 	 * "tdm_layer*" data. It will be freed in frontend.
 	 */
 	tdm_layer **(*output_get_layers)(tdm_output *output, int *count,
-	                                 tdm_error *error);
+									 tdm_error *error);
 
 	/**
 	 * @brief Set the property which has a given id
@@ -377,7 +376,7 @@ typedef struct _tdm_func_output {
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
 	tdm_error (*output_set_property)(tdm_output *output, unsigned int id,
-	                                 tdm_value value);
+									 tdm_value value);
 
 	/**
 	 * @brief Get the property which has a given id
@@ -387,7 +386,7 @@ typedef struct _tdm_func_output {
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
 	tdm_error (*output_get_property)(tdm_output *output, unsigned int id,
-	                                 tdm_value *value);
+									 tdm_value *value);
 
 	/**
 	 * @brief Wait for VBLANK
@@ -403,7 +402,7 @@ typedef struct _tdm_func_output {
 	 * vblanks.
 	 */
 	tdm_error (*output_wait_vblank)(tdm_output *output, int interval, int sync,
-	                                void *user_data);
+									void *user_data);
 
 	/**
 	 * @brief Set a user vblank handler
@@ -412,7 +411,7 @@ typedef struct _tdm_func_output {
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
 	tdm_error (*output_set_vblank_handler)(tdm_output *output,
-	                                       tdm_output_vblank_handler func);
+										   tdm_output_vblank_handler func);
 
 	/**
 	 * @brief Commit changes for a output object
@@ -438,7 +437,7 @@ typedef struct _tdm_func_output {
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
 	tdm_error (*output_set_commit_handler)(tdm_output *output,
-	                                       tdm_output_commit_handler func);
+										   tdm_output_commit_handler func);
 
 	/**
 	 * @brief Set DPMS of a output object
@@ -496,8 +495,8 @@ typedef struct _tdm_func_output {
 	 * @since 1.1.0
 	 */
 	tdm_error (*output_set_status_handler)(tdm_output *output,
-	                                       tdm_output_status_handler func,
-	                                       void *user_data);
+										   tdm_output_status_handler func,
+										   void *user_data);
 
 	void (*reserved1)(void);
 	void (*reserved2)(void);
@@ -534,7 +533,7 @@ typedef struct _tdm_func_layer {
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
 	tdm_error (*layer_set_property)(tdm_layer *layer, unsigned int id,
-	                                tdm_value value);
+									tdm_value value);
 
 	/**
 	 * @brief Get the property which has a given id.
@@ -544,7 +543,7 @@ typedef struct _tdm_func_layer {
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
 	tdm_error (*layer_get_property)(tdm_layer *layer, unsigned int id,
-	                                tdm_value *value);
+									tdm_value *value);
 
 	/**
 	 * @brief Set the geometry information to a layer object
@@ -636,7 +635,7 @@ typedef struct _tdm_func_layer {
  * @brief The done handler of a pp object
  */
 typedef void (*tdm_pp_done_handler)(tdm_pp *pp, tbm_surface_h src,
-                                    tbm_surface_h dst, void *user_data);
+									tbm_surface_h dst, void *user_data);
 
 /**
  * @brief The pp functions for a backend module.
@@ -647,7 +646,7 @@ typedef struct _tdm_func_pp {
 	 * @param[in] pp A pp object
 	 * @see display_create_pp() function of #tdm_func_display
 	 */
-	void         (*pp_destroy)(tdm_pp *pp);
+	void (*pp_destroy)(tdm_pp *pp);
 
 	/**
 	 * @brief Set the geometry information to a pp object
@@ -658,7 +657,7 @@ typedef struct _tdm_func_pp {
 	 * @remark
 	 * A backend module would apply the geometry information when committed.
 	 */
-	tdm_error    (*pp_set_info)(tdm_pp *pp, tdm_info_pp *info);
+	tdm_error (*pp_set_info)(tdm_pp *pp, tdm_info_pp *info);
 
 	/**
 	 * @brief Attach a source buffer and a destination buffer to a pp object
@@ -675,14 +674,14 @@ typedef struct _tdm_func_pp {
 	 * #pp_set_info() of #tdm_func_pp. When done, a backend module @b SHOULD
 	 * return the source/destination buffer via tdm_pp_done_handler.
 	 */
-	tdm_error    (*pp_attach)(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
+	tdm_error (*pp_attach)(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
 
 	/**
 	 * @brief Commit changes for a pp object
 	 * @param[in] pp A pp object
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
-	tdm_error    (*pp_commit)(tdm_pp *pp);
+	tdm_error (*pp_commit)(tdm_pp *pp);
 
 	/**
 	 * @brief Set a user done handler to a pp object
@@ -693,8 +692,8 @@ typedef struct _tdm_func_pp {
 	 * @remark
 	 * A backend module @b SHOULD call #tdm_pp_done_handler when converintg a image is done.
 	 */
-	tdm_error    (*pp_set_done_handler)(tdm_pp *pp, tdm_pp_done_handler func,
-	                                    void *user_data);
+	tdm_error (*pp_set_done_handler)(tdm_pp *pp, tdm_pp_done_handler func,
+									 void *user_data);
 
 	void (*reserved1)(void);
 	void (*reserved2)(void);
@@ -710,7 +709,7 @@ typedef struct _tdm_func_pp {
  * @brief The done handler of a capture object
  */
 typedef void (*tdm_capture_done_handler)(tdm_capture *capture,
-                tbm_surface_h buffer, void *user_data);
+										 tbm_surface_h buffer, void *user_data);
 
 /**
  * @brief The capture functions for a backend module.
@@ -722,7 +721,7 @@ typedef struct _tdm_func_capture {
 	 * @see output_create_capture() function of #tdm_func_output
 	 * @see layer_create_capture() function of #tdm_func_layer
 	 */
-	void         (*capture_destroy)(tdm_capture *capture);
+	void (*capture_destroy)(tdm_capture *capture);
 
 	/**
 	 * @brief Set the geometry information to a capture object
@@ -733,7 +732,7 @@ typedef struct _tdm_func_capture {
 	 * @remark
 	 * A backend module would apply the geometry information when committed.
 	 */
-	tdm_error    (*capture_set_info)(tdm_capture *capture, tdm_info_capture *info);
+	tdm_error (*capture_set_info)(tdm_capture *capture, tdm_info_capture *info);
 
 	/**
 	 * @brief Attach a TDM buffer to a capture object
@@ -751,14 +750,14 @@ typedef struct _tdm_func_capture {
 	 * of #tdm_func_capture. When done, a backend module @b SHOULD return the TDM
 	 * buffer via tdm_capture_done_handler.
 	 */
-	tdm_error    (*capture_attach)(tdm_capture *capture, tbm_surface_h buffer);
+	tdm_error (*capture_attach)(tdm_capture *capture, tbm_surface_h buffer);
 
 	/**
 	 * @brief Commit changes for a capture object
 	 * @param[in] capture A capture object
 	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
 	 */
-	tdm_error    (*capture_commit)(tdm_capture *capture);
+	tdm_error (*capture_commit)(tdm_capture *capture);
 
 	/**
 	 * @brief Set a user done handler to a capture object
@@ -769,8 +768,8 @@ typedef struct _tdm_func_capture {
 	 * @remark
 	 * A backend module @b SHOULD call #tdm_capture_done_handler when capture operation is done.
 	 */
-	tdm_error    (*capture_set_done_handler)(tdm_capture *capture,
-	                tdm_capture_done_handler func, void *user_data);
+	tdm_error (*capture_set_done_handler)(tdm_capture *capture,
+										  tdm_capture_done_handler func, void *user_data);
 
 	void (*reserved1)(void);
 	void (*reserved2)(void);
@@ -788,25 +787,25 @@ typedef struct _tdm_func_capture {
 #define TDM_BACKEND_GET_ABI_MAJOR(v)    (((v) & TDM_BACKEND_MAJOR_VERSION_MASK) >> 16)
 
 /**
- * @brief 
+ * @brief
  * The ABI version of TDM backend module. It has a major and minor revision.
  * Modules using lower minor revisions will work with TDM frontend of a higher
  * minor revision. There is no compatibility between different major revisions.
  * The minor revision mask is 0x0000FFFF and the major revision mask is 0xFFFF0000.
  * @par Example
  * @code
-    tdm_backend_module tdm_backend_module_data = {
-        "drm",
-        "Samsung",
-        TDM_BACKEND_SET_ABI_VERSION(1,1),
-        tdm_drm_init,
-        tdm_drm_deinit
-    };
+ *  tdm_backend_module tdm_backend_module_data = {
+ *      "drm",
+ *      "Samsung",
+ *      TDM_BACKEND_SET_ABI_VERSION(1,1),
+ *      tdm_drm_init,
+ *      tdm_drm_deinit
+ *  };
  * @endcode
  */
 #define TDM_BACKEND_SET_ABI_VERSION(major, minor) \
-        (((major) << 16) & TDM_BACKEND_MAJOR_VERSION_MASK) | \
-        ((major) & TDM_BACKEND_MINOR_VERSION_MASK)
+	(((major) << 16) & TDM_BACKEND_MAJOR_VERSION_MASK) | \
+	((major) & TDM_BACKEND_MINOR_VERSION_MASK)
 
 /**
  * @brief
@@ -856,7 +855,7 @@ typedef struct _tdm_backend_module {
  */
 tdm_error
 tdm_backend_register_func_display(tdm_display *dpy,
-                                  tdm_func_display *func_display);
+								  tdm_func_display *func_display);
 
 /**
  * @brief Register the backend output functions to a display
@@ -869,7 +868,7 @@ tdm_backend_register_func_display(tdm_display *dpy,
  */
 tdm_error
 tdm_backend_register_func_output(tdm_display *dpy,
-                                 tdm_func_output *func_output);
+								 tdm_func_output *func_output);
 
 /**
  * @brief Register the backend layer functions to a display
@@ -908,7 +907,7 @@ tdm_backend_register_func_pp(tdm_display *dpy, tdm_func_pp *func_pp);
  */
 tdm_error
 tdm_backend_register_func_capture(tdm_display *dpy,
-                                  tdm_func_capture *func_capture);
+								  tdm_func_capture *func_capture);
 
 /**
  * @brief Increase the ref_count of a TDM buffer
@@ -943,7 +942,7 @@ tdm_buffer_unref_backend(tbm_surface_h buffer);
  * @see tdm_buffer_add_destroy_handler, tdm_buffer_remove_destroy_handler
  */
 typedef void (*tdm_buffer_destroy_handler)(tbm_surface_h buffer,
-                void *user_data);
+										   void *user_data);
 
 /**
  * @brief Add a destroy handler to a TDM buffer
@@ -959,7 +958,7 @@ typedef void (*tdm_buffer_destroy_handler)(tbm_surface_h buffer,
  */
 tdm_error
 tdm_buffer_add_destroy_handler(tbm_surface_h buffer,
-                               tdm_buffer_destroy_handler func, void *user_data);
+							   tdm_buffer_destroy_handler func, void *user_data);
 
 /**
  * @brief Remove a destroy handler from a TDM buffer
@@ -970,7 +969,7 @@ tdm_buffer_add_destroy_handler(tbm_surface_h buffer,
  */
 void
 tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
-                                  tdm_buffer_destroy_handler func, void *user_data);
+								  tdm_buffer_destroy_handler func, void *user_data);
 
 /**
  * @brief Add a FD handler for activity on the given file descriptor
@@ -985,8 +984,8 @@ tdm_buffer_remove_destroy_handler(tbm_surface_h buffer,
  */
 tdm_event_loop_source*
 tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask,
-                         tdm_event_loop_fd_handler func, void *user_data,
-                         tdm_error *error);
+							  tdm_event_loop_fd_handler func, void *user_data,
+							  tdm_error *error);
 
 /**
  * @brief Update the mask of the given FD event source
@@ -1008,7 +1007,7 @@ tdm_event_loop_source_fd_update(tdm_event_loop_source *source, tdm_event_loop_ma
  */
 tdm_event_loop_source*
 tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler func,
-                            void *user_data, tdm_error *error);
+								 void *user_data, tdm_error *error);
 
 /**
  * @brief Update the millisecond delay time of the given timer event source.

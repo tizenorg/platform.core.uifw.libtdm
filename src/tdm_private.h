@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifndef _TDM_PRIVATE_H_
@@ -90,8 +90,8 @@ prototype_name_fn(dpms);
 prototype_name_fn(status);
 
 typedef enum {
-        TDM_CAPTURE_TARGET_OUTPUT,
-        TDM_CAPTURE_TARGET_LAYER,
+	TDM_CAPTURE_TARGET_OUTPUT,
+	TDM_CAPTURE_TARGET_LAYER,
 } tdm_capture_target;
 
 typedef struct _tdm_private_display tdm_private_display;
@@ -314,7 +314,7 @@ tdm_display_check_module_abi(tdm_private_display *private_display, int abimaj, i
 
 tdm_private_output *
 tdm_display_find_output_stamp(tdm_private_display *private_display,
-                              unsigned long stamp);
+							  unsigned long stamp);
 tdm_private_pp *
 tdm_pp_find_stamp(tdm_private_display *private_display, unsigned long stamp);
 tdm_private_capture *
@@ -322,25 +322,25 @@ tdm_capture_find_stamp(tdm_private_display *private_display, unsigned long stamp
 
 void
 tdm_output_cb_vblank(tdm_output *output_backend, unsigned int sequence,
-                     unsigned int tv_sec, unsigned int tv_usec, void *user_data);
+					 unsigned int tv_sec, unsigned int tv_usec, void *user_data);
 void
 tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
-                     unsigned int tv_sec, unsigned int tv_usec, void *user_data);
+					 unsigned int tv_sec, unsigned int tv_usec, void *user_data);
 void
 tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
-                     void *user_data);
+					 void *user_data);
 void
 tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
-               void *user_data);
+			   void *user_data);
 void
 tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
-                    void *user_data);
+					void *user_data);
 
 void
 tdm_output_call_change_handler_internal(tdm_private_output *private_output,
-                                        struct list_head *change_handler_list,
-                                        tdm_output_change_type type,
-                                        tdm_value value);
+										struct list_head *change_handler_list,
+										tdm_output_change_type type,
+										tdm_value value);
 
 tdm_private_pp *
 tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);
@@ -349,10 +349,10 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp);
 
 tdm_private_capture *
 tdm_capture_create_output_internal(tdm_private_output *private_output,
-                                   tdm_error *error);
+								   tdm_error *error);
 tdm_private_capture *
 tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
-                                  tdm_error *error);
+								  tdm_error *error);
 void
 tdm_capture_destroy_internal(tdm_private_capture *private_capture);
 
@@ -518,7 +518,7 @@ _tdm_display_unlock(tdm_display *dpy, const char *func);
 
 tdm_error
 tdm_display_update_output(tdm_private_display *private_display,
-                          tdm_output *output_backend, int pipe);
+						  tdm_output *output_backend, int pipe);
 
 #ifdef __cplusplus
 }

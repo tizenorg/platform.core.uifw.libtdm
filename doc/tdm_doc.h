@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifndef _TDM_DOC_H_
@@ -73,60 +73,60 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * #tdm_backend_register_func_display(), #tdm_backend_register_func_output(),
  * #tdm_backend_register_func_layer() functions in initial time.\n
  * @code
-    #include <tdm_backend.h>
-
-    static tdm_drm_data *drm_data;
-
-    tdm_backend_data*
-    tdm_drm_init(tdm_display *dpy, tdm_error *error)
-    {
-        tdm_func_display drm_func_display;
-        tdm_func_output drm_func_output;
-        tdm_func_layer drm_func_layer;
-
-        ...
-        drm_data = calloc(1, sizeof(tdm_drm_data));
-        ...
-
-        memset(&drm_func_display, 0, sizeof(drm_func_display));
-        drm_func_display.display_get_capabilitiy = drm_display_get_capabilitiy;
-        ...
-        ret = tdm_backend_register_func_display(dpy, &drm_func_display);
-        if (ret != TDM_ERROR_NONE)
-            goto failed;
-
-        memset(&drm_func_output, 0, sizeof(drm_func_output));
-        drm_func_output.output_get_capability = drm_output_get_capability;
-        ...
-        ret = tdm_backend_register_func_output(dpy, &drm_func_output);
-        if (ret != TDM_ERROR_NONE)
-            goto failed;
-
-        memset(&drm_func_layer, 0, sizeof(drm_func_layer));
-        drm_func_layer.layer_get_capability = drm_layer_get_capability;
-        ...
-        ret = tdm_backend_register_func_layer(dpy, &drm_func_layer);
-        if (ret != TDM_ERROR_NONE)
-            goto failed;
-        ...
-        return (tdm_backend_data*)drm_data;
-    }
-
-    void
-    tdm_drm_deinit(tdm_backend_data *bdata)
-    {
-        ...
-        free(bdata);
-    }
-
-    tdm_backend_module tdm_backend_module_data =
-    {
-        "drm",
-        "Samsung",
-        TDM_BACKEND_SET_ABI_VERSION(1,2),
-        tdm_drm_init,
-        tdm_drm_deinit
-    };
+ *  #include <tdm_backend.h>
+ *
+ *  static tdm_drm_data *drm_data;
+ *
+ *  tdm_backend_data*
+ *  tdm_drm_init(tdm_display *dpy, tdm_error *error)
+ *  {
+ *      tdm_func_display drm_func_display;
+ *      tdm_func_output drm_func_output;
+ *      tdm_func_layer drm_func_layer;
+ *
+ *      ...
+ *      drm_data = calloc(1, sizeof(tdm_drm_data));
+ *      ...
+ *
+ *      memset(&drm_func_display, 0, sizeof(drm_func_display));
+ *      drm_func_display.display_get_capabilitiy = drm_display_get_capabilitiy;
+ *      ...
+ *      ret = tdm_backend_register_func_display(dpy, &drm_func_display);
+ *      if (ret != TDM_ERROR_NONE)
+ *          goto failed;
+ *
+ *      memset(&drm_func_output, 0, sizeof(drm_func_output));
+ *      drm_func_output.output_get_capability = drm_output_get_capability;
+ *      ...
+ *      ret = tdm_backend_register_func_output(dpy, &drm_func_output);
+ *      if (ret != TDM_ERROR_NONE)
+ *          goto failed;
+ *
+ *      memset(&drm_func_layer, 0, sizeof(drm_func_layer));
+ *      drm_func_layer.layer_get_capability = drm_layer_get_capability;
+ *      ...
+ *      ret = tdm_backend_register_func_layer(dpy, &drm_func_layer);
+ *      if (ret != TDM_ERROR_NONE)
+ *          goto failed;
+ *      ...
+ *      return (tdm_backend_data*)drm_data;
+ *  }
+ *
+ *  void
+ *  tdm_drm_deinit(tdm_backend_data *bdata)
+ *  {
+ *      ...
+ *      free(bdata);
+ *  }
+ *
+ *  tdm_backend_module tdm_backend_module_data =
+ *  {
+ *      "drm",
+ *      "Samsung",
+ *      TDM_BACKEND_SET_ABI_VERSION(1,2),
+ *      tdm_drm_init,
+ *      tdm_drm_deinit
+ *  };
  * @endcode
  * \n
  * A sample backend source code can be downloaded.

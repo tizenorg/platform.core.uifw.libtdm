@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -43,21 +43,18 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <wayland-server-core.h>
 
-typedef struct _tdm_event_loop_source_base
-{
+typedef struct _tdm_event_loop_source_base {
 	struct wl_event_source *wl_source;
 } tdm_event_loop_source_base;
 
-typedef struct _tdm_event_loop_source_fd
-{
+typedef struct _tdm_event_loop_source_fd {
 	tdm_event_loop_source_base base;
 	tdm_private_display *private_display;
 	tdm_event_loop_fd_handler func;
 	void *user_data;
 } tdm_event_loop_source_fd;
 
-typedef struct _tdm_event_loop_source_timer
-{
+typedef struct _tdm_event_loop_source_timer {
 	tdm_event_loop_source_base base;
 	tdm_private_display *private_display;
 	tdm_event_loop_timer_handler func;
@@ -101,7 +98,7 @@ tdm_event_loop_init(tdm_private_display *private_display)
 	if (private_display->private_loop)
 		return TDM_ERROR_NONE;
 
-	private_loop = calloc(1, sizeof *private_loop);
+	private_loop = calloc(1, sizeof * private_loop);
 	if (!private_loop) {
 		TDM_ERR("alloc failed");
 		return TDM_ERROR_OUT_OF_MEMORY;
@@ -193,9 +190,9 @@ tdm_event_loop_create_backend_source(tdm_private_display *private_display)
 
 	private_loop->backend_source =
 		tdm_event_loop_add_fd_handler(private_display, fd,
-		                              TDM_EVENT_LOOP_READABLE,
-		                              _tdm_event_loop_main_fd_handler,
-		                              private_display, &ret);
+									  TDM_EVENT_LOOP_READABLE,
+									  _tdm_event_loop_main_fd_handler,
+									  private_display, &ret);
 	if (!private_loop->backend_source) {
 		TDM_ERR("no backend fd(%d) source", fd);
 		return;
@@ -231,7 +228,7 @@ tdm_event_loop_dispatch(tdm_private_display *private_display)
 		TDM_INFO("dispatch");
 
 	if (tdm_thread_is_running() &&
-	    tdm_thread_in_display_thread(syscall(SYS_gettid))) {
+		tdm_thread_in_display_thread(syscall(SYS_gettid))) {
 		TDM_NEVER_GET_HERE();
 		return TDM_ERROR_OPERATION_FAILED;
 	}
@@ -259,7 +256,7 @@ tdm_event_loop_flush(tdm_private_display *private_display)
 	TDM_RETURN_IF_FAIL(private_loop->wl_display != NULL);
 
 	if (tdm_thread_is_running() &&
-	    tdm_thread_in_display_thread(syscall(SYS_gettid))) {
+		tdm_thread_in_display_thread(syscall(SYS_gettid))) {
 		TDM_NEVER_GET_HERE();
 		return;
 	}
@@ -297,10 +294,10 @@ _tdm_event_loop_fd_func(int fd, uint32_t wl_mask, void *data)
 	return 1;
 }
 
-EXTERN tdm_event_loop_source*
+EXTERN tdm_event_loop_source *
 tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask,
-                              tdm_event_loop_fd_handler func, void *user_data,
-                              tdm_error *error)
+							  tdm_event_loop_fd_handler func, void *user_data,
+							  tdm_error *error)
 {
 	tdm_private_display *private_display;
 	tdm_private_loop *private_loop;
@@ -328,7 +325,7 @@ tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask
 
 	fd_source->base.wl_source =
 		wl_event_loop_add_fd(private_loop->wl_loop,
-		                     fd, wl_mask, _tdm_event_loop_fd_func, fd_source);
+							 fd, wl_mask, _tdm_event_loop_fd_func, fd_source);
 	if (!fd_source->base.wl_source) {
 		if (error)
 			*error = TDM_ERROR_OUT_OF_MEMORY;
@@ -343,7 +340,7 @@ tdm_event_loop_add_fd_handler(tdm_display *dpy, int fd, tdm_event_loop_mask mask
 	if (error)
 		*error = TDM_ERROR_NONE;
 
-	return (tdm_event_loop_source*)fd_source;
+	return (tdm_event_loop_source *)fd_source;
 }
 
 EXTERN tdm_error
@@ -388,9 +385,9 @@ _tdm_event_loop_timer_func(void *data)
 	return 1;
 }
 
-EXTERN tdm_event_loop_source*
+EXTERN tdm_event_loop_source *
 tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler func,
-                                 void *user_data, tdm_error *error)
+								 void *user_data, tdm_error *error)
 {
 	tdm_private_display *private_display;
 	tdm_private_loop *private_loop;
@@ -411,7 +408,7 @@ tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler 
 
 	timer_source->base.wl_source =
 		wl_event_loop_add_timer(private_loop->wl_loop,
-		                        _tdm_event_loop_timer_func, timer_source);
+								_tdm_event_loop_timer_func, timer_source);
 	if (!timer_source->base.wl_source) {
 		if (error)
 			*error = TDM_ERROR_OUT_OF_MEMORY;
@@ -426,7 +423,7 @@ tdm_event_loop_add_timer_handler(tdm_display *dpy, tdm_event_loop_timer_handler 
 	if (error)
 		*error = TDM_ERROR_NONE;
 
-	return (tdm_event_loop_source*)timer_source;
+	return (tdm_event_loop_source *)timer_source;
 }
 
 EXTERN tdm_error

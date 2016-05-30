@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -42,18 +42,18 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "tdm_private.h"
 
 #define CAPTURE_FUNC_ENTRY() \
-    tdm_func_capture *func_capture; \
-    tdm_private_display *private_display; \
-    tdm_private_capture *private_capture; \
-    tdm_error ret = TDM_ERROR_NONE; \
-    TDM_RETURN_VAL_IF_FAIL(capture != NULL, TDM_ERROR_INVALID_PARAMETER); \
-    private_capture = (tdm_private_capture*)capture; \
-    private_display = private_capture->private_display; \
-    func_capture = &private_display->func_capture
+	tdm_func_capture *func_capture; \
+	tdm_private_display *private_display; \
+	tdm_private_capture *private_capture; \
+	tdm_error ret = TDM_ERROR_NONE; \
+	TDM_RETURN_VAL_IF_FAIL(capture != NULL, TDM_ERROR_INVALID_PARAMETER); \
+	private_capture = (tdm_private_capture*)capture; \
+	private_display = private_capture->private_display; \
+	func_capture = &private_display->func_capture
 
 static tdm_error
 _tdm_capture_check_if_exist(tdm_private_capture *private_capture,
-                            tbm_surface_h buffer)
+							tbm_surface_h buffer)
 {
 	tdm_buffer_info *buf_info = NULL;
 
@@ -76,7 +76,7 @@ _tdm_capture_check_if_exist(tdm_private_capture *private_capture,
 
 INTERN void
 tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
-                    void *user_data)
+					void *user_data)
 {
 	tdm_private_capture *private_capture = user_data;
 	tdm_private_display *private_display = private_capture->private_display;
@@ -136,7 +136,7 @@ tdm_capture_find_stamp(tdm_private_display *private_display, unsigned long stamp
 
 INTERN tdm_private_capture *
 tdm_capture_create_output_internal(tdm_private_output *private_output,
-                                   tdm_error *error)
+								   tdm_error *error)
 {
 	tdm_private_display *private_display = private_output->private_display;
 	tdm_func_output *func_output = &private_display->func_output;
@@ -155,7 +155,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 	}
 
 	capture_backend = func_output->output_create_capture(
-	                          private_output->output_backend, &ret);
+						  private_output->output_backend, &ret);
 	if (ret != TDM_ERROR_NONE) {
 		if (error)
 			*error = ret;
@@ -172,7 +172,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 	}
 
 	ret = func_capture->capture_set_done_handler(capture_backend,
-	                tdm_capture_cb_done, private_capture);
+			tdm_capture_cb_done, private_capture);
 	if (ret != TDM_ERROR_NONE) {
 		TDM_ERR("capture(%p) set capture_done_handler failed", private_capture);
 		func_capture->capture_destroy(capture_backend);
@@ -206,7 +206,7 @@ tdm_capture_create_output_internal(tdm_private_output *private_output,
 
 INTERN tdm_private_capture *
 tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
-                                  tdm_error *error)
+								  tdm_error *error)
 {
 	tdm_private_output *private_output = private_layer->private_output;
 	tdm_private_display *private_display = private_output->private_display;
@@ -226,7 +226,7 @@ tdm_capture_create_layer_internal(tdm_private_layer *private_layer,
 	}
 
 	capture_backend = func_layer->layer_create_capture(private_layer->layer_backend,
-	                  &ret);
+					  &ret);
 	if (ret != TDM_ERROR_NONE)
 		return NULL;
 
@@ -403,7 +403,7 @@ tdm_capture_commit(tdm_capture *capture)
 	private_output = private_capture->private_output;
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
 		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
-		        dpms_str(private_output->current_dpms_value));
+				dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_BAD_REQUEST;
 	}

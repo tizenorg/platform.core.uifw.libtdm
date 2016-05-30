@@ -1,3 +1,38 @@
+/**************************************************************************
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+**************************************************************************/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -42,7 +77,7 @@ tdm_helper_get_time_in_micros(void)
 
 static void
 _tdm_helper_dump_raw(const char *file, void *data1, int size1, void *data2,
-                     int size2, void *data3, int size3)
+					 int size2, void *data3, int size3)
 {
 	unsigned int *blocks;
 	FILE *fp = fopen(file, "w+");
@@ -66,13 +101,13 @@ _tdm_helper_dump_raw(const char *file, void *data1, int size1, void *data2,
 
 static void
 _tdm_helper_dump_png(const char *file, const void *data, int width,
-                     int height)
+					 int height)
 {
 	FILE *fp = fopen(file, "wb");
 	TDM_RETURN_IF_FAIL(fp != NULL);
 
 	png_structp pPngStruct =
-	        png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+		png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!pPngStruct) {
 		fclose(fp);
 		return;
@@ -87,20 +122,20 @@ _tdm_helper_dump_png(const char *file, const void *data, int width,
 
 	png_init_io(pPngStruct, fp);
 	png_set_IHDR(pPngStruct,
-	             pPngInfo,
-	             width,
-	             height,
-	             PNG_DEPTH,
-	             PNG_COLOR_TYPE_RGBA,
-	             PNG_INTERLACE_NONE,
-	             PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+				 pPngInfo,
+				 width,
+				 height,
+				 PNG_DEPTH,
+				 PNG_COLOR_TYPE_RGBA,
+				 PNG_INTERLACE_NONE,
+				 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 	png_set_bgr(pPngStruct);
 	png_write_info(pPngStruct, pPngInfo);
 
 	const int pixel_size = 4;	// RGBA
 	png_bytep *row_pointers =
-	        png_malloc(pPngStruct, height * sizeof(png_byte *));
+		png_malloc(pPngStruct, height * sizeof(png_byte *));
 
 	unsigned int *blocks = (unsigned int *)data;
 	int y = 0;
@@ -108,7 +143,7 @@ _tdm_helper_dump_png(const char *file, const void *data, int width,
 
 	for (; y < height; ++y) {
 		png_bytep row =
-		        png_malloc(pPngStruct, sizeof(png_byte) * width * pixel_size);
+			png_malloc(pPngStruct, sizeof(png_byte) * width * pixel_size);
 		row_pointers[y] = (png_bytep)row;
 		for (x = 0; x < width; ++x) {
 			unsigned int curBlock = blocks[y * width + x];
@@ -160,36 +195,36 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 	case TBM_FORMAT_ARGB8888:
 	case TBM_FORMAT_XRGB8888:
 		_tdm_helper_dump_png(file, info.planes[0].ptr,
-		                     info.planes[0].stride >> 2, info.height);
+							 info.planes[0].stride >> 2, info.height);
 		break;
 	case TBM_FORMAT_YVU420:
 	case TBM_FORMAT_YUV420:
 		_tdm_helper_dump_raw(file,
-		                     info.planes[0].ptr,
-		                     info.planes[0].stride * info.height,
-		                     info.planes[1].ptr,
-		                     info.planes[1].stride * (info.height >> 1),
-		                     info.planes[2].ptr,
-		                     info.planes[2].stride * (info.height >> 1));
+							 info.planes[0].ptr,
+							 info.planes[0].stride * info.height,
+							 info.planes[1].ptr,
+							 info.planes[1].stride * (info.height >> 1),
+							 info.planes[2].ptr,
+							 info.planes[2].stride * (info.height >> 1));
 		break;
 	case TBM_FORMAT_NV12:
 	case TBM_FORMAT_NV21:
 		_tdm_helper_dump_raw(file,
-		                     info.planes[0].ptr,
-		                     info.planes[0].stride * info.height,
-		                     info.planes[1].ptr,
-		                     info.planes[1].stride * (info.height >> 1), NULL,
-		                     0);
+							 info.planes[0].ptr,
+							 info.planes[0].stride * info.height,
+							 info.planes[1].ptr,
+							 info.planes[1].stride * (info.height >> 1), NULL,
+							 0);
 		break;
 	case TBM_FORMAT_YUYV:
 	case TBM_FORMAT_UYVY:
 		_tdm_helper_dump_raw(file,
-		                     info.planes[0].ptr,
-		                     info.planes[0].stride * info.height, NULL, 0,
-		                     NULL, 0);
+							 info.planes[0].ptr,
+							 info.planes[0].stride * info.height, NULL, 0,
+							 NULL, 0);
 		break;
 	default:
-		TDM_ERR("can't dump %c%c%c%c buffer", FOURCC_STR (info.format));
+		TDM_ERR("can't dump %c%c%c%c buffer", FOURCC_STR(info.format));
 		tbm_surface_unmap(buffer);
 		return;
 	}

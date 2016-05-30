@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -70,8 +70,8 @@ typedef struct _tdm_client_vblank_info {
 
 static void
 _tdm_client_cb_global(void *data, struct wl_registry *registry,
-                      uint32_t name, const char *interface,
-                      uint32_t version)
+					  uint32_t name, const char *interface,
+					  uint32_t version)
 {
 	tdm_private_client *private_client = data;
 
@@ -89,10 +89,9 @@ _tdm_client_cb_global_remove(void *data, struct wl_registry *registry, uint32_t 
 {
 }
 
-static const struct wl_registry_listener tdm_client_registry_listener =
-{
-    _tdm_client_cb_global,
-    _tdm_client_cb_global_remove
+static const struct wl_registry_listener tdm_client_registry_listener = {
+	_tdm_client_cb_global,
+	_tdm_client_cb_global_remove
 };
 
 tdm_client*
@@ -105,7 +104,7 @@ tdm_client_create(tdm_client_error *error)
 	if (debug && (strstr(debug, "1")))
 		tdm_debug = 1;
 
-	private_client = calloc(1, sizeof *private_client);
+	private_client = calloc(1, sizeof * private_client);
 	if (!private_client) {
 		TDM_ERR("alloc failed");
 		if (error)
@@ -120,7 +119,7 @@ tdm_client_create(tdm_client_error *error)
 	TDM_GOTO_IF_FAIL(private_client->registry != NULL, create_failed);
 
 	wl_registry_add_listener(private_client->registry,
-	                         &tdm_client_registry_listener, private_client);
+							 &tdm_client_registry_listener, private_client);
 	wl_display_roundtrip(private_client->display);
 
 	/* check global objects */
@@ -202,7 +201,7 @@ tdm_client_handle_events(tdm_client *client)
 
 static void
 _tdm_client_cb_vblank_done(void *data, struct wl_tdm_vblank *vblank,
-                           uint32_t sequence, uint32_t tv_sec, uint32_t tv_usec)
+						   uint32_t sequence, uint32_t tv_sec, uint32_t tv_usec)
 {
 	tdm_client_vblank_info *vblank_info = (tdm_client_vblank_info*)data;
 
@@ -212,11 +211,10 @@ _tdm_client_cb_vblank_done(void *data, struct wl_tdm_vblank *vblank,
 		TDM_NEVER_GET_HERE();
 
 	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info,
-	        wl_proxy_get_id((struct wl_proxy *)vblank));
+			wl_proxy_get_id((struct wl_proxy *)vblank));
 
-	if (vblank_info->func) {
+	if (vblank_info->func)
 		vblank_info->func(sequence, tv_sec, tv_usec, vblank_info->user_data);
-	}
 
 	if (vblank_info->need_free) {
 		LIST_DEL(&vblank_info->link);
@@ -232,8 +230,8 @@ static const struct wl_tdm_vblank_listener tdm_client_vblank_listener = {
 
 tdm_client_error
 tdm_client_wait_vblank(tdm_client *client, char *name,
-                       int sw_timer, int interval, int sync,
-                       tdm_client_vblank_handler func, void *user_data)
+					   int sw_timer, int interval, int sync,
+					   tdm_client_vblank_handler func, void *user_data)
 {
 	tdm_private_client *private_client = (tdm_private_client*)client;
 	tdm_client_vblank_info *vblank_info;
@@ -246,7 +244,7 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	TDM_RETURN_VAL_IF_FAIL(private_client != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 	TDM_RETURN_VAL_IF_FAIL(private_client->tdm_client != NULL, TDM_CLIENT_ERROR_INVALID_PARAMETER);
 
-	vblank_info = calloc(1, sizeof *vblank_info);
+	vblank_info = calloc(1, sizeof * vblank_info);
 	if (!vblank_info) {
 		TDM_ERR("alloc failed");
 		return TDM_CLIENT_ERROR_OUT_OF_MEMORY;
@@ -255,13 +253,13 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 
 	vblank_info->req_sec = (unsigned int)tp.tv_sec;
-	vblank_info->req_usec = (unsigned int)(tp.tv_nsec/1000);
+	vblank_info->req_usec = (unsigned int)(tp.tv_nsec / 1000);
 	vblank_info->need_free = (sync) ? 0 : 1;
 
 	vblank_info->vblank =
 		wl_tdm_client_wait_vblank(private_client->tdm_client,
-		                          name, sw_timer, interval,
-		                          vblank_info->req_sec, vblank_info->req_usec);
+								  name, sw_timer, interval,
+								  vblank_info->req_sec, vblank_info->req_usec);
 	if (!vblank_info->vblank) {
 		TDM_ERR("couldn't create vblank resource");
 		free(vblank_info);
@@ -269,10 +267,10 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 	}
 
 	TDM_DBG("vblank_info(%p) wl_tbm_vblank@%d", vblank_info,
-	        wl_proxy_get_id((struct wl_proxy *)vblank_info->vblank));
+			wl_proxy_get_id((struct wl_proxy *)vblank_info->vblank));
 
 	wl_tdm_vblank_add_listener(vblank_info->vblank,
-	                           &tdm_client_vblank_listener, vblank_info);
+							   &tdm_client_vblank_listener, vblank_info);
 
 	vblank_info->func = func;
 	vblank_info->user_data = user_data;
@@ -288,8 +286,8 @@ tdm_client_wait_vblank(tdm_client *client, char *name,
 
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 	TDM_DBG("block during %d us",
-	        ((unsigned int)(tp.tv_sec * 1000000) + (unsigned int)(tp.tv_nsec/1000))
-	        - (vblank_info->req_sec * 1000000 + vblank_info->req_usec));
+			((unsigned int)(tp.tv_sec * 1000000) + (unsigned int)(tp.tv_nsec / 1000))
+			- (vblank_info->req_sec * 1000000 + vblank_info->req_usec));
 
 	LIST_DEL(&vblank_info->link);
 	free(vblank_info);

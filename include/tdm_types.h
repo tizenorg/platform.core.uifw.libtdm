@@ -1,36 +1,36 @@
 /**************************************************************************
-
-libtdm
-
-Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
-
-Contact: Eunchul Kim <chulspro.kim@samsung.com>,
-         JinYoung Jeon <jy0.jeon@samsung.com>,
-         Taeheon Kim <th908.kim@samsung.com>,
-         YoungJun Cho <yj44.cho@samsung.com>,
-         SooChan Lim <sc1.lim@samsung.com>,
-         Boram Park <sc1.lim@samsung.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ *
+ * libtdm
+ *
+ * Copyright 2015 Samsung Electronics co., Ltd. All Rights Reserved.
+ *
+ * Contact: Eunchul Kim <chulspro.kim@samsung.com>,
+ *          JinYoung Jeon <jy0.jeon@samsung.com>,
+ *          Taeheon Kim <th908.kim@samsung.com>,
+ *          YoungJun Cho <yj44.cho@samsung.com>,
+ *          SooChan Lim <sc1.lim@samsung.com>,
+ *          Boram Park <sc1.lim@samsung.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sub license, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the
+ * next paragraph) shall be included in all copies or substantial portions
+ * of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
 **************************************************************************/
 
 #ifndef _TDM_TYPES_H_
@@ -52,18 +52,17 @@ extern "C" {
  * include @ref tdm_types.h
  * @par Example
  * @code
-   #include <tdm.h>    //for a frontend user
+ * #include <tdm.h>    //for a frontend user
  * @endcode
  * @code
-   #include <tdm_backend.h>  //for a vendor to implement a backend module
+ * #include <tdm_backend.h>  //for a vendor to implement a backend module
  * @endcode
  */
 
 /**
  * @brief The error enumeration
  */
-typedef enum
-{
+typedef enum {
 	TDM_ERROR_NONE                  = 0,  /**< none */
 	TDM_ERROR_BAD_REQUEST           = -1, /**< bad request */
 	TDM_ERROR_OPERATION_FAILED      = -2, /**< operaion failed */
@@ -142,12 +141,12 @@ typedef enum {
  * SCALE and TRANSFORM capability.\n
  * @par Example
  * @code
-   //For example
-   capabilities = TDM_LAYER_CAPABILITY_PRIMARY | TDM_LAYER_CAPABILITY_GRAPHIC;
-   capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_GRAPHIC | TDM_LAYER_CAPABILITY_SCALE;
-   capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_GRAPHIC | TDM_LAYER_CAPABILITY_SCALE | TDM_LAYER_CAPABILITY_TRANSFORM;
-   capabilities = TDM_LAYER_CAPABILITY_CURSOR | TDM_LAYER_CAPABILITY_GRAPHIC;
-   capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_VIDEO;
+ *  //For example
+ *  capabilities = TDM_LAYER_CAPABILITY_PRIMARY | TDM_LAYER_CAPABILITY_GRAPHIC;
+ *  capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_GRAPHIC | TDM_LAYER_CAPABILITY_SCALE;
+ *  capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_GRAPHIC | TDM_LAYER_CAPABILITY_SCALE | TDM_LAYER_CAPABILITY_TRANSFORM;
+ *  capabilities = TDM_LAYER_CAPABILITY_CURSOR | TDM_LAYER_CAPABILITY_GRAPHIC;
+ *  capabilities = TDM_LAYER_CAPABILITY_OVERLAY | TDM_LAYER_CAPABILITY_VIDEO;
  * @endcode
  * @remark
  * - When a video plays, in most of cases, video buffers will be displayed to
@@ -225,8 +224,7 @@ typedef enum {
 	TDM_OUTPUT_MODE_FLAG_CLKDIV2    = (1 << 13),
 } tdm_output_mode_flag;
 
-typedef enum
-{
+typedef enum {
 	TDM_EVENT_LOOP_READABLE = (1 << 0),
 	TDM_EVENT_LOOP_WRITABLE = (1 << 1),
 	TDM_EVENT_LOOP_HANGUP   = (1 << 2),
@@ -353,16 +351,16 @@ typedef void tdm_pp;
  * @see output_set_vblank_handler() function of #tdm_func_display
  */
 typedef void (*tdm_output_vblank_handler)(tdm_output *output, unsigned int sequence,
-                                          unsigned int tv_sec, unsigned int tv_usec,
-                                          void *user_data);
+										  unsigned int tv_sec, unsigned int tv_usec,
+										  void *user_data);
 
 /**
  * @brief The commit handler
  * @see output_set_commit_handler() function of #tdm_func_display
  */
 typedef void (*tdm_output_commit_handler)(tdm_output *output, unsigned int sequence,
-                                          unsigned int tv_sec, unsigned int tv_usec,
-                                          void *user_data);
+										  unsigned int tv_sec, unsigned int tv_usec,
+										  void *user_data);
 
 /**
  * @brief The tdm event source

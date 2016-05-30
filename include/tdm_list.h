@@ -110,41 +110,41 @@ static inline int list_length(struct list_head *item)
 #define LIST_LENGTH(__item) list_length(__item)
 
 #define LIST_ENTRY(__type, __item, __field)   \
-    ((__type *)(((char *)(__item)) - offsetof(__type, __field)))
+	((__type *)(((char *)(__item)) - offsetof(__type, __field)))
 
 #define LIST_IS_EMPTY(__list)                   \
-    ((__list)->next == (__list))
+	((__list)->next == (__list))
 
 #ifndef container_of
 #define container_of(ptr, sample, member)				\
-    (void *)((char *)(ptr)						\
+	(void *)((char *)(ptr)						\
 	     - ((char *)&(sample)->member - (char *)(sample)))
 #endif
 
 #define LIST_FOR_EACH_ENTRY(pos, head, member)				\
-   for (pos = container_of((head)->next, pos, member);			\
+	for (pos = container_of((head)->next, pos, member);			\
 	&pos->member != (head);						\
 	pos = container_of(pos->member.next, pos, member))
 
 #define LIST_FOR_EACH_ENTRY_SAFE(pos, storage, head, member)	\
-   for (pos = container_of((head)->next, pos, member),			\
+	for (pos = container_of((head)->next, pos, member),			\
 	storage = container_of(pos->member.next, pos, member);	\
 	&pos->member != (head);						\
 	pos = storage, storage = container_of(storage->member.next, storage, member))
 
 #define LIST_FOR_EACH_ENTRY_SAFE_REV(pos, storage, head, member)	\
-   for (pos = container_of((head)->prev, pos, member),			\
+	for (pos = container_of((head)->prev, pos, member),			\
 	storage = container_of(pos->member.prev, pos, member);		\
 	&pos->member != (head);						\
 	pos = storage, storage = container_of(storage->member.prev, storage, member))
 
 #define LIST_FOR_EACH_ENTRY_FROM(pos, start, head, member)		\
-   for (pos = container_of((start), pos, member);			\
+	for (pos = container_of((start), pos, member);			\
 	&pos->member != (head);						\
 	pos = container_of(pos->member.next, pos, member))
 
 #define LIST_FOR_EACH_ENTRY_FROM_REV(pos, start, head, member)		\
-   for (pos = container_of((start), pos, member);			\
+	for (pos = container_of((start), pos, member);			\
 	&pos->member != (head);						\
 	pos = container_of(pos->member.prev, pos, member))
 
