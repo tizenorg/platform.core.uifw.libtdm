@@ -154,11 +154,10 @@ _tdm_display_lock(tdm_display *dpy, const char *func)
 
 	ret = pthread_mutex_trylock(&private_display->lock);
 	if (ret < 0) {
-		if (ret == EBUSY) {
+		if (ret == EBUSY)
 			TDM_ERR("mutex lock busy: %s", func);
-		} else {
+		else
 			TDM_ERR("mutex lock failed: %s(%m)", func);
-		}
 		return TDM_ERROR_OPERATION_FAILED;
 	}
 
@@ -1578,7 +1577,7 @@ tdm_layer_get_displaying_buffer(tdm_layer *layer, tdm_error *error)
 		if (error)
 			*error = TDM_ERROR_OPERATION_FAILED;
 		_pthread_mutex_unlock(&private_display->lock);
-		TDM_ERR("layer(%p) showing_buffer is null", private_layer);
+		TDM_DBG("layer(%p) showing_buffer is null", private_layer);
 		return NULL;
 	}
 	_pthread_mutex_unlock(&private_display->lock);
