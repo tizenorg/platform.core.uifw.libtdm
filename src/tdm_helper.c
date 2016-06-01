@@ -43,9 +43,11 @@
 #include <tbm_surface_internal.h>
 #include <string.h>
 #include <time.h>
+#include <pixman.h>
 
 #include "tdm.h"
 #include "tdm_private.h"
+#include "tdm_helper.h"
 
 #define PNG_DEPTH 8
 
@@ -306,5 +308,159 @@ tdm_helper_dump_stop(void)
 	tdm_dump_enable = 0;
 
 	TDM_DBG("tdm_helper_dump stop.");
+}
+
+static pixman_format_code_t
+_tdm_helper_pixman_format_get(tbm_format format)
+{
+	switch (format) {
+	case TBM_FORMAT_ARGB8888:
+		return PIXMAN_a8r8g8b8;
+	case TBM_FORMAT_XRGB8888:
+		return PIXMAN_x8r8g8b8;
+	default:
+		return 0;
+	}
+
+	return 0;
+}
+
+static tdm_error
+_tdm_helper_buffer_convert(tbm_surface_h srcbuf, tbm_surface_h dstbuf,
+						   int dx, int dy, int dw, int dh, int count)
+{
+	pixman_image_t *src_img = NULL, *dst_img = NULL;
+	pixman_format_code_t src_format, dst_format;
+	pixman_transform_t t;
+	struct pixman_f_transform ft;
+	pixman_op_t op;
+	tbm_surface_info_s src_info = {0, };
+	tbm_surface_info_s dst_info = {0, };
+	int stride, width;
+	double scale_x, scale_y;
+
+	TDM_RETURN_VAL_IF_FAIL(srcbuf != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(dstbuf != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+	if (tbm_surface_map(srcbuf, TBM_SURF_OPTION_READ, &src_info)
+			!= TBM_SURFACE_ERROR_NONE) {
+		TDM_ERR("cannot mmap srcbuf\n");
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	if (tbm_surface_map(dstbuf, TBM_SURF_OPTION_WRITE, &dst_info)
+			!= TBM_SURFACE_ERROR_NONE) {
+		TDM_ERR("cannot mmap dstbuf\n");
+		tbm_surface_unmap(srcbuf);
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+	TDM_GOTO_IF_FAIL(src_info.num_planes == 1, cant_convert);
+	TDM_GOTO_IF_FAIL(dst_info.num_planes == 1, cant_convert);
+
+	/* src */
+	src_format = _tdm_helper_pixman_format_get(src_info.format);
+	TDM_GOTO_IF_FAIL(src_format > 0, cant_convert);
+
+	width = src_info.planes[0].stride / 4;
+	stride = src_info.planes[0].stride;
+	src_img = pixman_image_create_bits(src_format, width, src_info.height,
+									   (uint32_t*)src_info.planes[0].ptr, stride);
+	TDM_GOTO_IF_FAIL(src_img != NULL, cant_convert);
+
+	/* dst */
+	dst_format = _tdm_helper_pixman_format_get(dst_info.format);
+	TDM_GOTO_IF_FAIL(dst_format > 0, cant_convert);
+
+	width = dst_info.planes[0].stride / 4;
+	stride = dst_info.planes[0].stride;
+	dst_img = pixman_image_create_bits(dst_format, width, dst_info.height,
+									   (uint32_t*)dst_info.planes[0].ptr, stride);
+	TDM_GOTO_IF_FAIL(dst_img != NULL, cant_convert);
+
+	pixman_f_transform_init_identity(&ft);
+
+	scale_x = (double)src_info.width / dw;
+	scale_y = (double)src_info.height / dh;
+
+	pixman_f_transform_scale(&ft, NULL, scale_x, scale_y);
+	pixman_f_transform_translate(&ft, NULL, 0, 0);
+	pixman_transform_from_pixman_f_transform(&t, &ft);
+	pixman_image_set_transform(src_img, &t);
+
+	if (count == 0)
+		op = PIXMAN_OP_SRC;
+	else
+		op = PIXMAN_OP_OVER;
+
+	pixman_image_composite(op, src_img, NULL, dst_img,
+						   0, 0, 0, 0, dx, dy, dw, dh);
+
+	if (src_img)
+		pixman_image_unref(src_img);
+	if (dst_img)
+		pixman_image_unref(dst_img);
+
+	tbm_surface_unmap(srcbuf);
+	tbm_surface_unmap(dstbuf);
+
+	return TDM_ERROR_NONE;
+
+cant_convert:
+	if (src_img)
+		pixman_image_unref(src_img);
+	if (dst_img)
+		pixman_image_unref(dst_img);
+
+	tbm_surface_unmap(srcbuf);
+	tbm_surface_unmap(dstbuf);
+
+	return TDM_ERROR_OPERATION_FAILED;
+}
+
+EXTERN tdm_error
+tdm_helper_capture_output(tdm_output *output, tbm_surface_h dst_buffer,
+						  int x, int y, int w, int h,
+						  tdm_helper_capture_handler func, void *data)
+{
+	tbm_surface_h surface;
+	tdm_error err;
+	int i, count, first = 0;
+
+	TDM_RETURN_VAL_IF_FAIL(output != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(dst_buffer != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(x >= 0, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(y >= 0, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(w >= 0, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(h >= 0, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
+	TDM_RETURN_VAL_IF_FAIL(data != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+	err = tdm_output_get_layer_count(output, &count);
+	if (err != TDM_ERROR_NONE) {
+		TDM_ERR("tdm_output_get_layer_count fail(%d)\n", err);
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+	if (count <= 0) {
+		TDM_ERR("tdm_output_get_layer_count err(%d, %d)\n", err, count);
+		return TDM_ERROR_BAD_MODULE;
+	}
+
+	for (i = count - 1; i >= 0; i--) {
+		tdm_layer *layer = tdm_output_get_layer(output, i, NULL);
+
+		surface = tdm_layer_get_displaying_buffer(layer, &err);
+		if (err != TDM_ERROR_NONE)
+			continue;
+
+		err = _tdm_helper_buffer_convert(surface, dst_buffer, x, y, w, h, first++);
+		if (err != TDM_ERROR_NONE)
+			TDM_DBG("convert fail %d-layer buffer\n", i);
+		else
+			TDM_DBG("convert success %d-layer buffer\n", i);
+	}
+
+	func(dst_buffer, data);
+
+	return TDM_ERROR_NONE;
 }
 

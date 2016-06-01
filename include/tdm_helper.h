@@ -118,6 +118,32 @@ tdm_helper_dump_start(char *dumppath, int *count);
 void
 tdm_helper_dump_stop(void);
 
+/**
+ * @brief The tdm helper capture handler
+ * @details
+ * This handler will be called when composit image produced.
+ * @see #tdm_helper_capture_output() function
+ */
+typedef void (*tdm_helper_capture_handler)(tbm_surface_h buffer, void *user_data);
+
+/**
+ * @brief Make an output's image surface.
+ * @details Composit specific output's all layer's buffer to dst_buffer surface.
+ * After composing, tdm_helper_capture_handler func will be called.
+ * @param[in] output A output object
+ * @param[in] dst_buffer A surface composite image saved
+ * @param[in] x A horizontal position of composite image on dst_buffer
+ * @param[in] y A vertical position of composite image on dst_buffer
+ * @param[in] w A composite image width
+ * @param[in] h A composite image height
+ * @param[in] func A composing done handler
+ * @param[in] user_data The user data
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_helper_capture_output(tdm_output *output, tbm_surface_h dst_buffer,
+						  int x, int y, int w, int h,
+						  tdm_helper_capture_handler func, void *data);
 #ifdef __cplusplus
 }
 #endif
