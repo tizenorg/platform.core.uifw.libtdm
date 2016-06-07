@@ -1393,6 +1393,9 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 
 	func_layer = &private_display->func_layer;
 
+	if (private_layer->usable)
+		TDM_INFO("layer(%p) not usable", private_layer);
+
 	private_layer->usable = 0;
 
 	if (!func_layer->layer_set_info) {
@@ -1476,6 +1479,9 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 
 	func_layer = &private_display->func_layer;
 
+	if (private_layer->usable)
+		TDM_INFO("layer(%p) not usable", private_layer);
+
 	private_layer->usable = 0;
 
 	if (!func_layer->layer_set_buffer) {
@@ -1545,6 +1551,9 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 	}
 
 	private_layer->usable = 1;
+
+	if (private_layer->usable)
+		TDM_INFO("layer(%p) now usable", private_layer);
 
 	if (!func_layer->layer_unset_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
@@ -1671,6 +1680,9 @@ tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 
 	func_layer = &private_display->func_layer;
 
+	if (private_layer->usable)
+		TDM_INFO("layer(%p) not usable", private_layer);
+
 	private_layer->usable = 0;
 
 	if (!func_layer->layer_set_buffer) {
@@ -1749,6 +1761,9 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 	tbm_surface_queue_remove_destroy_cb(private_layer->buffer_queue, _tbm_layer_queue_destroy_cb, layer);
 	private_layer->buffer_queue = NULL;
 	private_layer->usable = 1;
+
+	if (private_layer->usable)
+		TDM_INFO("layer(%p) now usable", private_layer);
 
 	if (!func_layer->layer_unset_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
