@@ -1318,7 +1318,7 @@ tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props, int
 }
 
 EXTERN tdm_error
-tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos)
+tdm_layer_get_zpos(tdm_layer *layer, int *zpos)
 {
 	LAYER_FUNC_ENTRY();
 

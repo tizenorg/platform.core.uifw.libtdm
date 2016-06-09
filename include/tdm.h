@@ -519,7 +519,7 @@ tdm_layer_get_available_properties(tdm_layer *layer, const tdm_prop **props,
  * @see tdm_layer_set_video_pos, tdm_layer_capability
  */
 tdm_error
-tdm_layer_get_zpos(tdm_layer *layer, unsigned int *zpos);
+tdm_layer_get_zpos(tdm_layer *layer, int *zpos);
 
 /**
  * @brief Set the property which has a given id.
