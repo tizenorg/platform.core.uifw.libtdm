@@ -203,10 +203,8 @@ struct _tdm_private_pp {
 
 	tdm_pp *pp_backend;
 
-	struct list_head src_pending_buffer_list;
-	struct list_head dst_pending_buffer_list;
-	struct list_head src_buffer_list;
-	struct list_head dst_buffer_list;
+	struct list_head pending_buffer_list;
+	struct list_head buffer_list;
 
 	pid_t owner_tid;
 };

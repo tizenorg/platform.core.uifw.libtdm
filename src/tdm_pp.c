@@ -41,6 +41,13 @@
 #include "tdm_backend.h"
 #include "tdm_private.h"
 
+typedef struct _tdm_pp_private_buffer {
+	tbm_surface_h src;
+	tbm_surface_h dst;
+	struct list_head link;
+	struct list_head commit_link;
+} tdm_pp_private_buffer;
+
 #define PP_FUNC_ENTRY() \
 	tdm_func_pp *func_pp; \
 	tdm_private_display *private_display; \
@@ -51,41 +58,52 @@
 	private_display = private_pp->private_display; \
 	func_pp = &private_display->func_pp
 
-static tdm_error
-_tdm_pp_check_if_exist(tdm_private_pp *private_pp,
-					   tbm_surface_h src, tbm_surface_h dst)
+static void
+_tdm_pp_print_list(struct list_head *list)
 {
-	tdm_buffer_info *buf_info = NULL;
+	tdm_pp_private_buffer *b = NULL;
+	char str[512], *p;
+	int len = sizeof(str);
 
-	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->src_buffer_list, link) {
-		if (buf_info->buffer == src) {
-			TDM_ERR("%p attached twice", src);
-			return TDM_ERROR_BAD_REQUEST;
-		}
+	TDM_RETURN_IF_FAIL(list != NULL);
+
+	p = str;
+	LIST_FOR_EACH_ENTRY(b, list, link) {
+		if (len > 0) {
+			int l = snprintf(p, len, " (%p,%p)", b->src, b->dst);
+			p += l;
+			len -= l;
+		} else
+			break;
 	}
 
-	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->src_pending_buffer_list, link) {
-		if (buf_info->buffer == src) {
-			TDM_ERR("%p attached twice", src);
-			return TDM_ERROR_BAD_REQUEST;
-		}
+	TDM_INFO("\t %s", str);
+}
+
+static tdm_pp_private_buffer *
+_tdm_pp_find_tbm_buffers(struct list_head *list, tbm_surface_h src, tbm_surface_h dst)
+{
+	tdm_pp_private_buffer *b = NULL, *bb = NULL;
+
+	LIST_FOR_EACH_ENTRY_SAFE(b, bb, list, link) {
+		if (b->src == src && b->dst == dst)
+			return b;
 	}
 
-	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->dst_buffer_list, link) {
-		if (buf_info->buffer == dst) {
-			TDM_ERR("%p attached twice", dst);
-			return TDM_ERROR_BAD_REQUEST;
-		}
+	return NULL;
+}
+
+static tdm_pp_private_buffer *
+_tdm_pp_find_buffer(struct list_head *list, tdm_pp_private_buffer *pp_buffer)
+{
+	tdm_pp_private_buffer *b = NULL, *bb = NULL;
+
+	LIST_FOR_EACH_ENTRY_SAFE(b, bb, list, link) {
+		if (b == pp_buffer)
+			return b;
 	}
 
-	LIST_FOR_EACH_ENTRY(buf_info, &private_pp->dst_pending_buffer_list, link) {
-		if (buf_info->buffer == dst) {
-			TDM_ERR("%p attached twice", dst);
-			return TDM_ERROR_BAD_REQUEST;
-		}
-	}
-
-	return TDM_ERROR_NONE;
+	return NULL;
 }
 
 INTERN void
@@ -94,8 +112,7 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 {
 	tdm_private_pp *private_pp = user_data;
 	tdm_private_display *private_display = private_pp->private_display;
-	tdm_buffer_info *buf_info;
-	tbm_surface_h first_entry;
+	tdm_pp_private_buffer *pp_buffer, *first_entry;
 
 	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
@@ -122,24 +139,20 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	if (tdm_debug_buffer)
 		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
 
-	first_entry = tdm_buffer_list_get_first_entry(&private_pp->src_buffer_list);
-	if (first_entry != src)
-		TDM_ERR("src(%p) is skipped", first_entry);
+	first_entry = container_of((&private_pp->buffer_list)->next, pp_buffer, link);
+	if (first_entry->src != src || first_entry->dst != dst)
+		TDM_ERR("buffer(%p,%p) is skipped", first_entry->src, first_entry->dst);
 
-	first_entry = tdm_buffer_list_get_first_entry(&private_pp->dst_buffer_list);
-	if (first_entry != dst)
-		TDM_ERR("dst(%p) is skipped", first_entry);
+	if ((pp_buffer = _tdm_pp_find_tbm_buffers(&private_pp->buffer_list, src, dst))) {
+		LIST_DEL(&pp_buffer->link);
 
-	if ((buf_info = tdm_buffer_get_info(src)))
-		LIST_DEL(&buf_info->link);
+		_pthread_mutex_unlock(&private_display->lock);
+		tdm_buffer_unref_backend(src);
+		tdm_buffer_unref_backend(dst);
+		_pthread_mutex_lock(&private_display->lock);
 
-	if ((buf_info = tdm_buffer_get_info(dst)))
-		LIST_DEL(&buf_info->link);
-
-	_pthread_mutex_unlock(&private_display->lock);
-	tdm_buffer_unref_backend(src);
-	tdm_buffer_unref_backend(dst);
-	_pthread_mutex_lock(&private_display->lock);
+		free(pp_buffer);
+	}
 }
 
 INTERN tdm_private_pp *
@@ -212,10 +225,8 @@ tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error)
 	private_pp->pp_backend = pp_backend;
 	private_pp->owner_tid = syscall(SYS_gettid);
 
-	LIST_INITHEAD(&private_pp->src_pending_buffer_list);
-	LIST_INITHEAD(&private_pp->dst_pending_buffer_list);
-	LIST_INITHEAD(&private_pp->src_buffer_list);
-	LIST_INITHEAD(&private_pp->dst_buffer_list);
+	LIST_INITHEAD(&private_pp->pending_buffer_list);
+	LIST_INITHEAD(&private_pp->buffer_list);
 
 	if (error)
 		*error = TDM_ERROR_NONE;
@@ -228,7 +239,7 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 {
 	tdm_private_display *private_display;
 	tdm_func_pp *func_pp;
-	tdm_buffer_info *b = NULL, *bb = NULL;
+	tdm_pp_private_buffer *b = NULL, *bb = NULL;
 
 	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
@@ -242,50 +253,24 @@ tdm_pp_destroy_internal(tdm_private_pp *private_pp)
 
 	func_pp->pp_destroy(private_pp->pp_backend);
 
-	if (!LIST_IS_EMPTY(&private_pp->src_pending_buffer_list)) {
+	if (!LIST_IS_EMPTY(&private_pp->pending_buffer_list)) {
 		TDM_WRN("pp(%p) not finished:", private_pp);
-		tdm_buffer_list_dump(&private_pp->src_pending_buffer_list);
+		_tdm_pp_print_list(&private_pp->pending_buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link) {
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->pending_buffer_list, link) {
 			LIST_DEL(&b->link);
-			_pthread_mutex_unlock(&private_display->lock);
-			tdm_buffer_unref_backend(b->buffer);
-			_pthread_mutex_lock(&private_display->lock);
 		}
 	}
 
-	if (!LIST_IS_EMPTY(&private_pp->dst_pending_buffer_list)) {
+	if (!LIST_IS_EMPTY(&private_pp->buffer_list)) {
 		TDM_WRN("pp(%p) not finished:", private_pp);
-		tdm_buffer_list_dump(&private_pp->dst_pending_buffer_list);
+		_tdm_pp_print_list(&private_pp->buffer_list);
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link) {
+		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->buffer_list, link) {
 			LIST_DEL(&b->link);
 			_pthread_mutex_unlock(&private_display->lock);
-			tdm_buffer_unref_backend(b->buffer);
-			_pthread_mutex_lock(&private_display->lock);
-		}
-	}
-
-	if (!LIST_IS_EMPTY(&private_pp->src_buffer_list)) {
-		TDM_WRN("pp(%p) not finished:", private_pp);
-		tdm_buffer_list_dump(&private_pp->src_buffer_list);
-
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_buffer_list, link) {
-			LIST_DEL(&b->link);
-			_pthread_mutex_unlock(&private_display->lock);
-			tdm_buffer_unref_backend(b->buffer);
-			_pthread_mutex_lock(&private_display->lock);
-		}
-	}
-
-	if (!LIST_IS_EMPTY(&private_pp->dst_buffer_list)) {
-		TDM_WRN("pp(%p) not finished:", private_pp);
-		tdm_buffer_list_dump(&private_pp->dst_buffer_list);
-
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_buffer_list, link) {
-			LIST_DEL(&b->link);
-			_pthread_mutex_unlock(&private_display->lock);
-			tdm_buffer_unref_backend(b->buffer);
+			tdm_buffer_unref_backend(b->src);
+			tdm_buffer_unref_backend(b->dst);
 			_pthread_mutex_lock(&private_display->lock);
 		}
 	}
@@ -347,6 +332,8 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 EXTERN tdm_error
 tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 {
+	tdm_pp_private_buffer *pp_buffer;
+
 	PP_FUNC_ENTRY();
 
 	TDM_RETURN_VAL_IF_FAIL(src != NULL, TDM_ERROR_INVALID_PARAMETER);
@@ -362,8 +349,8 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 
 	if (tdm_display_check_module_abi(private_display, 1, 2) &&
 		private_display->caps_pp.max_attach_count > 0) {
-		int length = LIST_LENGTH(&private_pp->src_pending_buffer_list) +
-					 LIST_LENGTH(&private_pp->src_buffer_list);
+		int length = LIST_LENGTH(&private_pp->pending_buffer_list) +
+					 LIST_LENGTH(&private_pp->buffer_list);
 		if (length >= private_display->caps_pp.max_attach_count) {
 			_pthread_mutex_unlock(&private_display->lock);
 			TDM_DBG("failed: too many attached!! max_attach_count(%d)",
@@ -372,29 +359,30 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 		}
 	}
 
-	ret = _tdm_pp_check_if_exist(private_pp, src, dst);
-	if (ret != TDM_ERROR_NONE) {
+	pp_buffer = calloc(1, sizeof *pp_buffer);
+	if (!pp_buffer) {
 		_pthread_mutex_unlock(&private_display->lock);
-		return ret;
+		TDM_ERR("alloc failed");
+		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
 	ret = func_pp->pp_attach(private_pp->pp_backend, src, dst);
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
-	if (ret == TDM_ERROR_NONE) {
-		tdm_buffer_info *buf_info;
+	if (ret != TDM_ERROR_NONE) {
+		free(pp_buffer);
+		_pthread_mutex_unlock(&private_display->lock);
+		TDM_ERR("attach failed");
+		return ret;
+	}
 
-		if ((buf_info = tdm_buffer_get_info(src)))
-			LIST_ADDTAIL(&buf_info->link, &private_pp->src_pending_buffer_list);
+	LIST_ADDTAIL(&pp_buffer->link, &private_pp->pending_buffer_list);
+	pp_buffer->src = tdm_buffer_ref_backend(src);
+	pp_buffer->dst = tdm_buffer_ref_backend(dst);
 
-		if ((buf_info = tdm_buffer_get_info(dst)))
-			LIST_ADDTAIL(&buf_info->link, &private_pp->dst_pending_buffer_list);
-
-		if (tdm_debug_buffer) {
-			TDM_INFO("pp(%p) attached:", private_pp);
-			tdm_buffer_list_dump(&private_pp->src_pending_buffer_list);
-			tdm_buffer_list_dump(&private_pp->dst_pending_buffer_list);
-		}
+	if (tdm_debug_buffer) {
+		TDM_INFO("pp(%p) attached:", private_pp);
+		_tdm_pp_print_list(&private_pp->pending_buffer_list);
 	}
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -405,7 +393,8 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 EXTERN tdm_error
 tdm_pp_commit(tdm_pp *pp)
 {
-	tdm_buffer_info *b = NULL, *bb = NULL;
+	tdm_pp_private_buffer *b = NULL, *bb = NULL;
+	struct list_head commit_buffer_list;
 
 	PP_FUNC_ENTRY();
 
@@ -417,26 +406,28 @@ tdm_pp_commit(tdm_pp *pp)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
+	LIST_INITHEAD(&commit_buffer_list);
+
+	LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->pending_buffer_list, link) {
+		LIST_DEL(&b->link);
+		LIST_ADDTAIL(&b->link, &private_pp->buffer_list);
+		LIST_ADDTAIL(&b->commit_link, &commit_buffer_list);
+	}
+
 	ret = func_pp->pp_commit(private_pp->pp_backend);
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
-	if (ret == TDM_ERROR_NONE) {
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link) {
-			LIST_DEL(&b->link);
-			tdm_buffer_ref_backend(b->buffer);
-			LIST_ADDTAIL(&b->link, &private_pp->src_buffer_list);
-		}
+	LIST_FOR_EACH_ENTRY_SAFE(b, bb, &commit_buffer_list, commit_link) {
+		if (!_tdm_pp_find_buffer(&private_pp->buffer_list, b))
+			continue;
 
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link) {
+		LIST_DEL(&b->commit_link);
+
+		if (ret != TDM_ERROR_NONE) {
+			tdm_buffer_unref_backend(b->src);
+			tdm_buffer_unref_backend(b->dst);
 			LIST_DEL(&b->link);
-			tdm_buffer_ref_backend(b->buffer);
-			LIST_ADDTAIL(&b->link, &private_pp->dst_buffer_list);
 		}
-	} else {
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->src_pending_buffer_list, link)
-			LIST_DEL(&b->link);
-		LIST_FOR_EACH_ENTRY_SAFE(b, bb, &private_pp->dst_pending_buffer_list, link)
-			LIST_DEL(&b->link);
 	}
 
 	_pthread_mutex_unlock(&private_display->lock);
