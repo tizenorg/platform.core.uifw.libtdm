@@ -178,7 +178,7 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 	TDM_RETURN_IF_FAIL(buffer != NULL);
 	TDM_RETURN_IF_FAIL(file != NULL);
 
-	ret = tbm_surface_map(buffer, TBM_DEVICE_CPU, &info);
+	ret = tbm_surface_map(buffer, TBM_OPTION_READ, &info);
 	TDM_RETURN_IF_FAIL(ret == TBM_SURFACE_ERROR_NONE);
 
 	len = strnlen(file, 1024);
