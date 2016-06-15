@@ -949,8 +949,10 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 			_pthread_mutex_lock(&private_display->lock);
 
 			if (private_layer->buffer_queue) {
+				_pthread_mutex_unlock(&private_display->lock);
 				tbm_surface_queue_release(private_layer->buffer_queue,
 										  private_layer->showing_buffer);
+				_pthread_mutex_lock(&private_display->lock);
 			}
 		}
 
@@ -1624,6 +1626,7 @@ _tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
 
 	if (ret == TDM_ERROR_NONE) {
 		if (private_layer->waiting_buffer) {
+			TDM_DBG("layer(%p) drop waiting_buffer(%p)", private_layer, private_layer->waiting_buffer);
 			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(private_layer->waiting_buffer);
 			tbm_surface_queue_release(private_layer->buffer_queue,
