@@ -264,6 +264,11 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 			found = client_info->vblank_output;
 	}
 
+	if (!strncmp(name, "primary", TDM_NAME_LEN)) {
+		tdm_output *output = tdm_display_get_output(private_loop->dpy, 0, NULL);
+		found = output;
+	}
+
 	if (!found) {
 		int count = 0, i;
 
