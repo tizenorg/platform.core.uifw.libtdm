@@ -610,7 +610,7 @@ _tdm_display_update_internal(tdm_private_display *private_display,
 {
 	tdm_output **outputs = NULL;
 	int output_count = 0, i;
-	tdm_error ret;
+	tdm_error ret = TDM_ERROR_NONE;
 
 	LIST_INITHEAD(&private_display->output_list);
 	LIST_INITHEAD(&private_display->pp_list);

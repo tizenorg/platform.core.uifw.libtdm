@@ -1150,9 +1150,7 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 	tdm_func_output *func_output;
 	OUTPUT_FUNC_ENTRY();
 
-	if (dpms_value < TDM_OUTPUT_DPMS_ON)
-		dpms_value = TDM_OUTPUT_DPMS_ON;
-	else if (dpms_value > TDM_OUTPUT_DPMS_OFF)
+	if (dpms_value > TDM_OUTPUT_DPMS_OFF)
 		dpms_value = TDM_OUTPUT_DPMS_OFF;
 
 	_pthread_mutex_lock(&private_display->lock);
@@ -1238,7 +1236,7 @@ tdm_output_call_change_handler_internal(tdm_private_output *private_output,
 										tdm_value value)
 {
 	tdm_private_display *private_display;
-	tdm_private_change_handler *change_handler;
+	tdm_private_change_handler *change_handler = NULL;
 
 	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 	TDM_RETURN_IF_FAIL(private_output);

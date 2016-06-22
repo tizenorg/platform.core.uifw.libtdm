@@ -408,8 +408,6 @@ _tdm_helper_buffer_convert(tbm_surface_h srcbuf, tbm_surface_h dstbuf,
 cant_convert:
 	if (src_img)
 		pixman_image_unref(src_img);
-	if (dst_img)
-		pixman_image_unref(dst_img);
 
 	tbm_surface_unmap(srcbuf);
 	tbm_surface_unmap(dstbuf);

@@ -150,7 +150,7 @@ static inline int list_length(struct list_head *item)
 
 #define LIST_FIND_ITEM(item, head, type, member, found) \
 	do {	\
-		type *pos;	\
+		type *pos = NULL;	\
 		found = NULL;	\
 		LIST_FOR_EACH_ENTRY(pos, head, member)	\
 			if (pos == item) { found = item; break; }	\

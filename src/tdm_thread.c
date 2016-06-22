@@ -240,7 +240,7 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 	tdm_private_thread *private_thread;
 	tdm_thread_cb_base *base;
 	char buffer[1024];
-	int len, i;
+	unsigned int len, i;
 
 	/* DON'T check TDM_MUTEX_IS_LOCKED here */
 

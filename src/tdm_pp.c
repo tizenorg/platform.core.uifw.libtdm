@@ -112,7 +112,7 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 {
 	tdm_private_pp *private_pp = user_data;
 	tdm_private_display *private_display = private_pp->private_display;
-	tdm_pp_private_buffer *pp_buffer, *first_entry;
+	tdm_pp_private_buffer *pp_buffer = NULL, *first_entry = NULL;
 
 	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
