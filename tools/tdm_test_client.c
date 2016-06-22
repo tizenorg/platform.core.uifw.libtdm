@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 		if (!sync) {
 			ret = poll(&fds, 1, -1);
 			if (ret < 0) {
-				if (errno == EBUSY)  /* normal case */
+				if (errno == EINTR || errno == EAGAIN)  /* normal case */
 					continue;
 				else {
 					printf("poll failed: %m\n");

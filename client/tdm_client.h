@@ -113,7 +113,7 @@ tdm_client_destroy(tdm_client *client);
  * while(1) {
  *    ret = poll(&fds, 1, -1);
  *    if (ret < 0) {
- *       if (errno == EBUSY)
+ *       if (errno == EINTR || errno == EAGAIN)
  *          continue;
  *       else {
  *          //error handling

@@ -99,7 +99,7 @@ _tdm_thread_main(void *data)
 			TDM_INFO("fd(%d) polling out", fd);
 
 		if (ret < 0) {
-			if (errno == EBUSY)  /* normal case */
+			if (errno == EINTR || errno == EAGAIN)  /* normal case */
 				continue;
 			else {
 				TDM_ERR("poll failed: %m");

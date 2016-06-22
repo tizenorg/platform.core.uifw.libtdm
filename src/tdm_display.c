@@ -417,7 +417,7 @@ tdm_display_handle_events(tdm_display *dpy)
 		TDM_INFO("fd(%d) polling in", fd);
 
 	while (poll(&fds, 1, -1) < 0) {
-		if (errno == EBUSY)  /* normal case */
+		if (errno == EINTR || errno == EAGAIN)  /* normal case */
 			continue;
 		else {
 			TDM_ERR("poll failed: %m");
