@@ -41,6 +41,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include <tdm_common.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -116,6 +118,42 @@ extern "C" {
 #define FOURCC(a, b, c, d)  (B(d, 24) | B(c, 16) | B(b, 8) | B(a, 0))
 #define FOURCC_STR(id)      C(id, 0), C(id, 8), C(id, 16), C(id, 24)
 #define FOURCC_ID(str)      FOURCC(((char*)str)[0], ((char*)str)[1], ((char*)str)[2], ((char*)str)[3])
+
+
+#define TDM_ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+struct tdm_type_name {
+	int type;
+	const char *name;
+};
+
+#define TDM_TYPE_NAME_FN(res) \
+static inline const char * tdm_##res##_str(int type)	\
+{			\
+	unsigned int i;					\
+	for (i = 0; i < TDM_ARRAY_SIZE(tdm_##res##_names); i++) { \
+		if (tdm_##res##_names[i].type == type)	\
+			return tdm_##res##_names[i].name;	\
+	}						\
+	return "(invalid)";				\
+}
+
+static struct tdm_type_name tdm_dpms_names[] = {
+	{ TDM_OUTPUT_DPMS_ON, "on" },
+	{ TDM_OUTPUT_DPMS_STANDBY, "standby" },
+	{ TDM_OUTPUT_DPMS_SUSPEND, "suspend" },
+	{ TDM_OUTPUT_DPMS_OFF, "off" },
+};
+
+TDM_TYPE_NAME_FN(dpms)
+
+static struct tdm_type_name tdm_status_names[] = {
+	{ TDM_OUTPUT_CONN_STATUS_DISCONNECTED, "disconnected" },
+	{ TDM_OUTPUT_CONN_STATUS_CONNECTED, "connected" },
+	{ TDM_OUTPUT_CONN_STATUS_MODE_SETTED, "mode_setted" },
+};
+
+TDM_TYPE_NAME_FN(status)
 
 #ifdef __cplusplus
 }

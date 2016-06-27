@@ -102,47 +102,6 @@
 	private_output = private_layer->private_output; \
 	private_display = private_output->private_display
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-
-struct type_name {
-	int type;
-	const char *name;
-};
-
-#define type_name_fn(res) \
-const char * res##_str(int type)	\
-{			\
-	unsigned int i;					\
-	for (i = 0; i < ARRAY_SIZE(res##_names); i++) { \
-		if (res##_names[i].type == type)	\
-			return res##_names[i].name;	\
-	}						\
-	return "(invalid)";				\
-}
-
-struct type_name dpms_names[] = {
-	{ TDM_OUTPUT_DPMS_ON, "on" },
-	{ TDM_OUTPUT_DPMS_STANDBY, "standby" },
-	{ TDM_OUTPUT_DPMS_SUSPEND, "suspend" },
-	{ TDM_OUTPUT_DPMS_OFF, "off" },
-};
-
-INTERN type_name_fn(dpms)
-
-struct type_name status_names[] = {
-	{ TDM_OUTPUT_CONN_STATUS_DISCONNECTED, "disconnected" },
-	{ TDM_OUTPUT_CONN_STATUS_CONNECTED, "connected" },
-	{ TDM_OUTPUT_CONN_STATUS_MODE_SETTED, "mode_setted" },
-};
-
-INTERN type_name_fn(status)
-
-INTERN const char*
-tdm_get_dpms_str(tdm_output_dpms dpms_value)
-{
-	return dpms_str(dpms_value);
-}
-
 INTERN tdm_error
 _tdm_display_lock(tdm_display *dpy, const char *func)
 {
@@ -988,7 +947,7 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
 		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
-				dpms_str(private_output->current_dpms_value));
+				tdm_dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_BAD_REQUEST;
 	}
@@ -1082,7 +1041,7 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
 		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
-				dpms_str(private_output->current_dpms_value));
+				tdm_dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_BAD_REQUEST;
 	}
@@ -1245,10 +1204,10 @@ tdm_output_call_change_handler_internal(tdm_private_output *private_output,
 	if (!tdm_thread_in_display_thread(syscall(SYS_gettid))) {
 		if (type & TDM_OUTPUT_CHANGE_CONNECTION)
 			TDM_INFO("output(%d) changed: %s (%d)",
-					 private_output->pipe, status_str(value.u32), value.u32);
+					 private_output->pipe, tdm_status_str(value.u32), value.u32);
 		if (type & TDM_OUTPUT_CHANGE_DPMS)
 			TDM_INFO("output(%d) changed: dpms %s (%d)",
-					 private_output->pipe, dpms_str(value.u32), value.u32);
+					 private_output->pipe, tdm_dpms_str(value.u32), value.u32);
 	}
 
 	if (LIST_IS_EMPTY(change_handler_list))

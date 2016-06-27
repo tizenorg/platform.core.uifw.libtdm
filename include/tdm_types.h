@@ -42,8 +42,6 @@
 extern "C" {
 #endif
 
-#define TDM_NAME_LEN        64
-
 /**
  * @file tdm_types.h
  * @brief The header file which defines Enumerations and Structures for frontend and backend.
@@ -59,21 +57,7 @@ extern "C" {
  * @endcode
  */
 
-/**
- * @brief The error enumeration
- */
-typedef enum {
-	TDM_ERROR_NONE                  = 0,  /**< none */
-	TDM_ERROR_BAD_REQUEST           = -1, /**< bad request */
-	TDM_ERROR_OPERATION_FAILED      = -2, /**< operaion failed */
-	TDM_ERROR_INVALID_PARAMETER     = -3, /**< wrong input parameter */
-	TDM_ERROR_PERMISSION_DENIED     = -4, /**< access denied */
-	TDM_ERROR_BUSY                  = -5, /**< hardware resource busy */
-	TDM_ERROR_OUT_OF_MEMORY         = -6, /**< no free memory */
-	TDM_ERROR_BAD_MODULE            = -7, /**< bad backend module */
-	TDM_ERROR_NOT_IMPLEMENTED       = -8, /**< not implemented */
-	TDM_ERROR_NO_CAPABILITY         = -9, /**< no capability */
-} tdm_error;
+#include <tdm_common.h>
 
 /**
  * @brief The transform enumeration(rotate, flip)
@@ -88,15 +72,6 @@ typedef enum {
 	TDM_TRANSFORM_FLIPPED_180       = 6, /**< rotate 180 and horizontal flip */
 	TDM_TRANSFORM_FLIPPED_270       = 7, /**< rotate 270 and horizontal flip */
 } tdm_transform;
-
-/**
- * @brief The output connection status enumeration
- */
-typedef enum {
-	TDM_OUTPUT_CONN_STATUS_DISCONNECTED, /**< output disconnected */
-	TDM_OUTPUT_CONN_STATUS_CONNECTED,    /**< output connected */
-	TDM_OUTPUT_CONN_STATUS_MODE_SETTED,  /**< output connected and setted a mode */
-} tdm_output_conn_status;
 
 /**
  * @brief The output connection status enumeration
@@ -121,17 +96,6 @@ typedef enum {
 	TDM_OUTPUT_TYPE_VIRTUAL,        /**< Virtual connection for WiFi Display */
 	TDM_OUTPUT_TYPE_DSI,            /**< DSI connection */
 } tdm_output_type;
-
-/**
- * @brief The DPMS enumeration
- * @details bit compatible with the libdrm definitions.
- */
-typedef enum {
-	TDM_OUTPUT_DPMS_ON,         /**< On */
-	TDM_OUTPUT_DPMS_STANDBY,    /**< StandBy */
-	TDM_OUTPUT_DPMS_SUSPEND,    /**< Suspend */
-	TDM_OUTPUT_DPMS_OFF,        /**< Off */
-} tdm_output_dpms;
 
 /**
  * @brief The layer capability enumeration
@@ -251,35 +215,6 @@ typedef struct _tdm_prop {
 	unsigned int id;
 	char name[TDM_NAME_LEN];
 } tdm_prop;
-
-/**
- * @brief The size structure
- */
-typedef struct _tdm_size {
-	unsigned int h;     /**< width */
-	unsigned int v;     /**< height */
-} tdm_size;
-
-/**
- * @brief The pos structure
- */
-typedef struct _tdm_pos {
-	unsigned int x;
-	unsigned int y;
-	unsigned int w;
-	unsigned int h;
-} tdm_pos;
-
-/**
- * @brief The value union
- */
-typedef union {
-	void	 *ptr;
-	int32_t  s32;
-	uint32_t u32;
-	int64_t  s64;
-	uint64_t u64;
-} tdm_value;
 
 /**
  * @brief The info config structure

@@ -38,6 +38,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <errno.h>
@@ -83,11 +84,6 @@ extern int tdm_debug_thread;
 #define TDM_TRACE_BEGIN(NAME)
 #define TDM_TRACE_END()
 #endif
-
-#define prototype_name_fn(res) const char * res##_str(int type)
-
-prototype_name_fn(dpms);
-prototype_name_fn(status);
 
 typedef enum {
 	TDM_CAPTURE_TARGET_OUTPUT,
@@ -303,9 +299,6 @@ typedef struct _tdm_buffer_info {
 	struct list_head *list;
 	struct list_head link;
 } tdm_buffer_info;
-
-const char*
-tdm_get_dpms_str(tdm_output_dpms dpms_value);
 
 int
 tdm_display_check_module_abi(tdm_private_display *private_display, int abimaj, int abimin);

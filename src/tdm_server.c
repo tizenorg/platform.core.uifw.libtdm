@@ -321,8 +321,8 @@ _tdm_server_client_cb_wait_vblank(struct wl_client *client,
 
 	if (dpms_value != TDM_OUTPUT_DPMS_ON && !sw_timer) {
 		wl_resource_post_error(resource, WL_TDM_CLIENT_ERROR_DPMS_OFF,
-							   "dpms '%s'", tdm_get_dpms_str(dpms_value));
-		TDM_ERR("dpms '%s'", tdm_get_dpms_str(dpms_value));
+							   "dpms '%s'", tdm_dpms_str(dpms_value));
+		TDM_ERR("dpms '%s'", tdm_dpms_str(dpms_value));
 		return;
 	}
 

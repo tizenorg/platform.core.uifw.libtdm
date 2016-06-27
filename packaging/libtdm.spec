@@ -35,6 +35,7 @@ Tizen Display Manager Client Library
 Summary:        Client library for Tizen Display Manager
 Group:          Development/Libraries
 Requires:       libtdm-client = %{version}
+Requires:       libtdm-devel
 
 %description client-devel
 Tizen Display Manager Client Library headers
@@ -100,6 +101,7 @@ rm -f %{_unitdir_user}/default.target.wants/tdm-socket-user.path
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/tdm.h
+%{_includedir}/tdm_common.h
 %{_includedir}/tdm_backend.h
 %{_includedir}/tdm_helper.h
 %{_includedir}/tdm_list.h

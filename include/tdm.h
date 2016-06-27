@@ -65,14 +65,6 @@ typedef enum {
 } tdm_display_capability;
 
 /**
- * @brief The output change enumeration of #tdm_output_change_handler
- */
-typedef enum {
-	TDM_OUTPUT_CHANGE_CONNECTION    = (1 << 0), /**< connection chagne */
-	TDM_OUTPUT_CHANGE_DPMS          = (1 << 1), /**< dpms change */
-} tdm_output_change_type;
-
-/**
  * @brief The output change handler
  * @details This handler will be called when the status of a output object is
  * changed in runtime.

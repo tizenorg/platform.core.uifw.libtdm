@@ -403,7 +403,7 @@ tdm_capture_commit(tdm_capture *capture)
 	private_output = private_capture->private_output;
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
 		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
-				dpms_str(private_output->current_dpms_value));
+				tdm_dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_BAD_REQUEST;
 	}
