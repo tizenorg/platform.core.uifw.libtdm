@@ -6,7 +6,6 @@ Group:          Development/Libraries
 License:        MIT
 Source0:        %{name}-%{version}.tar.gz
 Source1001:	    %{name}.manifest
-BuildRequires:  pkgconfig(pthread-stubs)
 BuildRequires:  pkgconfig(libtbm)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(ttrace)
