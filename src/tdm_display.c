@@ -1839,3 +1839,26 @@ tdm_layer_create_capture(tdm_layer *layer, tdm_error *error)
 
 	return capture;
 }
+
+EXTERN tdm_error
+tdm_layer_get_buffer_flags(tdm_layer *layer, unsigned int *flags)
+{
+	tdm_func_layer *func_layer;
+	LAYER_FUNC_ENTRY();
+
+	_pthread_mutex_lock(&private_display->lock);
+
+	func_layer = &private_display->func_layer;
+
+	if (!func_layer->layer_get_buffer_flags) {
+		_pthread_mutex_unlock(&private_display->lock);
+		TDM_ERR("not implemented!!");
+		return TDM_ERROR_NOT_IMPLEMENTED;
+	}
+
+	ret = func_layer->layer_get_buffer_flags(private_layer->layer_backend, flags);
+
+	_pthread_mutex_unlock(&private_display->lock);
+
+	return ret;
+}

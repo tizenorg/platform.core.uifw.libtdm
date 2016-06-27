@@ -621,6 +621,14 @@ typedef struct _tdm_func_layer {
 	 */
 	tdm_capture *(*layer_create_capture)(tdm_layer *layer, tdm_error *error);
 
+	/**
+	 * @brief Get buffer flags which the layer can support.
+	 * @param[in] layer A layer object
+	 * @param[out] flags The buffer flags which should be the tbm_bo flags
+	 * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+	 */
+	tdm_error (*layer_get_buffer_flags)(tdm_layer *layer, unsigned int *flags);
+
 	void (*reserved1)(void);
 	void (*reserved2)(void);
 	void (*reserved3)(void);
@@ -628,7 +636,6 @@ typedef struct _tdm_func_layer {
 	void (*reserved5)(void);
 	void (*reserved6)(void);
 	void (*reserved7)(void);
-	void (*reserved8)(void);
 } tdm_func_layer;
 
 /**
