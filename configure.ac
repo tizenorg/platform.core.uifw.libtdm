@@ -37,7 +37,7 @@ fi
 
 PKG_CHECK_MODULES(WAYLAND_SCANNER, wayland-scanner >= 1.7.0)
 
-PKG_CHECK_MODULES(TDM, dlog libtbm pthread-stubs libpng pixman-1 wayland-server)
+PKG_CHECK_MODULES(TDM, dlog libtbm libpng pixman-1 wayland-server)
 
 PKG_CHECK_MODULES(TTRACE,
 		[ttrace],
