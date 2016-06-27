@@ -52,6 +52,7 @@
 #include <poll.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <math.h>
 
 #include <tbm_bufmgr.h>
 #include <tbm_surface_queue.h>
@@ -331,7 +332,8 @@ void
 tdm_output_call_change_handler_internal(tdm_private_output *private_output,
 										struct list_head *change_handler_list,
 										tdm_output_change_type type,
-										tdm_value value);
+										tdm_value value,
+										int no_check_thread_id);
 
 tdm_private_pp *
 tdm_pp_create_internal(tdm_private_display *private_display, tdm_error *error);
@@ -510,6 +512,28 @@ _tdm_display_unlock(tdm_display *dpy, const char *func);
 tdm_error
 tdm_display_update_output(tdm_private_display *private_display,
 						  tdm_output *output_backend, int pipe);
+
+
+/**
+ * @brief The tdm vblank object
+ */
+typedef void tdm_vblank;
+
+typedef void (*tdm_vblank_handler)(tdm_vblank *vblank, tdm_error error, unsigned int sequence,
+								   unsigned int tv_sec, unsigned int tv_usec, void *user_data);
+
+tdm_vblank*
+tdm_vblank_create(tdm_display *dpy, tdm_output *output, tdm_error *error);
+void
+tdm_vblank_destroy(tdm_vblank *vblank);
+tdm_error
+tdm_vblank_set_fps(tdm_vblank *vblank, unsigned int fps);
+tdm_error
+tdm_vblank_set_offset(tdm_vblank *vblank, int offset);
+tdm_error
+tdm_vblank_set_enable_fake(tdm_vblank *vblank, unsigned int enable_fake);
+tdm_error
+tdm_vblank_wait(tdm_vblank *vblank, unsigned int req_sec, unsigned int req_usec, unsigned int interval, tdm_vblank_handler func, void *user_data);
 
 #ifdef __cplusplus
 }

@@ -8,7 +8,8 @@ tdm_test_client_LDFLAGS = ${LDFLAGS}
 tdm_test_client_CFLAGS = \
 	$(TDM_CFLAGS) \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/client
+	-I$(top_srcdir)/client \
+	-I$(top_srcdir)/src
 tdm_test_client_LDADD = \
 	$(TDM_LIBS) \
 	$(top_builddir)/client/libtdm-client.la

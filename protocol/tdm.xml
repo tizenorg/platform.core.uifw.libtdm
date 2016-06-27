@@ -8,42 +8,33 @@
       TDM uses the wayland protocol to communicate between tdm client and tdm server.
         </description>
 
-        <request name="create_client">
-            <arg name="id" type="new_id" interface="wl_tdm_client"/>
+        <request name="create_output">
+            <arg name="name" type="string" summary="output's name"/>
+            <arg name="id" type="new_id" interface="wl_tdm_output"/>
         </request>
 
     </interface>
 
-    <interface name="wl_tdm_client" version="1">
+    <interface name="wl_tdm_output" version="1">
 
-        <description summary="tdm client resource">
-      TDM uses the wayland protocol to communicate between tdm client and tdm server.
-        </description>
+        <event name="mode">
+            <arg name="width" type="uint"/>
+            <arg name="height" type="uint"/>
+            <arg name="refresh" type="uint"/>
+        </event>
 
-        <enum name="error">
-            <entry name="invalid_name" value="0" summary="invalid output name"/>
-            <entry name="operation_failed" value="1" summary="operation failed"/>
-            <entry name="dpms_off" value="2" summary="DPMS off"/>
-        </enum>
+        <event name="connection">
+            <arg name="value" type="uint"/>
+        </event>
+
+        <event name="dpms">
+            <arg name="value" type="uint"/>
+        </event>
 
         <request name="destroy" type="destructor"/>
-        <request name="wait_vblank">
 
-            <description summary="Wait for a HW vblank">
-          When wl_tdm_client.wait_vblank is called, wl_tdm_vblank resource is created.
-          And when TDM server gets the HW vblank, TDM server will send the 'done'
-          event of wl_tdm_vblank interface to let the TDM client get the HW vblank.
-          If 'sw_timer' param is 1, TDM server will use the SW timer in case of DPMS off.
-          And TDM server will create the fake vblank event and send it to TDM client.
-          Otherwise, TDM server will return 'dpms_off' error.
-            </description>
-
+        <request name="create_vblank">
             <arg name="id" type="new_id" interface="wl_tdm_vblank"/>
-            <arg name="name" type="string" summary="output's name"/>
-            <arg name="sw_timer" type="int" summary="0: not using SW timer, 1: using SW timer when DPMS off"/>
-            <arg name="interval" type="int" summary="vblank interval"/>
-            <arg name="req_sec" type="uint" summary="sec of the request time in client side"/>
-            <arg name="req_usec" type="uint" summary="usec of the request time in client side"/>
         </request>
 
     </interface>
@@ -51,10 +42,39 @@
     <interface name="wl_tdm_vblank" version="1">
 
         <event name="done">
+            <arg name="req_id" type="uint" summary="wait_vblank request ID"/>
             <arg name="sequence" type="uint" summary="sequence of the HW vblank"/>
             <arg name="tv_sec" type="uint" summary="sec of the HW vblank in kernel side"/>
             <arg name="tv_usec" type="uint" summary="usec of the HW vblank in kernel side"/>
+            <arg name="error" type="uint" summary="error status enumeration"/>
         </event>
+
+        <request name="destroy" type="destructor"/>
+
+        <request name="set_fps">
+            <arg name="fps" type="uint"/>
+        </request>
+
+        <request name="set_offset">
+            <arg name="offset" type="int"/>
+        </request>
+
+        <request name="set_enable_fake">
+            <arg name="enable_fake" type="uint"/>
+        </request>
+
+        <request name="wait_vblank">
+            <description summary="Wait for a HW vblank">
+          When wl_tdm_vblank.wait_vblank is called, TDM server will send the wl_tdm_vblank.done
+          event which is aligned with HW vblank. Even if DPMS is off, it will send
+          wl_tdm_vblank.done events by using SW timer.
+            </description>
+
+            <arg name="interval" type="uint"/>
+            <arg name="req_id" type="uint" summary="wait_vblank request ID"/>
+            <arg name="req_sec" type="uint" summary="sec of the request time in client side"/>
+            <arg name="req_usec" type="uint" summary="usec of the request time in client side"/>
+        </request>
 
     </interface>
 

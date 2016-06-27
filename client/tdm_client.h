@@ -49,39 +49,16 @@ extern "C" {
  * @endcode
  */
 
-/**
- * @brief The client error enumeration
- */
-typedef enum {
-	TDM_CLIENT_ERROR_NONE                  = 0,  /**< none */
-	TDM_CLIENT_ERROR_OPERATION_FAILED      = -1, /**< operaion failed */
-	TDM_CLIENT_ERROR_INVALID_PARAMETER     = -2, /**< wrong input parameter */
-	TDM_CLIENT_ERROR_PERMISSION_DENIED     = -3, /**< access denied */
-	TDM_CLIENT_ERROR_OUT_OF_MEMORY         = -4, /**< no free memory */
-	TDM_CLIENT_ERROR_DPMS_OFF              = -5, /**< dpms off */
-} tdm_client_error;
-
-/**
- * @brief The TDM client object
- */
-typedef void *tdm_client;
-
-/**
- * @brief The client vblank handler
- * @see #tdm_client_wait_vblank
- */
-typedef void
-(*tdm_client_vblank_handler)(unsigned int sequence, unsigned int tv_sec,
-							 unsigned int tv_usec, void *user_data);
+#include <tdm_client_types.h>
 
 /**
  * @brief Create a TDM client object.
- * @param[out] error #TDM_CLIENT_ERROR_NONE if success. Otherwise, error value.
+ * @param[out] error #TDM_ERROR_NONE if success. Otherwise, error value.
  * @return A TDM client object if success. Otherwise, NULL.
  * @see #tdm_client_destroy
  */
 tdm_client*
-tdm_client_create(tdm_client_error *error);
+tdm_client_create(tdm_error *error);
 
 /**
  * @brief Destroy a TDM client object
@@ -95,14 +72,14 @@ tdm_client_destroy(tdm_client *client);
  * @brief Get the file descriptor
  * @param[in] client A TDM client object
  * @param[out] fd The file descriptor
- * @return #TDM_CLIENT_ERROR_NONE if success. Otherwise, error value.
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see #tdm_client_handle_events
  * @par Example
  * @code
  * #include <tdm_client.h>    //for a client of TDM
  *
  * err = tdm_client_get_fd(client, &fd);
- * if (err != TDM_CLIENT_ERROR_NONE) {
+ * if (err != TDM_ERROR_NONE) {
  *     //error handling
  * }
  *
@@ -121,26 +98,27 @@ tdm_client_destroy(tdm_client *client);
  *    }
  *
  *    err = tdm_client_handle_events(client);
- *    if (err != TDM_CLIENT_ERROR_NONE) {
+ *    if (err != TDM_ERROR_NONE) {
  *        //error handling
  *    }
  * }
  * @endcode
  */
-tdm_client_error
+tdm_error
 tdm_client_get_fd(tdm_client *client, int *fd);
 
 /**
  * @brief Handle the events of the given file descriptor
  * @param[in] client A TDM client object
- * @return #TDM_CLIENT_ERROR_NONE if success. Otherwise, error value.
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see #tdm_client_get_fd
  */
-tdm_client_error
+tdm_error
 tdm_client_handle_events(tdm_client *client);
 
 /**
  * @brief Wait for VBLANK
+ * @deprecated
  * @details After interval vblanks, a client vblank handler will be called.
  * If 'sw_timer' param is 1 in case of DPMS off, TDM will use the SW timer and
  * call a client vblank handler. Otherwise, this function will return error.
@@ -151,13 +129,58 @@ tdm_client_handle_events(tdm_client *client);
  * @param[in] sync 0: asynchronous, 1:synchronous
  * @param[in] func A client vblank handler
  * @param[in] user_data The user data
- * @return #TDM_CLIENT_ERROR_NONE if success. Otherwise, error value.
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
  * @see #tdm_client_vblank_handler
  */
-tdm_client_error
+tdm_error
 tdm_client_wait_vblank(tdm_client *client, char *name,
 					   int sw_timer, int interval, int sync,
-					   tdm_client_vblank_handler func, void *user_data);
+					   tdm_client_vblank_handler2 func, void *user_data);
+
+
+tdm_client_output*
+tdm_client_get_output(tdm_client *client, char *name, tdm_error *error);
+
+tdm_error
+tdm_client_output_add_change_handler(tdm_client_output *output,
+									 tdm_client_output_change_handler func,
+									 void *user_data);
+
+void
+tdm_client_output_remove_change_handler(tdm_client_output *output,
+										tdm_client_output_change_handler func,
+										void *user_data);
+
+tdm_error
+tdm_client_output_get_refresh_rate(tdm_client_output *output, unsigned int *refresh);
+
+tdm_error
+tdm_client_output_get_conn_status(tdm_client_output *output, tdm_output_conn_status *status);
+
+tdm_error
+tdm_client_output_get_dpms(tdm_client_output *output, tdm_output_dpms *dpms);
+
+tdm_client_vblank*
+tdm_client_output_create_vblank(tdm_client_output *output, tdm_error *error);
+
+void
+tdm_client_vblank_destroy(tdm_client_vblank *vblank);
+
+tdm_error
+tdm_client_vblank_set_sync(tdm_client_vblank *vblank, unsigned int sync);
+
+tdm_error
+tdm_client_vblank_set_fps(tdm_client_vblank *vblank, unsigned int fps);
+
+tdm_error
+tdm_client_vblank_set_offset(tdm_client_vblank *vblank, int offset_ms);
+
+tdm_error
+tdm_client_vblank_set_enable_fake(tdm_client_vblank *vblank, unsigned int enable_fake);
+
+tdm_error
+tdm_client_vblank_wait(tdm_client_vblank *vblank, unsigned int interval, tdm_client_vblank_handler func, void *user_data);
+
 
 #ifdef __cplusplus
 }

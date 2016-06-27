@@ -1,6 +1,7 @@
 libtdm_clientincludedir = ${includedir}
 libtdm_clientinclude_HEADERS = \
-	tdm_client.h
+	tdm_client.h \
+	tdm_client_types.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libtdm-client.pc

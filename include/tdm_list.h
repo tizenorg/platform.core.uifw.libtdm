@@ -126,6 +126,11 @@ static inline int list_length(struct list_head *item)
 	&pos->member != (head);						\
 	pos = container_of(pos->member.next, pos, member))
 
+#define LIST_FOR_EACH_ENTRY_REV(pos, head, member)				\
+	for (pos = container_of((head)->prev, pos, member);			\
+	&pos->member != (head);						\
+	pos = container_of(pos->member.prev, pos, member))
+
 #define LIST_FOR_EACH_ENTRY_SAFE(pos, storage, head, member)	\
 	for (pos = container_of((head)->next, pos, member),			\
 	storage = container_of(pos->member.next, pos, member);	\

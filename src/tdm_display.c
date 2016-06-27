@@ -491,7 +491,7 @@ tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
 		tdm_output_call_change_handler_internal(private_output,
 												&private_output->change_handler_list_sub,
 												TDM_OUTPUT_CHANGE_CONNECTION,
-												value);
+												value, 0);
 
 		ret = tdm_thread_send_cb(private_display->private_loop, &output_status.base);
 		TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
@@ -506,7 +506,7 @@ tdm_output_cb_status(tdm_output *output_backend, tdm_output_conn_status status,
 	tdm_output_call_change_handler_internal(private_output,
 											&private_output->change_handler_list_main,
 											TDM_OUTPUT_CHANGE_CONNECTION,
-											value);
+											value, 0);
 }
 
 EXTERN tdm_error
@@ -520,12 +520,6 @@ tdm_output_add_change_handler(tdm_output *output,
 	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
 
 	pthread_mutex_lock(&private_display->lock);
-
-	if (!private_output->regist_change_cb) {
-		_pthread_mutex_unlock(&private_display->lock);
-		TDM_ERR("not implemented!!");
-		return TDM_ERROR_NOT_IMPLEMENTED;
-	}
 
 	change_handler = calloc(1, sizeof(tdm_private_change_handler));
 	if (!change_handler) {
@@ -1138,7 +1132,13 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 		tdm_output_call_change_handler_internal(private_output,
 												&private_output->change_handler_list_main,
 												TDM_OUTPUT_CHANGE_DPMS,
-												value);
+												value, 0);
+
+		//TODO: safe? We can't take care of the user_data of callback functions.
+		tdm_output_call_change_handler_internal(private_output,
+												&private_output->change_handler_list_sub,
+												TDM_OUTPUT_CHANGE_DPMS,
+												value, 1);
 	}
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -1192,7 +1192,8 @@ INTERN void
 tdm_output_call_change_handler_internal(tdm_private_output *private_output,
 										struct list_head *change_handler_list,
 										tdm_output_change_type type,
-										tdm_value value)
+										tdm_value value,
+										int no_check_thread_id)
 {
 	tdm_private_display *private_display;
 	tdm_private_change_handler *change_handler = NULL;
@@ -1214,7 +1215,7 @@ tdm_output_call_change_handler_internal(tdm_private_output *private_output,
 		return;
 
 	LIST_FOR_EACH_ENTRY(change_handler, change_handler_list, link) {
-		if (change_handler->owner_tid != syscall(SYS_gettid))
+		if (!no_check_thread_id && change_handler->owner_tid != syscall(SYS_gettid))
 			TDM_NEVER_GET_HERE();
 
 		_pthread_mutex_unlock(&private_display->lock);

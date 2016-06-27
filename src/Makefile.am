@@ -14,6 +14,7 @@ libtdm_la_SOURCES = \
 	$(top_srcdir)/protocol/tdm-protocol.c \
 	tdm_backend.c \
 	tdm_server.c \
+	tdm_vblank.c \
 	tdm_event_loop.c \
 	tdm_thread.c \
 	tdm_helper.c \

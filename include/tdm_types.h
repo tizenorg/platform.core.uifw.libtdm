@@ -297,21 +297,6 @@ typedef void (*tdm_output_commit_handler)(tdm_output *output, unsigned int seque
 										  unsigned int tv_sec, unsigned int tv_usec,
 										  void *user_data);
 
-/**
- * @brief The tdm event source
- */
-typedef void tdm_event_loop_source;
-
-/**
- * @brief The fd source handler
- */
-typedef tdm_error (*tdm_event_loop_fd_handler)(int fd, tdm_event_loop_mask mask, void *user_data);
-
-/**
- * @brief The timer source handler
- */
-typedef tdm_error (*tdm_event_loop_timer_handler)(void *user_data);
-
 #ifdef __cplusplus
 }
 #endif

@@ -120,6 +120,7 @@ rm -f %{_unitdir_user}/default.target.wants/tdm-socket-user.path
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/tdm_client.h
+%{_includedir}/tdm_client_types.h
 %{_libdir}/pkgconfig/libtdm-client.pc
 %{_libdir}/libtdm-client.so
 

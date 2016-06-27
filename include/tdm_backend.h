@@ -788,6 +788,21 @@ typedef struct _tdm_func_capture {
 	void (*reserved8)(void);
 } tdm_func_capture;
 
+/**
+ * @brief The tdm event source
+ */
+typedef void tdm_event_loop_source;
+
+/**
+ * @brief The fd source handler
+ */
+typedef tdm_error (*tdm_event_loop_fd_handler)(int fd, tdm_event_loop_mask mask, void *user_data);
+
+/**
+ * @brief The timer source handler
+ */
+typedef tdm_error (*tdm_event_loop_timer_handler)(void *user_data);
+
 #define TDM_BACKEND_MINOR_VERSION_MASK  0x0000FFFF
 #define TDM_BACKEND_MAJOR_VERSION_MASK  0xFFFF0000
 #define TDM_BACKEND_GET_ABI_MINOR(v)    ((v) & TDM_BACKEND_MINOR_VERSION_MASK)
