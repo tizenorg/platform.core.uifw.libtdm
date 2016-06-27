@@ -653,6 +653,15 @@ tdm_capture *
 tdm_layer_create_capture(tdm_layer *layer, tdm_error *error);
 
 /**
+ * @brief Get buffer flags from a layer object
+ * @param[in] layer A layer object
+ * @param[out] flags a buffer flags value
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_layer_get_buffer_flags(tdm_layer *layer, uint32_t *flags);
+
+/**
  * @brief Destroy a pp object
  * @param[in] pp A pp object
  * @see tdm_display_create_pp
