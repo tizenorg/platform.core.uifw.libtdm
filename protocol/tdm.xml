@@ -9,13 +9,17 @@
         </description>
 
         <request name="create_output">
-            <arg name="name" type="string" summary="output's name"/>
+            <arg name="name" type="string" summary="output's name. 'primary' or 'default' can be used for default."/>
             <arg name="id" type="new_id" interface="wl_tdm_output"/>
         </request>
 
     </interface>
 
     <interface name="wl_tdm_output" version="1">
+        <description summary="TDM client output object">
+      When the DPMS of connection status of the output is changed, TDM server
+      will send wl_tdm_output.mode and wl_tdm_output.dpms event.
+        </description>
 
         <event name="mode">
             <arg name="width" type="uint"/>
@@ -43,9 +47,9 @@
 
         <event name="done">
             <arg name="req_id" type="uint" summary="wait_vblank request ID"/>
-            <arg name="sequence" type="uint" summary="sequence of the HW vblank"/>
-            <arg name="tv_sec" type="uint" summary="sec of the HW vblank in kernel side"/>
-            <arg name="tv_usec" type="uint" summary="usec of the HW vblank in kernel side"/>
+            <arg name="sequence" type="uint" summary="the sequence number of the vblank"/>
+            <arg name="tv_sec" type="uint" summary="sec of the vblank"/>
+            <arg name="tv_usec" type="uint" summary="usec of the vblank"/>
             <arg name="error" type="uint" summary="error status enumeration"/>
         </event>
 
@@ -65,9 +69,10 @@
 
         <request name="wait_vblank">
             <description summary="Wait for a HW vblank">
-          When wl_tdm_vblank.wait_vblank is called, TDM server will send the wl_tdm_vblank.done
-          event which is aligned with HW vblank. Even if DPMS is off, it will send
-          wl_tdm_vblank.done events by using SW timer.
+          When wl_tdm_vblank.wait_vblank is called, TDM server will send the
+          wl_tdm_vblank.done event after interval vblanks. If enable_fake == 1,
+          TDM server will send the done event always. Otherwise, TDM server will
+          send the done event with TDM error value.
             </description>
 
             <arg name="interval" type="uint"/>

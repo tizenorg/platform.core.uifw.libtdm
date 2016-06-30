@@ -104,7 +104,10 @@ INPUT                  = \
     include/tdm_helper.h \
     include/tdm_list.h \
     include/tdm_log.h \
-    include/tdm_types.h
+    include/tdm_types.h \
+    include/tdm_common.h \
+    client/tdm_client_types.h \
+    client/tdm_client.h
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          =
 RECURSIVE              = NO
