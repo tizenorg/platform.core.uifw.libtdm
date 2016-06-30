@@ -87,6 +87,10 @@ typedef void tdm_client_output;
  */
 typedef void tdm_client_vblank;
 
+/**
+ * @brief The client output handler
+ * @see #tdm_client_output_add_change_handler, #tdm_client_output_remove_change_handler
+ */
 typedef void
 (*tdm_client_output_change_handler)(tdm_client_output *output,
 									tdm_output_change_type type,
@@ -95,7 +99,7 @@ typedef void
 
 /**
  * @brief The client vblank handler
- * @see #tdm_client_wait_vblank
+ * @see #tdm_client_vblank_wait
  */
 typedef void
 (*tdm_client_vblank_handler)(tdm_client_vblank *vblank,
