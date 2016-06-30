@@ -309,7 +309,7 @@ do_vblank(tdm_test_client *data)
 	int fd = -1;
 	struct pollfd fds;
 
-	output = tdm_client_get_output(data->client, NULL, &error);
+	output = tdm_client_get_output(data->client, data->args.output_name, &error);
 	if (error != TDM_ERROR_NONE) {
 		printf("tdm_client_get_output failed\n");
 		return;
