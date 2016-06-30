@@ -1,7 +1,7 @@
 AC_PREREQ([2.60])
 
 m4_define([tdm_major_version],  [1])
-m4_define([tdm_minor_version],  [2])
+m4_define([tdm_minor_version],  [3])
 m4_define([tdm_micro_version],  [0])
 m4_define([tdm_version],
           [tdm_major_version.tdm_minor_version.tdm_micro_version])
