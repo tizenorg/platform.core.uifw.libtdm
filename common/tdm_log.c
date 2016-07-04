@@ -61,7 +61,7 @@
 #define LOG_TAG "TDM"
 
 static unsigned int dlog_enable;
-static unsigned int debug_enable;
+static unsigned int debug_level = TDM_LOG_LEVEL_INFO;
 
 static unsigned int need_check_env = 1;
 
@@ -69,10 +69,15 @@ static void
 _tdm_log_check_env(void)
 {
 	const char *str;
+	char *end;
+
+	str = getenv("TDM_DEBUG_LEVEL");
+	if (str)
+		debug_level = strtol(str, &end, 10);
 
 	str = getenv("TDM_DEBUG");
 	if (str && (strstr(str, "1")))
-		debug_enable = 1;
+		debug_level = TDM_LOG_LEVEL_DBG;
 
 	str = getenv("TDM_DLOG");
 	if (str && (strstr(str, "1")))
@@ -88,7 +93,16 @@ tdm_log_enable_dlog(unsigned int enable)
 EXTERN void
 tdm_log_enable_debug(unsigned int enable)
 {
-	debug_enable = enable;
+	if (enable)
+		debug_level = TDM_LOG_LEVEL_DBG;
+	else
+		debug_level = TDM_LOG_LEVEL_INFO;
+}
+
+EXTERN void
+tdm_log_set_debug_level(int level)
+{
+	debug_level = level;
 }
 
 EXTERN void
@@ -101,7 +115,7 @@ tdm_log_print(int level, const char *fmt, ...)
 		_tdm_log_check_env();
 	}
 
-	if (level > 3 && !debug_enable)
+	if (level > debug_level)
 		return;
 
 	if (dlog_enable) {

@@ -8,9 +8,17 @@
       TDM uses the wayland protocol to communicate between tdm client and tdm server.
         </description>
 
+        <event name="debug_done">
+            <arg name="message" type="string"/>
+        </event>
+
         <request name="create_output">
             <arg name="name" type="string" summary="output's name. 'primary' or 'default' can be used for default."/>
             <arg name="id" type="new_id" interface="wl_tdm_output"/>
+        </request>
+
+        <request name="debug">
+            <arg name="options" type="string" summary="debug options"/>
         </request>
 
     </interface>

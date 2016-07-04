@@ -42,10 +42,13 @@
 #include <sys/types.h>
 
 #include <tdm_common.h>
+#include <tbm_surface.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define TDM_SERVER_REPLY_MSG_LEN	8192
 
 #undef EXTERN
 #undef DEPRECATED
@@ -101,6 +104,12 @@ extern "C" {
 		goto dst; \
 	} \
 }
+#define TDM_EXIT_IF_FAIL(cond) { \
+	if (!(cond)) { \
+		TDM_ERR("'%s' failed", #cond); \
+		exit(0); \
+	} \
+}
 
 #define TDM_NEVER_GET_HERE() TDM_WRN("** NEVER GET HERE **")
 
@@ -113,12 +122,23 @@ extern "C" {
 		} \
 	} while (0)
 
+#define TDM_DBG_RETURN_IF_FAIL(cond) { \
+	if (!(cond))  { \
+		TDM_SNPRINTF(reply, len, "[%s %d] '%s' failed\n", __func__, __LINE__, #cond); \
+		return; \
+	} \
+}
+
 #define C(b, m)             (((b) >> (m)) & 0xFF)
 #define B(c, s)             ((((unsigned int)(c)) & 0xff) << (s))
 #define FOURCC(a, b, c, d)  (B(d, 24) | B(c, 16) | B(b, 8) | B(a, 0))
 #define FOURCC_STR(id)      C(id, 0), C(id, 8), C(id, 16), C(id, 24)
 #define FOURCC_ID(str)      FOURCC(((char*)str)[0], ((char*)str)[1], ((char*)str)[2], ((char*)str)[3])
+#define IS_RGB(f)           ((f) == TBM_FORMAT_XRGB8888 || (f) == TBM_FORMAT_ARGB8888)
 
+/* don't using !,$,# */
+#define TDM_DELIM           "@^&*+-|,:~"
+#define TDM_ALIGN(a, b)     (((a) + ((b) - 1)) & ~((b) - 1))
 
 #define TDM_ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
@@ -144,7 +164,6 @@ static struct tdm_type_name tdm_dpms_names[] = {
 	{ TDM_OUTPUT_DPMS_SUSPEND, "suspend" },
 	{ TDM_OUTPUT_DPMS_OFF, "off" },
 };
-
 TDM_TYPE_NAME_FN(dpms)
 
 static struct tdm_type_name tdm_status_names[] = {
@@ -152,8 +171,120 @@ static struct tdm_type_name tdm_status_names[] = {
 	{ TDM_OUTPUT_CONN_STATUS_CONNECTED, "connected" },
 	{ TDM_OUTPUT_CONN_STATUS_MODE_SETTED, "mode_setted" },
 };
-
 TDM_TYPE_NAME_FN(status)
+
+static struct tdm_type_name tdm_conn_names[] = {
+	{ TDM_OUTPUT_TYPE_Unknown, "Unknown" },
+	{ TDM_OUTPUT_TYPE_VGA, "VGA" },
+	{ TDM_OUTPUT_TYPE_DVII, "DVII" },
+	{ TDM_OUTPUT_TYPE_DVID, "DVID" },
+	{ TDM_OUTPUT_TYPE_DVIA, "DVIA" },
+	{ TDM_OUTPUT_TYPE_Composite, "Composite" },
+	{ TDM_OUTPUT_TYPE_SVIDEO, "SVIDEO" },
+	{ TDM_OUTPUT_TYPE_LVDS, "LVDS" },
+	{ TDM_OUTPUT_TYPE_Component, "Component" },
+	{ TDM_OUTPUT_TYPE_9PinDIN, "9PinDIN" },
+	{ TDM_OUTPUT_TYPE_DisplayPort, "DisplayPort" },
+	{ TDM_OUTPUT_TYPE_HDMIA, "HDMIA" },
+	{ TDM_OUTPUT_TYPE_HDMIB, "HDMIB" },
+	{ TDM_OUTPUT_TYPE_TV, "TV" },
+	{ TDM_OUTPUT_TYPE_eDP, "eDP" },
+	{ TDM_OUTPUT_TYPE_VIRTUAL, "VIRTUAL" },
+	{ TDM_OUTPUT_TYPE_DSI, "DSI" },
+};
+TDM_TYPE_NAME_FN(conn)
+
+
+#define TDM_BIT_NAME_FB(res)					\
+static inline const char * tdm_##res##_str(int type, char **reply, int *len)	\
+{			\
+	unsigned int i;						\
+	const char *sep = "";					\
+	for (i = 0; i < TDM_ARRAY_SIZE(tdm_##res##_names); i++) {		\
+		if (type & (1 << i)) {				\
+			TDM_SNPRINTF(*reply, len, "%s%s", sep, tdm_##res##_names[i]);	\
+			sep = ",";				\
+		}						\
+	}							\
+	return NULL;						\
+}
+
+static const char *tdm_mode_type_names[] = {
+	"builtin",
+	"clock_c",
+	"crtc_c",
+	"preferred",
+	"default",
+	"userdef",
+	"driver",
+};
+TDM_BIT_NAME_FB(mode_type)
+
+static const char *tdm_mode_flag_names[] = {
+	"phsync",
+	"nhsync",
+	"pvsync",
+	"nvsync",
+	"interlace",
+	"dblscan",
+	"csync",
+	"pcsync",
+	"ncsync",
+	"hskew",
+	"bcast",
+	"pixmux",
+	"dblclk",
+	"clkdiv2"
+};
+TDM_BIT_NAME_FB(mode_flag)
+
+static const char *tdm_layer_caps_names[] = {
+	"cursor",
+	"primary",
+	"overlay",
+	"",
+	"graphic",
+	"video",
+	"",
+	"",
+	"scale",
+	"transform",
+	"scanout",
+	"reserved",
+	"no_crop",
+};
+TDM_BIT_NAME_FB(layer_caps)
+
+static const char *tdm_pp_caps_names[] = {
+	"sync",
+	"async",
+	"scale",
+	"transform",
+};
+TDM_BIT_NAME_FB(pp_caps)
+
+static const char *tdm_capture_caps_names[] = {
+	"output",
+	"layer",
+	"scale",
+	"transform",
+};
+TDM_BIT_NAME_FB(capture_caps)
+
+static inline char*
+strtostr(char *buf, int len, char *str, char *delim)
+{
+	char *end;
+	end = strpbrk(str, delim);
+	if (end)
+		len = ((end - str + 1) < len) ? (end - str + 1) : len;
+	else {
+		int l = strlen(str);
+		len = ((l + 1) < len) ? (l + 1) : len;
+	}
+	snprintf(buf, len, "%s", str);
+	return str + len - 1;
+}
 
 #ifdef __cplusplus
 }

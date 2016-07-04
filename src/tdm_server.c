@@ -413,8 +413,22 @@ _tdm_server_cb_create_output(struct wl_client *client, struct wl_resource *resou
 	wl_tdm_output_send_connection(output_resource, status);
 }
 
+static void
+_tdm_server_cb_debug(struct wl_client *client, struct wl_resource *resource, const char *options)
+{
+	tdm_private_server *private_server = wl_resource_get_user_data(resource);
+	tdm_private_loop *private_loop = private_server->private_loop;
+
+	char message[TDM_SERVER_REPLY_MSG_LEN];
+	int size = sizeof(message);
+
+	tdm_dbg_server_command(private_loop->dpy, options, message, &size);
+	wl_tdm_send_debug_done(resource, message);
+}
+
 static const struct wl_tdm_interface tdm_implementation = {
 	_tdm_server_cb_create_output,
+	_tdm_server_cb_debug,
 };
 
 static void

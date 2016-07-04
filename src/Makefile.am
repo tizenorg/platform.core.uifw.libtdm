@@ -22,4 +22,5 @@ libtdm_la_SOURCES = \
 	tdm_display.c \
 	tdm_pp.c \
 	tdm_capture.c \
+	tdm_dbg_server.c \
 	tdm.c

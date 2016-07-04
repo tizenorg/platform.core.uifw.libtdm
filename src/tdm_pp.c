@@ -40,6 +40,7 @@
 #include "tdm.h"
 #include "tdm_backend.h"
 #include "tdm_private.h"
+#include "tdm_helper.h"
 
 typedef struct _tdm_pp_private_buffer {
 	tbm_surface_h src;
@@ -135,6 +136,13 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 
 	if (private_pp->owner_tid != syscall(SYS_gettid))
 		TDM_NEVER_GET_HERE();
+
+	if (tdm_debug_dump & TDM_DUMP_FLAG_PP) {
+		char str[TDM_PATH_LEN];
+		static int i;
+		snprintf(str, TDM_PATH_LEN, "pp_dst_%03d", i++);
+		tdm_helper_dump_buffer_str(dst, str);
+	}
 
 	if (tdm_debug_buffer)
 		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
@@ -361,6 +369,13 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 					private_display->caps_pp.max_attach_count);
 			return TDM_ERROR_BAD_REQUEST;
 		}
+	}
+
+	if (tdm_debug_dump & TDM_DUMP_FLAG_PP) {
+		char str[TDM_PATH_LEN];
+		static int i;
+		snprintf(str, TDM_PATH_LEN, "pp_src_%03d", i++);
+		tdm_helper_dump_buffer_str(src, str);
 	}
 
 	pp_buffer = calloc(1, sizeof *pp_buffer);

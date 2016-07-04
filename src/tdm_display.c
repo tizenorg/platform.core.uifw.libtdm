@@ -355,6 +355,32 @@ tdm_display_handle_events(tdm_display *dpy)
 	return ret;
 }
 
+EXTERN tdm_error
+tdm_display_get_backend_info(tdm_display *dpy, const char **name,
+							 const char **vendor, int *major, int *minor)
+{
+	tdm_backend_module *module_data;
+
+	DISPLAY_FUNC_ENTRY();
+
+	_pthread_mutex_lock(&private_display->lock);
+
+	module_data = private_display->module_data;
+
+	if (name)
+		*name = module_data->name;
+	if (vendor)
+		*vendor = module_data->vendor;
+	if (major)
+		*major = TDM_BACKEND_GET_ABI_MAJOR(module_data->abi_version);
+	if (minor)
+		*minor = TDM_BACKEND_GET_ABI_MINOR(module_data->abi_version);
+
+	_pthread_mutex_unlock(&private_display->lock);
+
+	return ret;
+}
+
 EXTERN tdm_pp *
 tdm_display_create_pp(tdm_display *dpy, tdm_error *error)
 {
@@ -1430,6 +1456,15 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	if (tdm_debug_dump & TDM_DUMP_FLAG_LAYER &&
+		!(private_layer->caps.capabilities & TDM_LAYER_CAPABILITY_VIDEO)) {
+		char str[TDM_PATH_LEN];
+		static int i;
+		snprintf(str, TDM_PATH_LEN, "layer_%d_%d_%03d",
+				 private_output->pipe, private_layer->caps.zpos, i++);
+		tdm_helper_dump_buffer_str(buffer, str);
+	}
+
 	func_layer = &private_display->func_layer;
 
 	if (private_layer->usable)
@@ -1447,7 +1482,7 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	/* dump buffer */
-	if (tdm_dump_enable)
+	if (tdm_dump_enable && !(private_layer->caps.capabilities & TDM_LAYER_CAPABILITY_VIDEO))
 		_tdm_layer_dump_buffer(layer, buffer);
 
 	if (ret == TDM_ERROR_NONE) {

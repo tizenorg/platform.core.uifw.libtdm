@@ -123,6 +123,18 @@ tdm_error
 tdm_display_handle_events(tdm_display *dpy);
 
 /**
+ * @brief Get the information of the TDM backend module.
+ * @param[in] dpy A display object
+ * @param[out] name The name of the TDM backend module
+ * @param[out] vendor The vendor of the TDM backend module
+ * @param[out] version The version of the TDM backend module
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_display_get_backend_info(tdm_display *dpy, const char **name,
+							 const char **vendor, int *major, int *minor);
+
+/**
  * @brief Get the capabilities of a display object.
  * @details A frontend user can get whether TDM supports pp/capture functionality with this function.
  * @param[in] dpy A display object

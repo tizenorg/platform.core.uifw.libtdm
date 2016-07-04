@@ -65,15 +65,15 @@ typedef struct _tdm_test_client {
 
 struct typestrings {
 	int type;
-	char string[512];
+	const char *string;
 };
 
 struct optstrings {
 	int  type;
-	char opt[512];
-	char desc[512];
-	char arg[512];
-	char ex[512];
+	const char *opt;
+	const char *desc;
+	const char *arg;
+	const char *ex;
 };
 
 enum {
@@ -90,25 +90,8 @@ static struct typestrings typestrs[] = {
 
 static struct optstrings optstrs[] = {
 	{OPT_QRY, "qo", "output objects info", "<output_name>", "primary"},
-	{OPT_TST, "v", "vblank test", "<output_name>[,<sync>][@<fps>][#<interval>][+<offset>][*fake]", "primary,0@60#1+0*1"},
+	{OPT_TST, "v", "vblank test", "<output_name>[,<sync>][@<fps>][~<interval>][+<offset>][*fake]", "primary,0@60~1+0*1"},
 };
-
-#define DELIM "!@#^&*+-|,"
-
-static char*
-strtostr(char *buf, int len, char *str, char *delim)
-{
-	char *end;
-	end = strpbrk(str, delim);
-	if (end)
-		len = ((end - str + 1) < len) ? (end - str + 1) : len;
-	else {
-		int l = strlen(str);
-		len = ((l + 1) < len) ? (l + 1) : len;
-	}
-	snprintf(buf, len, "%s", str);
-	return str + len - 1;
-}
 
 static void
 usage(char *app_name)
@@ -127,10 +110,13 @@ usage(char *app_name)
 				if (f == 1)
 					printf(" %s options:\n\n", typestrs[t].string);
 				printf("\t-%s\t%s\n", optstrs[o].opt, optstrs[o].desc);
-				printf("\t\t%s\n", optstrs[o].arg);
-				printf("\t\tex) %s\n", optstrs[o].ex);
+				if (optstrs[o].arg)
+					printf("\t\t  %s\n", optstrs[o].arg);
+				if (optstrs[o].ex)
+					printf("\t\t  ex) %s\n", optstrs[o].ex);
 				f = 0;
 			}
+		printf("\n");
 	}
 
 	exit(0);
@@ -138,73 +124,68 @@ usage(char *app_name)
 
 //"<output_name>"
 static void
-parse_arg_qo(tdm_test_client *data, char *p)
+parse_arg_qo(tdm_test_client *data, char *arg)
 {
-	strtostr(data->args.output_name, 512, p, DELIM);
+	strtostr(data->args.output_name, 512, arg, TDM_DELIM);
 }
 
-//"<output_name>[,<sync>][@<fps>][#<interval>][+<offset>][*fake]"
+//"<output_name>[,<sync>][@<fps>][~<interval>][+<offset>][*fake]"
 static void
-parse_arg_v(tdm_test_client *data, char *p)
+parse_arg_v(tdm_test_client *data, char *arg)
 {
-	char *end = p;
+	char *end = arg;
 
-	end = strtostr(data->args.output_name, 512, p, DELIM);
+	end = strtostr(data->args.output_name, 512, arg, TDM_DELIM);
 
 	if (*end == ',') {
-		p = end + 1;
-		data->args.sync = strtol(p, &end, 10);
+		arg = end + 1;
+		data->args.sync = strtol(arg, &end, 10);
 	}
 
 	if (*end == '@') {
-		p = end + 1;
-		data->args.fps = strtol(p, &end, 10);
+		arg = end + 1;
+		data->args.fps = strtol(arg, &end, 10);
 	}
 
-	if (*end == '#') {
-		p = end + 1;
-		data->args.interval = strtol(p, &end, 10);
+	if (*end == '~') {
+		arg = end + 1;
+		data->args.interval = strtol(arg, &end, 10);
 	}
 
 	if (*end == '+' || *end == '-') {
-		p = end;
-		data->args.offset = strtol(p, &end, 10);
+		arg = end;
+		data->args.offset = strtol(arg, &end, 10);
 	}
 
 	if (*end == '*') {
-		p = end + 1;
-		data->args.enable_fake= strtol(p, &end, 10);
+		arg = end + 1;
+		data->args.enable_fake= strtol(arg, &end, 10);
 	}
 }
 
 static void
 parse_args(tdm_test_client *data, int argc, char *argv[])
 {
-	int size = sizeof(optstrs) / sizeof(struct optstrings);
-	int i, j = 0;
+	int i;
 
-	if (argc < 2) {
+	if (argc < 3) {
 		usage(argv[0]);
-		exit(1);
+		exit(0);
 	}
 
 	memset(data, 0, sizeof *data);
 	data->args.interval = 1;
 
 	for (i = 1; i < argc; i++) {
-		for (j = 0; j < size; j++) {
-			if (!strncmp(argv[i]+1, "qo", 512)) {
-				data->do_query = 1;
-				parse_arg_qo(data, argv[++i]);
-				break;
-			} else if (!strncmp(argv[i]+1, "v", 512)) {
-				data->do_vblank = 1;
-				parse_arg_v(data, argv[++i]);
-				break;
-			} else {
-				usage(argv[0]);
-				exit(1);
-			}
+		if (!strncmp(argv[i]+1, "qo", 2)) {
+			data->do_query = 1;
+			parse_arg_qo(data, argv[++i]);
+		} else if (!strncmp(argv[i]+1, "v", 1)) {
+			data->do_vblank = 1;
+			parse_arg_v(data, argv[++i]);
+		} else {
+			usage(argv[0]);
+			exit(0);
 		}
 	}
 }
@@ -232,12 +213,12 @@ _client_vblank_handler(tdm_client_vblank *vblank, tdm_error error, unsigned int 
 
 	if (error == TDM_ERROR_DPMS_OFF) {
 		printf("exit: dpms off\n");
-		exit(1);
+		exit(0);
 	}
 
 	if (error != TDM_ERROR_NONE) {
 		printf("exit: error(%d)\n", error);
-		exit(1);
+		exit(0);
 	}
 
 	cur = get_time_in_micros();
@@ -376,6 +357,17 @@ main(int argc, char *argv[])
 {
 	tdm_test_client *data = &ttc_data;
 	tdm_error error;
+
+#if 1 /* for testing */
+	const char *xdg = (const char*)getenv("XDG_RUNTIME_DIR");
+	if (!xdg) {
+		char buf[32];
+		snprintf(buf, sizeof(buf), "/run");
+		int ret = setenv("XDG_RUNTIME_DIR", (const char*)buf, 1);
+		if (ret != 0)
+			exit (0);
+	}
+#endif
 
 	parse_args(data, argc, argv);
 

@@ -144,6 +144,16 @@ tdm_error
 tdm_helper_capture_output(tdm_output *output, tbm_surface_h dst_buffer,
 						  int x, int y, int w, int h,
 						  tdm_helper_capture_handler func, void *data);
+
+/**
+ * @brief Fill the display information to the reply buffer as string.
+ * @param[in] dpy A display object
+ * @param[out] reply the string buffer to be filled by this function.
+ * @param[out] len the length of the reply buffer
+ */
+void
+tdm_helper_get_display_information(tdm_display *dpy, char *reply, int *len);
+
 #ifdef __cplusplus
 }
 #endif

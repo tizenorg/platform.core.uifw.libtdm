@@ -253,7 +253,7 @@ _tdm_client_cb_global(void *data, struct wl_registry *registry,
 {
 	tdm_private_client *private_client = data;
 
-	if (strcmp(interface, "wl_tdm") == 0) {
+	if (strncmp(interface, "wl_tdm", 6) == 0) {
 		private_client->tdm =
 			wl_registry_bind(registry, name, &wl_tdm_interface, version);
 		TDM_RETURN_IF_FAIL(private_client->tdm != NULL);

@@ -76,6 +76,7 @@ extern "C" {
 extern int tdm_debug_buffer;
 extern int tdm_debug_mutex;
 extern int tdm_debug_thread;
+extern int tdm_debug_dump;
 
 #ifdef HAVE_TTRACE
 #include <ttrace.h>
@@ -90,6 +91,12 @@ typedef enum {
 	TDM_CAPTURE_TARGET_OUTPUT,
 	TDM_CAPTURE_TARGET_LAYER,
 } tdm_capture_target;
+
+enum {
+	TDM_DUMP_FLAG_LAYER   = (1 << 0),
+	TDM_DUMP_FLAG_PP      = (1 << 1),
+	TDM_DUMP_FLAG_CAPTURE = (1 << 2),
+};
 
 typedef struct _tdm_private_display tdm_private_display;
 typedef struct _tdm_private_output tdm_private_output;
@@ -446,6 +453,8 @@ tdm_server_init(tdm_private_loop *private_loop);
 void
 tdm_server_deinit(tdm_private_loop *private_loop);
 
+void
+tdm_helper_dump_buffer_str(tbm_surface_h buffer, const char *str);
 unsigned long
 tdm_helper_get_time_in_millis(void);
 unsigned long
@@ -513,7 +522,10 @@ static inline int TDM_MUTEX_IS_LOCKED(void)
 tdm_error
 tdm_display_update_output(tdm_private_display *private_display,
 						  tdm_output *output_backend, int pipe);
-
+void
+tdm_display_enable_debug(char *debug, int enable);
+void
+tdm_display_enable_dump(const char *dump_str);
 
 /**
  * @brief The tdm vblank object
@@ -535,6 +547,9 @@ tdm_error
 tdm_vblank_set_enable_fake(tdm_vblank *vblank, unsigned int enable_fake);
 tdm_error
 tdm_vblank_wait(tdm_vblank *vblank, unsigned int req_sec, unsigned int req_usec, unsigned int interval, tdm_vblank_handler func, void *user_data);
+
+void
+tdm_dbg_server_command(tdm_display *dpy, const char *options, char *reply, int *len);
 
 #ifdef __cplusplus
 }
