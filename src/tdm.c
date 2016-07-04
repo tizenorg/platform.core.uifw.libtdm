@@ -386,7 +386,7 @@ _tdm_display_update_layer(tdm_private_display *private_display,
 		private_layer = calloc(1, sizeof(tdm_private_layer));
 		TDM_RETURN_VAL_IF_FAIL(private_layer != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
-		LIST_ADD(&private_layer->link, &private_output->layer_list);
+		LIST_ADDTAIL(&private_layer->link, &private_output->layer_list);
 		private_layer->private_display = private_display;
 		private_layer->private_output = private_output;
 		private_layer->layer_backend = layer_backend;
@@ -671,6 +671,7 @@ tdm_display_update(tdm_display *dpy)
 int tdm_debug_buffer;
 int tdm_debug_thread;
 int tdm_debug_mutex;
+int tdm_debug_dump;
 
 static tdm_private_display *g_private_display;
 static pthread_mutex_t gLock = PTHREAD_MUTEX_INITIALIZER;
@@ -678,41 +679,47 @@ static pthread_mutex_t gLock = PTHREAD_MUTEX_INITIALIZER;
 static tdm_error
 _tdm_display_check_module(tdm_backend_module *module)
 {
-	const char *name;
-	const char *vendor;
 	int major, minor;
 
 	TDM_INFO("TDM ABI version : %d.%d",
 			 TDM_MAJOR_VERSION, TDM_MINOR_VERSION);
 
-	name = module->name ? module->name : "unknown";
-	vendor = module->vendor ? module->vendor : "unknown";
+	if (!module->name) {
+		TDM_ERR("TDM backend doesn't have name");
+		return TDM_ERROR_BAD_MODULE;
+	}
+
+	if (!module->vendor) {
+		TDM_ERR("TDM backend doesn't have vendor");
+		return TDM_ERROR_BAD_MODULE;
+	}
+
 	major = TDM_BACKEND_GET_ABI_MAJOR(module->abi_version);
 	minor = TDM_BACKEND_GET_ABI_MINOR(module->abi_version);
 
-	TDM_INFO("TDM module name: %s", name);
-	TDM_INFO("'%s' vendor: %s", name, vendor);
-	TDM_INFO("'%s' version: %d.%d", name, major, minor);
+	TDM_INFO("TDM module name: %s", module->name);
+	TDM_INFO("'%s' vendor: %s", module->name, module->vendor);
+	TDM_INFO("'%s' version: %d.%d", module->name, major, minor);
 
 	if (major != TDM_MAJOR_VERSION) {
 		TDM_ERR("'%s' major version mismatch, %d != %d",
-				name, major, TDM_MAJOR_VERSION);
+				module->name, major, TDM_MAJOR_VERSION);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
 	if (minor > TDM_MINOR_VERSION) {
 		TDM_ERR("'%s' minor version(%d) is newer than %d",
-				name, minor, TDM_MINOR_VERSION);
+				module->name, minor, TDM_MINOR_VERSION);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
 	if (!module->init) {
-		TDM_ERR("'%s' doesn't have init function", name);
+		TDM_ERR("'%s' doesn't have init function", module->name);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
 	if (!module->deinit) {
-		TDM_ERR("'%s' doesn't have deinit function", name);
+		TDM_ERR("'%s' doesn't have deinit function", module->name);
 		return TDM_ERROR_BAD_MODULE;
 	}
 
@@ -898,6 +905,10 @@ tdm_display_init(tdm_error *error)
 	if (debug && (strstr(debug, "1")))
 		tdm_debug_buffer = 1;
 
+	debug = getenv("TDM_DEBUG_DUMP");
+	if (debug)
+		tdm_display_enable_dump(debug);
+
 	debug = getenv("TDM_DEBUG_THREAD");
 	if (debug && (strstr(debug, "1")))
 		tdm_debug_thread = 1;
@@ -1038,3 +1049,42 @@ tdm_display_check_module_abi(tdm_private_display *private_display, int abimaj, i
 	return 1;
 }
 
+INTERN void
+tdm_display_enable_debug(char *debug, int enable)
+{
+	if (!strncmp(debug, "TDM_DEBUG_BUFFER", 16))
+		tdm_debug_buffer = enable;
+	else if (!strncmp(debug, "TDM_DEBUG_THREAD", 16))
+		tdm_debug_thread = enable;
+	else if (!strncmp(debug, "TDM_DEBUG_MUTEX", 15))
+		tdm_debug_mutex = enable;
+}
+
+INTERN void
+tdm_display_enable_dump(const char *dump_str)
+{
+	char temp[1024];
+	char *arg;
+	char *end;
+	int flags = 0;
+
+	snprintf(temp, sizeof(temp), "%s", dump_str);
+	arg = strtok_r(temp, ",", &end);
+	while (arg) {
+		if (!strncmp(arg, "all", 3)) {
+			flags = TDM_DUMP_FLAG_LAYER|TDM_DUMP_FLAG_PP|TDM_DUMP_FLAG_CAPTURE;
+			break;
+		}
+		else if (!strncmp(arg, "layer", 5))
+			flags |= TDM_DUMP_FLAG_LAYER;
+		else if (!strncmp(arg, "pp", 2))
+			flags |= TDM_DUMP_FLAG_PP;
+		else if (!strncmp(arg, "capture", 7))
+			flags |= TDM_DUMP_FLAG_CAPTURE;
+		else if (!strncmp(arg, "none", 4))
+			flags = 0;
+		arg = strtok_r(NULL, ",", &end);
+	}
+
+	tdm_debug_dump = flags;
+}

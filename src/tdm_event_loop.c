@@ -379,6 +379,10 @@ _tdm_event_loop_timer_func(void *data)
 
 	private_display = timer_source->private_display;
 
+	/* TDM event_loop function is actually for TDM backend module. When we call the
+	 * backend's functions, we have to lock the mutex. TDM backend shouldn't consider
+	 * mutex things.
+	 */
 	_pthread_mutex_lock(&private_display->lock);
 	timer_source->func(timer_source->user_data);
 	_pthread_mutex_unlock(&private_display->lock);

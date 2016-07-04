@@ -40,6 +40,7 @@
 #include "tdm.h"
 #include "tdm_backend.h"
 #include "tdm_private.h"
+#include "tdm_helper.h"
 
 #define CAPTURE_FUNC_ENTRY() \
 	tdm_func_capture *func_capture; \
@@ -103,6 +104,13 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 
 	if (private_capture->owner_tid != syscall(SYS_gettid))
 		TDM_NEVER_GET_HERE();
+
+	if (tdm_debug_dump & TDM_DUMP_FLAG_CAPTURE) {
+		char str[TDM_PATH_LEN];
+		static int i;
+		snprintf(str, TDM_PATH_LEN, "capture_%03d", i++);
+		tdm_helper_dump_buffer_str(buffer, str);
+	}
 
 	if (tdm_debug_buffer)
 		TDM_INFO("capture(%p) done: %p", private_capture, buffer);

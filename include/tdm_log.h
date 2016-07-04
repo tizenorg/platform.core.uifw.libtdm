@@ -65,6 +65,7 @@ enum {
 
 void tdm_log_enable_dlog(unsigned int enable);
 void tdm_log_enable_debug(unsigned int enable);
+void tdm_log_set_debug_level(int level);
 void tdm_log_print(int level, const char *fmt, ...);
 
 #define TDM_DBG(fmt, args...) \
