@@ -78,9 +78,10 @@ AC_OUTPUT([
 	libtdm.pc
 	include/Makefile
 	protocol/Makefile
+	common/Makefile
+	src/Makefile
 	client/libtdm-client.pc
 	client/Makefile
-	src/Makefile
 	tools/Makefile])
 
 echo ""
