@@ -41,12 +41,9 @@
 #include <time.h>
 #include <stdint.h>
 
-#include "tdm_macro.h"
-
 #include <tdm_client.h>
-#include <tdm_helper.h>
-
-int tdm_debug;
+#include <tdm_log.h>
+#include "tdm_macro.h"
 
 typedef struct _tdm_test_client_arg {
 	char output_name[512];
@@ -247,17 +244,10 @@ _client_vblank_handler(tdm_client_vblank *vblank, tdm_error error, unsigned int 
 	cur = get_time_in_micros();
 	vbl = (unsigned long)tv_sec * (unsigned long)1000000 + (unsigned long)tv_usec;
 
-	printf("vblank              : %ld us vbl(%lu)\n", vbl - p_vbl, vbl);
+	TDM_INFO("vblank              : %ld us vbl(%lu)\n", vbl - p_vbl, vbl);
 
 	if (cur - vbl > 2000) /* 2ms */
 		printf("kernel -> tdm-client: %ld us\n", cur - vbl);
-
-	if (tdm_debug) {
-		static unsigned long p_cur = 0;
-		printf("vblank event interval: %ld %ld\n",
-			   vbl - p_vbl, cur - p_cur);
-		p_cur = cur;
-	}
 
 	p_vbl = vbl;
 }
@@ -387,11 +377,6 @@ main(int argc, char *argv[])
 {
 	tdm_test_client *data = &ttc_data;
 	tdm_error error;
-	const char *debug;
-
-	debug = getenv("TDM_DEBUG");
-	if (debug && (strstr(debug, "1")))
-		tdm_debug = 1;
 
 	parse_args(data, argc, argv);
 
