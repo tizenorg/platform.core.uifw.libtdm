@@ -1331,6 +1331,8 @@ EXTERN tdm_error
 tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 {
 	tdm_func_layer *func_layer;
+	char fmtstr[128];
+
 	LAYER_FUNC_ENTRY();
 
 	TDM_RETURN_VAL_IF_FAIL(info != NULL, TDM_ERROR_INVALID_PARAMETER);
@@ -1350,11 +1352,16 @@ tdm_layer_set_info(tdm_layer *layer, tdm_info_layer *info)
 		return TDM_ERROR_NOT_IMPLEMENTED;
 	}
 
-	TDM_INFO("layer(%p) info: src(%dx%d %d,%d %dx%d %c%c%c%c) dst(%d,%d %dx%d) trans(%d)",
+	if (info->src_config.format)
+		snprintf(fmtstr, 128, "%c%c%c%c", FOURCC_STR(info->src_config.format));
+	else
+		snprintf(fmtstr, 128, "NONE");
+
+	TDM_INFO("layer(%p) info: src(%dx%d %d,%d %dx%d %s) dst(%d,%d %dx%d) trans(%d)",
 			 private_layer, info->src_config.size.h, info->src_config.size.v,
 			 info->src_config.pos.x, info->src_config.pos.y,
 			 info->src_config.pos.w, info->src_config.pos.h,
-			 FOURCC_STR(info->src_config.format),
+			 fmtstr,
 			 info->dst_pos.x, info->dst_pos.y,
 			 info->dst_pos.w, info->dst_pos.h,
 			 info->transform);
