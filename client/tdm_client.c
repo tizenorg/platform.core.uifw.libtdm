@@ -49,8 +49,6 @@
 #include "tdm_list.h"
 #include "tdm-client-protocol.h"
 
-int tdm_debug;
-
 typedef struct _tdm_private_client_vblank tdm_private_client_vblank;
 
 typedef struct _tdm_private_client {
@@ -278,11 +276,6 @@ tdm_client*
 tdm_client_create(tdm_error *error)
 {
 	tdm_private_client *private_client;
-	const char *debug;
-
-	debug = getenv("TDM_DEBUG");
-	if (debug && (strstr(debug, "1")))
-		tdm_debug = 1;
 
 	private_client = calloc(1, sizeof *private_client);
 	if (!private_client) {

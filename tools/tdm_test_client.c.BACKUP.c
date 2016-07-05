@@ -42,7 +42,13 @@
 #include <stdint.h>
 
 #include <tdm_client.h>
+<<<<<<< HEAD
+#include <tdm_log.h>
 #include "tdm_macro.h"
+=======
+
+int tdm_debug;
+>>>>>>> add tdm-dbg and tdm-test-server tools
 
 typedef struct _tdm_test_client_arg {
 	char output_name[512];
@@ -65,15 +71,15 @@ typedef struct _tdm_test_client {
 
 struct typestrings {
 	int type;
-	char string[512];
+	const char *string;
 };
 
 struct optstrings {
 	int  type;
-	char opt[512];
-	char desc[512];
-	char arg[512];
-	char ex[512];
+	const char *opt;
+	const char *desc;
+	const char *arg;
+	const char *ex;
 };
 
 enum {
@@ -127,10 +133,13 @@ usage(char *app_name)
 				if (f == 1)
 					printf(" %s options:\n\n", typestrs[t].string);
 				printf("\t-%s\t%s\n", optstrs[o].opt, optstrs[o].desc);
-				printf("\t\t%s\n", optstrs[o].arg);
-				printf("\t\tex) %s\n", optstrs[o].ex);
+				if (optstrs[o].arg)
+					printf("\t\t%s\n", optstrs[o].arg);
+				if (optstrs[o].ex)
+					printf("\t\tex) %s\n", optstrs[o].ex);
 				f = 0;
 			}
+		printf("\n");
 	}
 
 	exit(0);
@@ -243,7 +252,7 @@ _client_vblank_handler(tdm_client_vblank *vblank, tdm_error error, unsigned int 
 	cur = get_time_in_micros();
 	vbl = (unsigned long)tv_sec * (unsigned long)1000000 + (unsigned long)tv_usec;
 
-	printf("vblank              : %ld us vbl(%lu)\n", vbl - p_vbl, vbl);
+	TDM_INFO("vblank              : %ld us vbl(%lu)\n", vbl - p_vbl, vbl);
 
 	if (cur - vbl > 2000) /* 2ms */
 		printf("kernel -> tdm-client: %ld us\n", cur - vbl);

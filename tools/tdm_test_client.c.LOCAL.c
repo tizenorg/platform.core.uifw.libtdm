@@ -42,6 +42,7 @@
 #include <stdint.h>
 
 #include <tdm_client.h>
+#include <tdm_log.h>
 #include "tdm_macro.h"
 
 typedef struct _tdm_test_client_arg {
@@ -243,7 +244,7 @@ _client_vblank_handler(tdm_client_vblank *vblank, tdm_error error, unsigned int 
 	cur = get_time_in_micros();
 	vbl = (unsigned long)tv_sec * (unsigned long)1000000 + (unsigned long)tv_usec;
 
-	printf("vblank              : %ld us vbl(%lu)\n", vbl - p_vbl, vbl);
+	TDM_INFO("vblank              : %ld us vbl(%lu)\n", vbl - p_vbl, vbl);
 
 	if (cur - vbl > 2000) /* 2ms */
 		printf("kernel -> tdm-client: %ld us\n", cur - vbl);

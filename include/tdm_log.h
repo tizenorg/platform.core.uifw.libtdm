@@ -36,132 +36,49 @@
 #ifndef _TDM_LOG_H_
 #define _TDM_LOG_H_
 
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <unistd.h>
-#include <time.h>
-#include <assert.h>
-#include <sys/syscall.h>
-
-
 /**
  * @file tdm_log.h
  * @brief The header file to print logs in frontend and backend modules
  * @details
- * The TDM debug log can be enable by setting "TDM_DEBUG" enviroment
+ * The TDM debug log can be enable by setting "TDM_DEBUG" enviroment. And also,
+ * the TDM dlog can be enable by setting "TDM_DLOG" enviroment.
  * @par Example
  * @code
  *  $ export TDM_DEBUG=1
  * @endcode
  */
-extern int tdm_debug;
 
-//#define TDM_CONFIG_DLOG
-//#define TDM_CONFIG_ASSERT
+enum {
+	TDM_LOG_LEVEL_NONE,
+	TDM_LOG_LEVEL_ERR,
+	TDM_LOG_LEVEL_WRN,
+	TDM_LOG_LEVEL_INFO,
+	TDM_LOG_LEVEL_DBG,
+};
 
-#undef TDM_ASSERT
-#ifdef TDM_CONFIG_ASSERT
-#define TDM_ASSERT(o) assert(o)
-#else
-#define TDM_ASSERT(o)
-#endif
-
-#ifdef TDM_CONFIG_DLOG
-
-#include <dlog.h>
-
-#ifdef LOG_TAG
-#undef LOG_TAG
-#endif
-#define LOG_TAG "TDM"
+void tdm_log_enable_dlog(unsigned int enable);
+void tdm_log_enable_debug(unsigned int enable);
+void tdm_log_print(int level, const char *fmt, ...);
 
 #define TDM_DBG(fmt, args...) \
-	do { \
-		if (tdm_debug) { \
-			struct timespec ts;	\
-			clock_gettime(CLOCK_MONOTONIC, &ts);	\
-			LOGD("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-			printf("[TDM_DBG][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-				(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-		} \
-	} while (0)
-
+	tdm_log_print(TDM_LOG_LEVEL_DBG, "[%d][%s %d]"fmt"\n", \
+				  (int)syscall(SYS_gettid), __FUNCTION__, __LINE__, ##args)
 #define TDM_INFO(fmt, args...) \
-	do { \
-		struct timespec ts;	\
-		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		LOGI("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_INF][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-	} while (0)
-
+	tdm_log_print(TDM_LOG_LEVEL_INFO, "[%d][%s %d]"fmt"\n", \
+				  (int)syscall(SYS_gettid), __FUNCTION__, __LINE__, ##args)
 #define TDM_WRN(fmt, args...) \
-	do { \
-		struct timespec ts;	\
-		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		LOGI("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_WRN][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-	} while (0)
-
+	tdm_log_print(TDM_LOG_LEVEL_WRN, "[%d][%s %d]"fmt"\n", \
+				  (int)syscall(SYS_gettid), __FUNCTION__, __LINE__, ##args)
 #define TDM_ERR(fmt, args...) \
-	do { \
-		struct timespec ts;	\
-		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		LOGE("[%d.%06d] "fmt"\n", (int)ts.tv_sec, (int)ts.tv_nsec / 1000, ##args);	\
-		printf("[TDM_ERR][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-	} while (0)
-
-#else /* TDM_CONFIG_DLOG */
-
-#include <stdio.h>
-
-#define COLOR_RED "\x1b[31m"      /* for error */
-#define COLOR_YELLOW "\x1b[33m"   /* for warning */
-#define COLOR_GREEN "\x1b[32m"    /* for info */
-#define COLOR_RESET "\x1b[0m"
-
-#define TDM_DBG(fmt, args...) \
-	do { \
-		if (tdm_debug) { \
-			struct timespec ts;	\
-			clock_gettime(CLOCK_MONOTONIC, &ts);	\
-			printf("[TDM_DBG][%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-				(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-		} \
-	} while (0)
-
-#define TDM_INFO(fmt, args...) \
-	do { \
-		struct timespec ts;	\
-		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf(COLOR_GREEN"[TDM_INF]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-	} while (0)
-
-#define TDM_WRN(fmt, args...) \
-	do { \
-		struct timespec ts;	\
-		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf(COLOR_YELLOW"[TDM_WRN]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-		TDM_ASSERT(0); \
-	} while (0)
-
-#define TDM_ERR(fmt, args...) \
-	do { \
-		struct timespec ts;	\
-		clock_gettime(CLOCK_MONOTONIC, &ts);	\
-		printf(COLOR_RED"[TDM_ERR]"COLOR_RESET"[%d.%06d][%d][%s %d] "fmt"\n", (int)ts.tv_sec,	\
-			(int)ts.tv_nsec / 1000, (int)syscall(SYS_gettid), __func__, __LINE__, ##args); \
-		TDM_ASSERT(0); \
-	} while (0)
-
-#endif /* TDM_CONFIG_DLOG */
+	tdm_log_print(TDM_LOG_LEVEL_ERR, "[%d][%s %d]"fmt"\n", \
+				  (int)syscall(SYS_gettid), __FUNCTION__, __LINE__, ##args)
 
 #ifdef __cplusplus
 }

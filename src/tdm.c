@@ -665,7 +665,6 @@ tdm_display_update(tdm_display *dpy)
 #define SUFFIX_MODULE    ".so"
 #define DEFAULT_MODULE   "libtdm-default"SUFFIX_MODULE
 
-int tdm_debug;
 int tdm_debug_buffer;
 int tdm_debug_thread;
 int tdm_debug_mutex;
@@ -892,10 +891,6 @@ tdm_display_init(tdm_error *error)
 		return g_private_display;
 	}
 
-	debug = getenv("TDM_DEBUG");
-	if (debug && (strstr(debug, "1")))
-		tdm_debug = 1;
-
 	debug = getenv("TDM_DEBUG_BUFFER");
 	if (debug && (strstr(debug, "1")))
 		tdm_debug_buffer = 1;
@@ -975,7 +970,6 @@ failed_event:
 failed_mutex_init:
 	free(private_display);
 failed_alloc:
-	tdm_debug = 0;
 	tdm_debug_buffer = 0;
 	if (error)
 		*error = ret;
@@ -1018,7 +1012,6 @@ tdm_display_deinit(tdm_display *dpy)
 	pthread_mutex_destroy(&private_display->lock);
 	free(private_display);
 	g_private_display = NULL;
-	tdm_debug = 0;
 	tdm_debug_buffer = 0;
 
 	_pthread_mutex_unlock(&gLock);

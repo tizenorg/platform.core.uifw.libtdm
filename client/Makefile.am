@@ -9,7 +9,7 @@ pkgconfig_DATA = libtdm-client.pc
 libtdm_client_la_LTLIBRARIES = libtdm-client.la
 libtdm_client_ladir = $(libdir)
 libtdm_client_la_LDFLAGS = $(LDFLAGS)
-libtdm_client_la_LIBADD = $(TDM_CLIENT_LIBS)
+libtdm_client_la_LIBADD = $(TDM_CLIENT_LIBS) ../common/libtdm-common.la
 libtdm_client_la_CFLAGS = \
 	$(CFLAGS) \
 	$(WARN_CFLAGS) \

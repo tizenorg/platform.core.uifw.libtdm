@@ -41,8 +41,11 @@
 #include <time.h>
 #include <stdint.h>
 
-#include <tdm_client.h>
 #include "tdm_macro.h"
+
+#include <tdm_client.h>
+
+int tdm_debug;
 
 typedef struct _tdm_test_client_arg {
 	char output_name[512];
@@ -65,15 +68,15 @@ typedef struct _tdm_test_client {
 
 struct typestrings {
 	int type;
-	char string[512];
+	const char *string;
 };
 
 struct optstrings {
 	int  type;
-	char opt[512];
-	char desc[512];
-	char arg[512];
-	char ex[512];
+	const char *opt;
+	const char *desc;
+	const char *arg;
+	const char *ex;
 };
 
 enum {
@@ -127,10 +130,13 @@ usage(char *app_name)
 				if (f == 1)
 					printf(" %s options:\n\n", typestrs[t].string);
 				printf("\t-%s\t%s\n", optstrs[o].opt, optstrs[o].desc);
-				printf("\t\t%s\n", optstrs[o].arg);
-				printf("\t\tex) %s\n", optstrs[o].ex);
+				if (optstrs[o].arg)
+					printf("\t\t%s\n", optstrs[o].arg);
+				if (optstrs[o].ex)
+					printf("\t\tex) %s\n", optstrs[o].ex);
 				f = 0;
 			}
+		printf("\n");
 	}
 
 	exit(0);
@@ -248,6 +254,13 @@ _client_vblank_handler(tdm_client_vblank *vblank, tdm_error error, unsigned int 
 	if (cur - vbl > 2000) /* 2ms */
 		printf("kernel -> tdm-client: %ld us\n", cur - vbl);
 
+	if (tdm_debug) {
+		static unsigned long p_cur = 0;
+		printf("vblank event interval: %ld %ld\n",
+			   vbl - p_vbl, cur - p_cur);
+		p_cur = cur;
+	}
+
 	p_vbl = vbl;
 }
 
@@ -298,7 +311,7 @@ do_vblank(tdm_test_client *data)
 	int fd = -1;
 	struct pollfd fds;
 
-	output = tdm_client_get_output(data->client, data->args.output_name, &error);
+	output = tdm_client_get_output(data->client, NULL, &error);
 	if (error != TDM_ERROR_NONE) {
 		printf("tdm_client_get_output failed\n");
 		return;
@@ -376,6 +389,11 @@ main(int argc, char *argv[])
 {
 	tdm_test_client *data = &ttc_data;
 	tdm_error error;
+	const char *debug;
+
+	debug = getenv("TDM_DEBUG");
+	if (debug && (strstr(debug, "1")))
+		tdm_debug = 1;
 
 	parse_args(data, argc, argv);
 
