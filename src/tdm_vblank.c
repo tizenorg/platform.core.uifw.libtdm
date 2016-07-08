@@ -180,25 +180,36 @@ static inline void
 _tdm_vblank_insert_wait(tdm_vblank_wait_info *wait_info, struct list_head *list)
 {
 	tdm_vblank_wait_info *w = NULL;
+	tdm_vblank_wait_info *found = NULL;
 
-	LIST_FOR_EACH_ENTRY_REV(w, list, link) {
-		/* If last_tv_sec == 0, we can't calculate target_sec. */
-		if (wait_info->target_sec == 0) {
-			if (w->interval > wait_info->interval)
-				continue;
-			list = &w->link;
-			break;
-		} else {
-			if (w->target_sec > wait_info->target_sec)
-				continue;
-			if (w->target_usec > wait_info->target_usec)
-				continue;
-			list = &w->link;
-		}
-		break;
+	if (LIST_IS_EMPTY(list)) {
+		LIST_ADDTAIL(&wait_info->link, list);
+		return;
 	}
 
-	LIST_ADDTAIL(&wait_info->link, list->next);
+	LIST_FOR_EACH_ENTRY(w, list, link) {
+		/* If last_tv_sec == 0, we can't calculate target_sec. */
+		if (wait_info->target_sec == 0) {
+			if (w->interval <= wait_info->interval) {
+				found = w;
+				continue;
+			}
+		} else {
+			if (w->target_sec < wait_info->target_sec) {
+				found = w;
+				continue;
+			}
+			if (w->target_sec == wait_info->target_sec && w->target_usec <= wait_info->target_usec) {
+				found = w;
+				continue;
+			}
+		}
+	}
+
+	if (found)
+		LIST_ADD(&wait_info->link, &found->link);
+	else
+		LIST_ADDTAIL(&wait_info->link, list->next);
 }
 
 static void
@@ -502,6 +513,11 @@ _tdm_vblank_cb_vblank_SW(void *user_data)
 
 	TDM_RETURN_VAL_IF_FAIL(private_vblank != NULL, TDM_ERROR_OPERATION_FAILED);
 
+	if (LIST_IS_EMPTY(&private_vblank->SW_wait_list)) {
+		VER("no wait_info");
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
 	first_wait_info = container_of(private_vblank->SW_wait_list.next, first_wait_info, link);
 	TDM_RETURN_VAL_IF_FAIL(first_wait_info != NULL, TDM_ERROR_OPERATION_FAILED);
 
@@ -547,6 +563,11 @@ _tdm_vblank_cb_vblank_SW_first(tdm_output *output, unsigned int sequence,
 	private_vblank = wait_info->private_vblank;
 	TDM_RETURN_IF_FAIL(private_vblank != NULL);
 
+	if (LIST_IS_EMPTY(&private_vblank->SW_pending_wait_list)) {
+		VER("no wait_info");
+		return;
+	}
+
 	w = container_of((&private_vblank->SW_pending_wait_list)->next, w, link);
 	TDM_RETURN_IF_FAIL(w != NULL);
 
@@ -585,6 +606,11 @@ _tdm_vblank_sw_timer_update(tdm_private_vblank *private_vblank)
 	unsigned long curr, target;
 	int ms_delay;
 	tdm_error ret;
+
+	if (LIST_IS_EMPTY(&private_vblank->SW_wait_list)) {
+		VER("no wait_info");
+		return TDM_ERROR_OPERATION_FAILED;
+	}
 
 	first_wait_info = container_of(private_vblank->SW_wait_list.next, first_wait_info, link);
 	curr = tdm_helper_get_time_in_micros();
@@ -734,6 +760,7 @@ _tdm_vblank_wait_SW(tdm_vblank_wait_info *wait_info)
 
 	ret = _tdm_vblank_sw_timer_update(private_vblank);
 	if (ret != TDM_ERROR_NONE) {
+		LIST_DEL(&wait_info->link);
 		VER("couldn't update sw timer");
 		return ret;
 	}
@@ -853,6 +880,7 @@ tdm_vblank_wait(tdm_vblank *vblank, unsigned int req_sec, unsigned int req_usec,
 		return TDM_ERROR_OUT_OF_MEMORY;
 	}
 
+	LIST_INITHEAD(&wait_info->link);
 	LIST_ADDTAIL(&wait_info->valid_link, &valid_wait_list);
 	wait_info->stamp = ++stamp;
 	wait_info->req_sec = req_sec;
@@ -870,6 +898,7 @@ tdm_vblank_wait(tdm_vblank *vblank, unsigned int req_sec, unsigned int req_usec,
 		ret = _tdm_vblank_wait_SW(wait_info);
 
 	if (ret != TDM_ERROR_NONE) {
+		LIST_DEL(&wait_info->link);
 		LIST_DEL(&wait_info->valid_link);
 		free(wait_info);
 		return ret;

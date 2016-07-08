@@ -263,6 +263,9 @@ tdm_buffer_list_get_first_entry(struct list_head *list)
 
 	TDM_RETURN_VAL_IF_FAIL(list != NULL, NULL);
 
+	if (LIST_IS_EMPTY(list))
+		return NULL;
+
 	buf_info = container_of((list)->next, buf_info, link);
 
 	return buf_info->buffer;

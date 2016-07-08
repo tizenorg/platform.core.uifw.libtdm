@@ -139,9 +139,13 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 	if (tdm_debug_buffer)
 		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
 
-	first_entry = container_of((&private_pp->buffer_list)->next, pp_buffer, link);
-	if (first_entry->src != src || first_entry->dst != dst)
-		TDM_ERR("buffer(%p,%p) is skipped", first_entry->src, first_entry->dst);
+	if (!LIST_IS_EMPTY(&private_pp->buffer_list)) {
+		first_entry = container_of((&private_pp->buffer_list)->next, pp_buffer, link);
+		if (first_entry->src != src || first_entry->dst != dst)
+			TDM_ERR("buffer(%p,%p) is skipped", first_entry->src, first_entry->dst);
+	} else {
+		TDM_NEVER_GET_HERE();
+	}
 
 	if ((pp_buffer = _tdm_pp_find_tbm_buffers(&private_pp->buffer_list, src, dst))) {
 		LIST_DEL(&pp_buffer->link);
