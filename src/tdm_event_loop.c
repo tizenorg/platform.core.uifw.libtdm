@@ -147,7 +147,11 @@ tdm_event_loop_deinit(tdm_private_display *private_display)
 	if (!private_display->private_loop)
 		return;
 
+	/* after tdm_thread_deinit, we don't worry about thread things because it's finalized */
 	tdm_thread_deinit(private_display->private_loop);
+
+
+	_pthread_mutex_unlock(&private_display->lock);
 	tdm_server_deinit(private_display->private_loop);
 
 	if (private_display->private_loop->backend_source)
@@ -158,6 +162,8 @@ tdm_event_loop_deinit(tdm_private_display *private_display)
 
 	free(private_display->private_loop);
 	private_display->private_loop = NULL;
+
+	_pthread_mutex_lock(&private_display->lock);
 }
 
 INTERN void

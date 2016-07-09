@@ -173,13 +173,23 @@ tdm_thread_init(tdm_private_loop *private_loop)
 INTERN void
 tdm_thread_deinit(tdm_private_loop *private_loop)
 {
+	tdm_private_display *private_display;
+
 	TDM_RETURN_IF_FAIL(TDM_MUTEX_IS_LOCKED());
 
 	if (!private_loop->private_thread)
 		return;
 
 	pthread_cancel(private_loop->private_thread->event_thread);
+
+	private_display = private_loop->dpy;
+
+	/* before falling into the block of pthread_join, we have to unlock the mutex
+	 * for subthread to use the mutex.
+	 */
+	_pthread_mutex_unlock(&private_display->lock);
 	pthread_join(private_loop->private_thread->event_thread, NULL);
+	_pthread_mutex_lock(&private_display->lock);
 
 	if (private_loop->private_thread->pipe[0] >= 0)
 		close(private_loop->private_thread->pipe[0]);

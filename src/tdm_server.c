@@ -48,6 +48,7 @@
  *     However, the internal function which does lock/unlock the mutex of
  *     private_display in itself can be called.
  * - DO NOT use the tdm_private_display structure here.
+ * - The callback function things can be called in main thread.
  */
 
 struct _tdm_private_server {
