@@ -42,11 +42,9 @@
 #include "tdm_list.h"
 
 /* CAUTION:
- * - tdm vblank doesn't care about thread things.
- * - DO NOT use the TDM internal functions here.
- *     However, the internal function which does lock/unlock the mutex of
- *     private_display in itself can be called.
- * - DO NOT use the tdm_private_display structure here.
+ * tdm vblank doesn't care about thread things.
+ * However, to use tdm_event_loop_xxx functions, have to use the internal function.
+ * So need to lock/unlock the mutex of private_display.
  */
 
 /* TDM vblank
@@ -362,10 +360,9 @@ tdm_vblank_destroy(tdm_vblank *vblank)
 #endif
 
 	if (private_vblank->SW_timer) {
-		if (tdm_display_lock(private_vblank->dpy) == TDM_ERROR_NONE) {
-			tdm_event_loop_source_remove(private_vblank->SW_timer);
-			tdm_display_unlock(private_vblank->dpy);
-		}
+		tdm_display_lock(private_vblank->dpy);
+		tdm_event_loop_source_remove(private_vblank->SW_timer);
+		tdm_display_unlock(private_vblank->dpy);
 	}
 
 	tdm_output_remove_change_handler(private_vblank->output,
@@ -495,7 +492,7 @@ _tdm_vblank_wait_HW(tdm_vblank_wait_info *wait_info)
 								 _tdm_vblank_cb_vblank_HW, wait_info);
 
 	if (ret != TDM_ERROR_NONE) {
-		VER("wait(%p) failed", wait_info);
+		VWR("wait(%p) failed", wait_info);
 		LIST_DEL(&wait_info->link);
 		return ret;
 	}
@@ -627,8 +624,7 @@ _tdm_vblank_sw_timer_update(tdm_private_vblank *private_vblank)
 	VDB("wait(%p) curr(%4lu) target(%4lu) ms_delay(%d)",
 		first_wait_info, curr, target, ms_delay);
 
-	ret = tdm_display_lock(private_vblank->dpy);
-	TDM_RETURN_VAL_IF_FAIL(ret == TDM_ERROR_NONE, ret);
+	tdm_display_lock(private_vblank->dpy);
 
 	if (!private_vblank->SW_timer) {
 		private_vblank->SW_timer =
@@ -745,6 +741,10 @@ _tdm_vblank_wait_SW(tdm_vblank_wait_info *wait_info)
 		if (do_wait) {
 			ret = tdm_output_wait_vblank(private_vblank->output, 1, 0,
 										 _tdm_vblank_cb_vblank_SW_first, wait_info);
+			if (ret == TDM_ERROR_DPMS_OFF) {
+				TDM_WRN("use SW");
+				goto use_sw;
+			}
 			if (ret != TDM_ERROR_NONE) {
 				LIST_DEL(&wait_info->link);
 				return ret;
@@ -754,6 +754,7 @@ _tdm_vblank_wait_SW(tdm_vblank_wait_info *wait_info)
 		return TDM_ERROR_NONE;
 	}
 
+use_sw:
 	TDM_RETURN_VAL_IF_FAIL(wait_info->target_sec > 0, TDM_ERROR_OPERATION_FAILED);
 
 	_tdm_vblank_insert_wait(wait_info, &private_vblank->SW_wait_list);
@@ -892,8 +893,13 @@ tdm_vblank_wait(tdm_vblank *vblank, unsigned int req_sec, unsigned int req_usec,
 
 	_tdm_vblank_calculate_target(wait_info);
 
-	if (private_vblank->HW_enable)
+	if (private_vblank->HW_enable) {
 		ret = _tdm_vblank_wait_HW(wait_info);
+		if (ret == TDM_ERROR_DPMS_OFF) {
+			TDM_WRN("try to use SW");
+			ret = _tdm_vblank_wait_SW(wait_info);
+		}
+	}
 	else
 		ret = _tdm_vblank_wait_SW(wait_info);
 

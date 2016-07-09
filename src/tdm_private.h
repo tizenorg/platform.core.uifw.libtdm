@@ -170,6 +170,9 @@ struct _tdm_private_output {
 	struct list_head change_handler_list_sub;
 
 	void **layers_ptr;
+
+	/* TODO: temp solution for handling DPMS things in sub-htread */
+	tdm_event_loop_source *dpms_changed_timer;
 };
 
 struct _tdm_private_layer {
@@ -495,19 +498,17 @@ extern int tdm_dump_enable;
 static inline int TDM_MUTEX_IS_LOCKED(void)
 {
 	int ret;
+	/* if thread is not running, we don't need to consider mutex things. */
+	if (!tdm_thread_is_running())
+		return 1;
 	pthread_mutex_lock(&tdm_mutex_check_lock);
 	ret = (tdm_mutex_locked == 1);
 	pthread_mutex_unlock(&tdm_mutex_check_lock);
 	return ret;
 }
 
-tdm_error
-_tdm_display_lock(tdm_display *dpy, const char *func);
-void
-_tdm_display_unlock(tdm_display *dpy, const char *func);
-
-#define tdm_display_lock(dpy)   _tdm_display_lock(dpy, __FUNCTION__)
-#define tdm_display_unlock(dpy)   _tdm_display_unlock(dpy, __FUNCTION__)
+#define tdm_display_lock(dpy)   _pthread_mutex_lock(&((tdm_private_display *)dpy)->lock)
+#define tdm_display_unlock(dpy)   _pthread_mutex_unlock(&((tdm_private_display *)dpy)->lock)
 
 tdm_error
 tdm_display_update_output(tdm_private_display *private_display,
