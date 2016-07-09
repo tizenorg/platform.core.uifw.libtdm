@@ -185,6 +185,9 @@ _tdm_display_destroy_private_output(tdm_private_output *private_output)
 
 	_tdm_display_destroy_caps_output(&private_output->caps);
 
+	if (private_output->dpms_changed_timer)
+		tdm_event_loop_source_remove(private_output->dpms_changed_timer);
+
 	private_output->stamp = 0;
 	free(private_output);
 }
@@ -993,9 +996,13 @@ tdm_display_deinit(tdm_display *dpy)
 		return;
 	}
 
+	/* dont move the position of lock/unlock. all resource shoudl be protected
+	 * during destroying.
+	 */
 	_pthread_mutex_lock(&private_display->lock);
-
+	/* after tdm_event_loop_deinit, we don't worry about thread things because it's finalized */
 	tdm_event_loop_deinit(private_display);
+	_pthread_mutex_unlock(&private_display->lock);
 
 	_tdm_display_destroy_private_display(private_display);
 	_tdm_display_unload_module(private_display);
@@ -1006,8 +1013,6 @@ tdm_display_deinit(tdm_display *dpy)
 #endif
 
 	tdm_helper_set_fd("TDM_DRM_MASTER_FD", -1);
-
-	_pthread_mutex_unlock(&private_display->lock);
 
 	pthread_mutex_destroy(&private_display->lock);
 	free(private_display);

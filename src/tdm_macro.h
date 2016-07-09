@@ -102,7 +102,7 @@ extern "C" {
 	} \
 }
 
-#define TDM_NEVER_GET_HERE() TDM_ERR("** NEVER GET HERE **")
+#define TDM_NEVER_GET_HERE() TDM_WRN("** NEVER GET HERE **")
 
 #define TDM_SNPRINTF(p, len, fmt, ARG...)  \
 	do { \
