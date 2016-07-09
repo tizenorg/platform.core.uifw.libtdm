@@ -102,46 +102,6 @@
 	private_output = private_layer->private_output; \
 	private_display = private_output->private_display
 
-INTERN tdm_error
-_tdm_display_lock(tdm_display *dpy, const char *func)
-{
-	tdm_private_display *private_display = (tdm_private_display*)dpy;
-	int ret;
-
-	if (tdm_debug_mutex)
-		TDM_INFO("mutex lock: %s", func);
-
-	ret = pthread_mutex_trylock(&private_display->lock);
-	if (ret < 0) {
-		if (ret == EBUSY)
-			TDM_ERR("mutex lock busy: %s", func);
-		else
-			TDM_ERR("mutex lock failed: %s(%m)", func);
-		return TDM_ERROR_OPERATION_FAILED;
-	}
-
-	pthread_mutex_lock(&tdm_mutex_check_lock);
-	tdm_mutex_locked = 1;
-	pthread_mutex_unlock(&tdm_mutex_check_lock);
-
-	return TDM_ERROR_NONE;
-}
-
-INTERN void
-_tdm_display_unlock(tdm_display *dpy, const char *func)
-{
-	tdm_private_display *private_display = (tdm_private_display*)dpy;
-
-	if (tdm_debug_mutex)
-		TDM_INFO("mutex unlock: %s", func);
-
-	pthread_mutex_lock(&tdm_mutex_check_lock);
-	tdm_mutex_locked = 0;
-	pthread_mutex_unlock(&tdm_mutex_check_lock);
-
-	pthread_mutex_unlock(&private_display->lock);
-}
-
 EXTERN tdm_error
 tdm_display_get_capabilities(tdm_display *dpy,
 							 tdm_display_capability *capabilities)
@@ -940,10 +900,10 @@ tdm_output_wait_vblank(tdm_output *output, int interval, int sync,
 	_pthread_mutex_lock(&private_display->lock);
 
 	if (private_output->current_dpms_value > TDM_OUTPUT_DPMS_ON) {
-		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
+		TDM_WRN("output(%d) dpms: %s", private_output->pipe,
 				tdm_dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_BAD_REQUEST;
+		return TDM_ERROR_DPMS_OFF;
 	}
 
 	func_output = &private_display->func_output;
@@ -1037,7 +997,7 @@ tdm_output_commit(tdm_output *output, int sync, tdm_output_commit_handler func,
 		TDM_ERR("output(%d) dpms: %s", private_output->pipe,
 				tdm_dpms_str(private_output->current_dpms_value));
 		_pthread_mutex_unlock(&private_display->lock);
-		return TDM_ERROR_BAD_REQUEST;
+		return TDM_ERROR_DPMS_OFF;
 	}
 
 	ret = _tdm_output_commit(output, sync, func, user_data);
@@ -1097,6 +1057,21 @@ tdm_output_get_mode(tdm_output *output, const tdm_output_mode **mode)
 	return ret;
 }
 
+static tdm_error
+_tdm_output_dpms_changed_timeout(void *user_data)
+{
+	tdm_private_output *private_output = user_data;
+	tdm_value value;
+
+	value.u32 = private_output->current_dpms_value;
+	tdm_output_call_change_handler_internal(private_output,
+											&private_output->change_handler_list_sub,
+											TDM_OUTPUT_CHANGE_DPMS,
+											value, 0);
+
+	return TDM_ERROR_NONE;
+}
+
 EXTERN tdm_error
 tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 {
@@ -1111,6 +1086,17 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 	if (private_output->current_dpms_value == dpms_value) {
 		_pthread_mutex_unlock(&private_display->lock);
 		return TDM_ERROR_NONE;
+	}
+
+	if (!private_output->dpms_changed_timer) {
+		private_output->dpms_changed_timer =
+			tdm_event_loop_add_timer_handler(private_output->private_display,
+				_tdm_output_dpms_changed_timeout, private_output, NULL);
+		if (!private_output->dpms_changed_timer) {
+			TDM_ERR("can't create dpms timer!!");
+			_pthread_mutex_unlock(&private_display->lock);
+			return TDM_ERROR_OUT_OF_MEMORY;
+		}
 	}
 
 	func_output = &private_display->func_output;
@@ -1134,11 +1120,11 @@ tdm_output_set_dpms(tdm_output *output, tdm_output_dpms dpms_value)
 												TDM_OUTPUT_CHANGE_DPMS,
 												value, 0);
 
-		//TODO: safe? We can't take care of the user_data of callback functions.
-		tdm_output_call_change_handler_internal(private_output,
-												&private_output->change_handler_list_sub,
-												TDM_OUTPUT_CHANGE_DPMS,
-												value, 1);
+		if (!LIST_IS_EMPTY(&private_output->change_handler_list_sub)) {
+			ret = tdm_event_loop_source_timer_update(private_output->dpms_changed_timer, 1);
+			if (ret != TDM_ERROR_NONE)
+				TDM_NEVER_GET_HERE();
+		}
 	}
 
 	_pthread_mutex_unlock(&private_display->lock);
