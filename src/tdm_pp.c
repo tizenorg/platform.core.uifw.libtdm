@@ -144,7 +144,7 @@ tdm_pp_cb_done(tdm_pp *pp_backend, tbm_surface_h src, tbm_surface_h dst,
 		tdm_helper_dump_buffer_str(dst, str);
 	}
 
-	if (tdm_debug_buffer)
+	if (tdm_debug_module & TDM_DEBUG_BUFFER)
 		TDM_INFO("pp(%p) done: src(%p) dst(%p)", private_pp, src, dst);
 
 	if (!LIST_IS_EMPTY(&private_pp->buffer_list)) {
@@ -399,7 +399,7 @@ tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst)
 	pp_buffer->src = tdm_buffer_ref_backend(src);
 	pp_buffer->dst = tdm_buffer_ref_backend(dst);
 
-	if (tdm_debug_buffer) {
+	if (tdm_debug_module & TDM_DEBUG_BUFFER) {
 		TDM_INFO("pp(%p) attached:", private_pp);
 		_tdm_pp_print_list(&private_pp->pending_buffer_list);
 	}

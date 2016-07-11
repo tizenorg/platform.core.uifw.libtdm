@@ -112,7 +112,7 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 		tdm_helper_dump_buffer_str(buffer, str);
 	}
 
-	if (tdm_debug_buffer)
+	if (tdm_debug_module & TDM_DEBUG_BUFFER)
 		TDM_INFO("capture(%p) done: %p", private_capture, buffer);
 
 	first_entry = tdm_buffer_list_get_first_entry(&private_capture->buffer_list);
@@ -387,7 +387,7 @@ tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer)
 		if ((buf_info = tdm_buffer_get_info(buffer)))
 			LIST_ADDTAIL(&buf_info->link, &private_capture->pending_buffer_list);
 
-		if (tdm_debug_buffer) {
+		if (tdm_debug_module & TDM_DEBUG_BUFFER) {
 			TDM_INFO("capture(%p) attached:", private_capture);
 			tdm_buffer_list_dump(&private_capture->buffer_list);
 		}

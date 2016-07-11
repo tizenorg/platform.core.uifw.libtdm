@@ -332,7 +332,7 @@ tdm_display_handle_events(tdm_display *dpy)
 	fds.fd = fd;
 	fds.revents = 0;
 
-	if (tdm_debug_thread)
+	if (tdm_debug_module & TDM_DEBUG_THREAD)
 		TDM_INFO("fd(%d) polling in", fd);
 
 	while (poll(&fds, 1, -1) < 0) {
@@ -344,7 +344,7 @@ tdm_display_handle_events(tdm_display *dpy)
 		}
 	}
 
-	if (tdm_debug_thread)
+	if (tdm_debug_module & TDM_DEBUG_THREAD)
 		TDM_INFO("fd(%d) polling out", fd);
 
 	if (tdm_thread_is_running())
@@ -898,7 +898,7 @@ tdm_output_cb_commit(tdm_output *output_backend, unsigned int sequence,
 		private_layer->showing_buffer = private_layer->waiting_buffer;
 		private_layer->waiting_buffer = NULL;
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) waiting_buffer(%p) showing_buffer(%p)",
 					 private_layer, private_layer->waiting_buffer,
 					 private_layer->showing_buffer);
@@ -1496,7 +1496,7 @@ tdm_layer_set_buffer(tdm_layer *layer, tbm_surface_h buffer)
 		}
 
 		private_layer->waiting_buffer = tdm_buffer_ref_backend(buffer);
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) waiting_buffer(%p)",
 					 private_layer, private_layer->waiting_buffer);
 	}
@@ -1522,7 +1522,7 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 		_pthread_mutex_lock(&private_display->lock);
 		private_layer->waiting_buffer = NULL;
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) waiting_buffer(%p)",
 					 private_layer, private_layer->waiting_buffer);
 	}
@@ -1533,7 +1533,7 @@ tdm_layer_unset_buffer(tdm_layer *layer)
 		_pthread_mutex_lock(&private_display->lock);
 		private_layer->showing_buffer = NULL;
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) showing_buffer(%p)",
 					 private_layer, private_layer->showing_buffer);
 	}
@@ -1622,7 +1622,7 @@ _tbm_layer_queue_acquirable_cb(tbm_surface_queue_h surface_queue, void *data)
 
 		private_layer->waiting_buffer = tdm_buffer_ref_backend(surface);
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) waiting_buffer(%p)",
 					 private_layer, private_layer->waiting_buffer);
 
@@ -1693,7 +1693,7 @@ tdm_layer_set_buffer_queue(tdm_layer *layer, tbm_surface_queue_h buffer_queue)
 		private_layer->waiting_buffer = NULL;
 		_pthread_mutex_lock(&private_display->lock);
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) waiting_buffer(%p)",
 					 private_layer, private_layer->waiting_buffer);
 	}
@@ -1728,7 +1728,7 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 		private_layer->waiting_buffer = NULL;
 		_pthread_mutex_lock(&private_display->lock);
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) waiting_buffer(%p)",
 					 private_layer, private_layer->waiting_buffer);
 	}
@@ -1741,7 +1741,7 @@ tdm_layer_unset_buffer_queue(tdm_layer *layer)
 		_pthread_mutex_lock(&private_display->lock);
 		private_layer->showing_buffer = NULL;
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("layer(%p) showing_buffer(%p)",
 					 private_layer, private_layer->showing_buffer);
 	}

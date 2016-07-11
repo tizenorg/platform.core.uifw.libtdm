@@ -668,9 +668,7 @@ tdm_display_update(tdm_display *dpy)
 #define SUFFIX_MODULE    ".so"
 #define DEFAULT_MODULE   "libtdm-default"SUFFIX_MODULE
 
-int tdm_debug_buffer;
-int tdm_debug_thread;
-int tdm_debug_mutex;
+int tdm_debug_module;
 int tdm_debug_dump;
 
 static tdm_private_display *g_private_display;
@@ -901,21 +899,13 @@ tdm_display_init(tdm_error *error)
 		return g_private_display;
 	}
 
-	debug = getenv("TDM_DEBUG_BUFFER");
-	if (debug && (strstr(debug, "1")))
-		tdm_debug_buffer = 1;
+	debug = getenv("TDM_DEBUG_MODULE");
+	if (debug)
+		tdm_display_enable_debug_module(debug);
 
 	debug = getenv("TDM_DEBUG_DUMP");
 	if (debug)
 		tdm_display_enable_dump(debug);
-
-	debug = getenv("TDM_DEBUG_THREAD");
-	if (debug && (strstr(debug, "1")))
-		tdm_debug_thread = 1;
-
-	debug = getenv("TDM_DEBUG_MUTEX");
-	if (debug && (strstr(debug, "1")))
-		tdm_debug_mutex = 1;
 
 	private_display = calloc(1, sizeof(tdm_private_display));
 	if (!private_display) {
@@ -984,7 +974,6 @@ failed_event:
 failed_mutex_init:
 	free(private_display);
 failed_alloc:
-	tdm_debug_buffer = 0;
 	if (error)
 		*error = ret;
 	_pthread_mutex_unlock(&gLock);
@@ -1028,7 +1017,6 @@ tdm_display_deinit(tdm_display *dpy)
 	pthread_mutex_destroy(&private_display->lock);
 	free(private_display);
 	g_private_display = NULL;
-	tdm_debug_buffer = 0;
 
 	_pthread_mutex_unlock(&gLock);
 
@@ -1049,42 +1037,77 @@ tdm_display_check_module_abi(tdm_private_display *private_display, int abimaj, i
 	return 1;
 }
 
-INTERN void
-tdm_display_enable_debug(char *debug, int enable)
+INTERN tdm_error
+tdm_display_enable_debug_module(const char*modules)
 {
-	if (!strncmp(debug, "TDM_DEBUG_BUFFER", 16))
-		tdm_debug_buffer = enable;
-	else if (!strncmp(debug, "TDM_DEBUG_THREAD", 16))
-		tdm_debug_thread = enable;
-	else if (!strncmp(debug, "TDM_DEBUG_MUTEX", 15))
-		tdm_debug_mutex = enable;
+	char temp[TDM_PATH_LEN];
+	char *arg;
+	char *end;
+
+	snprintf(temp, TDM_PATH_LEN, "%s", modules);
+
+	tdm_debug_module = 0;
+
+	arg = strtok_r(temp, TDM_DELIM, &end);
+	while (arg) {
+		if (!strncmp(arg, "none", 4)) {
+			tdm_debug_module = 0;
+			return TDM_ERROR_NONE;
+		}
+		if (!strncmp(arg, "all", 3)) {
+			tdm_debug_module = 0xFFFFFFFF;
+			return TDM_ERROR_NONE;
+		}
+		if (!strncmp(arg, "buffer", 6))
+			tdm_debug_module |= TDM_DEBUG_BUFFER;
+		else if (!strncmp(arg, "thread", 6))
+			tdm_debug_module |= TDM_DEBUG_THREAD;
+		else if (!strncmp(arg, "mutex", 5))
+			tdm_debug_module |= TDM_DEBUG_MUTEX;
+		else
+			return TDM_ERROR_BAD_REQUEST;
+
+		arg = strtok_r(NULL, TDM_DELIM, &end);
+	}
+
+	TDM_INFO("module debugging... '%s'", modules);
+
+	return TDM_ERROR_NONE;
 }
 
-INTERN void
+INTERN tdm_error
 tdm_display_enable_dump(const char *dump_str)
 {
 	char temp[1024];
 	char *arg;
 	char *end;
-	int flags = 0;
+
+	tdm_debug_dump = 0;
 
 	snprintf(temp, sizeof(temp), "%s", dump_str);
 	arg = strtok_r(temp, ",", &end);
 	while (arg) {
-		if (!strncmp(arg, "all", 3)) {
-			flags = TDM_DUMP_FLAG_LAYER|TDM_DUMP_FLAG_PP|TDM_DUMP_FLAG_CAPTURE;
-			break;
+		if (!strncmp(arg, "none", 4)) {
+			tdm_debug_dump = 0;
+			return TDM_ERROR_NONE;
 		}
-		else if (!strncmp(arg, "layer", 5))
-			flags |= TDM_DUMP_FLAG_LAYER;
+		if (!strncmp(arg, "all", 3)) {
+			tdm_debug_dump = 0xFFFFFFFF;
+			return TDM_ERROR_NONE;
+		}
+		if (!strncmp(arg, "layer", 5))
+			tdm_debug_dump |= TDM_DUMP_FLAG_LAYER;
 		else if (!strncmp(arg, "pp", 2))
-			flags |= TDM_DUMP_FLAG_PP;
+			tdm_debug_dump |= TDM_DUMP_FLAG_PP;
 		else if (!strncmp(arg, "capture", 7))
-			flags |= TDM_DUMP_FLAG_CAPTURE;
-		else if (!strncmp(arg, "none", 4))
-			flags = 0;
+			tdm_debug_dump |= TDM_DUMP_FLAG_CAPTURE;
+		else
+			return TDM_ERROR_BAD_REQUEST;
+
 		arg = strtok_r(NULL, ",", &end);
 	}
 
-	tdm_debug_dump = flags;
+	TDM_INFO("dump... '%s'", dump_str);
+
+	return TDM_ERROR_NONE;
 }
