@@ -189,7 +189,6 @@ tdm_thread_deinit(tdm_private_loop *private_loop)
 	 */
 	_pthread_mutex_unlock(&private_display->lock);
 	pthread_join(private_loop->private_thread->event_thread, NULL);
-	_pthread_mutex_lock(&private_display->lock);
 
 	if (private_loop->private_thread->pipe[0] >= 0)
 		close(private_loop->private_thread->pipe[0]);
