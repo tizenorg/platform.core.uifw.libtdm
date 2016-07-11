@@ -601,6 +601,7 @@ interpret_args(tdm_test_server *data)
 				TDM_EXIT_IF_FAIL(l != NULL);
 				LIST_INITHEAD(&l->prop_list);
 				LIST_ADDTAIL(&l->link, &o->layer_list);
+				l->data = data;
 				l->o = o;
 				l->idx = j;
 
@@ -653,6 +654,7 @@ interpret_args(tdm_test_server *data)
 				TDM_EXIT_IF_FAIL(l != NULL);
 				LIST_INITHEAD(&l->prop_list);
 				LIST_ADDTAIL(&l->link, &o->layer_list);
+				l->data = data;
 				l->o = o;
 				l->idx = i;
 				l->is_primary = 1;

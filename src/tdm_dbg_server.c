@@ -89,7 +89,7 @@ _tdm_dbg_server_dpms(unsigned int pid, char *cwd, int argc, char *argv[], char *
 static void
 _tdm_dbg_server_debug(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
-	int value;
+	int level;
 	char *arg;
 	char *end;
 
@@ -99,29 +99,17 @@ _tdm_dbg_server_debug(unsigned int pid, char *cwd, int argc, char *argv[], char 
 	}
 
 	arg = argv[2];
-	value = strtol(arg, &end, 10);
+	level = strtol(arg, &end, 10);
 
-	tdm_log_set_debug_level(value);
+	tdm_log_set_debug_level(level);
+	TDM_SNPRINTF(reply, len, "debug level: %d\n", level);
 
-	value = !!value;
-	tdm_log_enable_debug(value);
+	if (*end == '@') {
+		char *arg = end + 1;
 
-	TDM_SNPRINTF(reply, len, "debug '%s'\n", (value) ? "on" : "off");
+		tdm_display_enable_debug_module((const char *)arg);
 
-	if (argc > 3) {
-		char temp[TDM_PATH_LEN];
-		char *arg;
-		char *end;
-
-		snprintf(temp, TDM_PATH_LEN, "%s", argv[3]);
-
-		arg = strtok_r(temp, TDM_DELIM, &end);
-		while (arg) {
-			tdm_display_enable_debug(arg, value);
-			if (value)
-				TDM_SNPRINTF(reply, len, "debuging '%s'...\n", arg);
-			arg = strtok_r(NULL, TDM_DELIM, &end);
-		}
+		TDM_SNPRINTF(reply, len, "debugging... '%s'\n", arg);
 	}
 }
 
@@ -296,9 +284,9 @@ static struct {
 	},
 	{
 		"debug", _tdm_dbg_server_debug,
-		"enable the debug level log",
-		"<enable>",
-		"0 or 1"
+		"set the debug level and modules(none,mutex,buffer,thread)",
+		"<level>[@<module1>[,<module2>]]",
+		NULL
 	},
 	{
 		"log_path", _tdm_dbg_server_log_path,

@@ -335,8 +335,9 @@ tdm_vblank_create(tdm_display *dpy, tdm_output *output, tdm_error *error)
 
 	LIST_ADD(&private_vblank->link, &vblank_list);
 
-	VDB("created. vrefresh(%d) dpms(%d)",
-		private_vblank->vrefresh, private_vblank->dpms);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("created. vrefresh(%d) dpms(%d)",
+			private_vblank->vrefresh, private_vblank->dpms);
 
 	return (tdm_vblank*)private_vblank;
 }
@@ -382,7 +383,8 @@ tdm_vblank_destroy(tdm_vblank *vblank)
 		free(w);
 	}
 
-	VIN("destroyed");
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("destroyed");
 
 	free(private_vblank);
 }
@@ -401,7 +403,8 @@ tdm_vblank_set_fps(tdm_vblank *vblank, unsigned int fps)
 	private_vblank->fps = fps;
 	private_vblank->check_HW_or_SW = 1;
 
-	VDB("fps(%d)", private_vblank->fps);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("fps(%d)", private_vblank->fps);
 
 	return TDM_ERROR_NONE;
 }
@@ -419,7 +422,8 @@ tdm_vblank_set_offset(tdm_vblank *vblank, int offset)
 	private_vblank->offset = offset;
 	private_vblank->check_HW_or_SW = 1;
 
-	VDB("offset(%d)", private_vblank->offset);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("offset(%d)", private_vblank->offset);
 
 	return TDM_ERROR_NONE;
 }
@@ -436,7 +440,8 @@ tdm_vblank_set_enable_fake(tdm_vblank *vblank, unsigned int enable_fake)
 
 	private_vblank->enable_fake = enable_fake;
 
-	VDB("enable_fake(%d)", private_vblank->enable_fake);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("enable_fake(%d)", private_vblank->enable_fake);
 
 	return TDM_ERROR_NONE;
 }
@@ -473,7 +478,8 @@ _tdm_vblank_cb_vblank_HW(tdm_output *output, unsigned int sequence,
 		wait_info->func(private_vblank, TDM_ERROR_NONE, private_vblank->last_seq,
 						tv_sec, tv_usec, wait_info->user_data);
 
-	VDB("wait(%p) done", wait_info);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("wait(%p) done", wait_info);
 
 	free(wait_info);
 }
@@ -497,7 +503,8 @@ _tdm_vblank_wait_HW(tdm_vblank_wait_info *wait_info)
 		return ret;
 	}
 
-	VDB("wait(%p) waiting", wait_info);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("wait(%p) waiting", wait_info);
 
 	return TDM_ERROR_NONE;
 }
@@ -518,7 +525,8 @@ _tdm_vblank_cb_vblank_SW(void *user_data)
 	first_wait_info = container_of(private_vblank->SW_wait_list.next, first_wait_info, link);
 	TDM_RETURN_VAL_IF_FAIL(first_wait_info != NULL, TDM_ERROR_OPERATION_FAILED);
 
-	VDB("wait(%p) done", first_wait_info);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("wait(%p) done", first_wait_info);
 
 	private_vblank->last_seq = first_wait_info->target_seq;
 	private_vblank->last_tv_sec = first_wait_info->target_sec;
@@ -568,7 +576,8 @@ _tdm_vblank_cb_vblank_SW_first(tdm_output *output, unsigned int sequence,
 	w = container_of((&private_vblank->SW_pending_wait_list)->next, w, link);
 	TDM_RETURN_IF_FAIL(w != NULL);
 
-	VDB("wait(%p) done", w);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("wait(%p) done", w);
 
 	min_interval = w->interval;
 
@@ -621,8 +630,9 @@ _tdm_vblank_sw_timer_update(tdm_private_vblank *private_vblank)
 	if (ms_delay < 1)
 		ms_delay = 1;
 
-	VDB("wait(%p) curr(%4lu) target(%4lu) ms_delay(%d)",
-		first_wait_info, curr, target, ms_delay);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("wait(%p) curr(%4lu) target(%4lu) ms_delay(%d)",
+			first_wait_info, curr, target, ms_delay);
 
 	tdm_display_lock(private_vblank->dpy);
 
@@ -749,7 +759,8 @@ _tdm_vblank_wait_SW(tdm_vblank_wait_info *wait_info)
 				LIST_DEL(&wait_info->link);
 				return ret;
 			}
-			VDB("wait(%p) waiting", wait_info);
+			if (tdm_debug_module & TDM_DEBUG_VBLANK)
+				VIN("wait(%p) waiting", wait_info);
 		}
 		return TDM_ERROR_NONE;
 	}
@@ -823,8 +834,9 @@ _tdm_vblank_calculate_target(tdm_vblank_wait_info *wait_info)
 		}
 	}
 
-	VDB("target_seq(%d) last_seq(%d) skip(%d)",
-		wait_info->target_seq, private_vblank->last_seq, skip);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("target_seq(%d) last_seq(%d) skip(%d)",
+			wait_info->target_seq, private_vblank->last_seq, skip);
 
 #if 0
 	target -= (private_vblank->SW_align_offset * skip * private_vblank->HW_quotient);
@@ -834,9 +846,10 @@ _tdm_vblank_calculate_target(tdm_vblank_wait_info *wait_info)
 	wait_info->target_sec = target / 1000000;
 	wait_info->target_usec = target % 1000000;
 
-	VDB("wait(%p) last(%4lu) req(%4lu) prev(%4lu) curr(%4lu) skip(%d) hw_interval(%d) target(%4lu,%4lu)",
-		wait_info, last, req - last, prev - last, curr - last,
-		skip, wait_info->target_hw_interval, target, target - last);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		VIN("wait(%p) last(%4lu) req(%4lu) prev(%4lu) curr(%4lu) skip(%d) hw_interval(%d) target(%4lu,%4lu)",
+			wait_info, last, req - last, prev - last, curr - last,
+			skip, wait_info->target_hw_interval, target, target - last);
 }
 
 tdm_error

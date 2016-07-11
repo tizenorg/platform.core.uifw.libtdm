@@ -86,16 +86,16 @@ _tdm_thread_main(void *data)
 	fds.revents = 0;
 
 	while (1) {
-		if (tdm_debug_thread)
+		if (tdm_debug_module & TDM_DEBUG_THREAD)
 			TDM_INFO("server flush");
 		tdm_event_loop_flush(private_loop->dpy);
 
-		if (tdm_debug_thread)
+		if (tdm_debug_module & TDM_DEBUG_THREAD)
 			TDM_INFO("fd(%d) polling in", fd);
 
 		ret = poll(&fds, 1, -1);
 
-		if (tdm_debug_thread)
+		if (tdm_debug_module & TDM_DEBUG_THREAD)
 			TDM_INFO("fd(%d) polling out", fd);
 
 		if (ret < 0) {
@@ -107,7 +107,7 @@ _tdm_thread_main(void *data)
 			}
 		}
 
-		if (tdm_debug_thread)
+		if (tdm_debug_module & TDM_DEBUG_THREAD)
 			TDM_INFO("thread got events");
 
 		if (tdm_event_loop_dispatch(private_loop->dpy) < 0)
@@ -229,7 +229,7 @@ tdm_thread_send_cb(tdm_private_loop *private_loop, tdm_thread_cb_base *base)
 
 	private_thread = private_loop->private_thread;
 
-	if (tdm_debug_thread)
+	if (tdm_debug_module & TDM_DEBUG_THREAD)
 		TDM_INFO("fd(%d) type(%d), length(%d)",
 				 private_thread->pipe[1], base->type, base->length);
 
@@ -261,7 +261,7 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 
 	len = read(private_thread->pipe[0], buffer, sizeof buffer);
 
-	if (tdm_debug_thread)
+	if (tdm_debug_module & TDM_DEBUG_THREAD)
 		TDM_INFO("fd(%d) read length(%d)", private_thread->pipe[0], len);
 
 	if (len == 0)
@@ -277,7 +277,7 @@ tdm_thread_handle_cb(tdm_private_loop *private_loop)
 	i = 0;
 	while (i < len) {
 		base = (tdm_thread_cb_base*)&buffer[i];
-		if (tdm_debug_thread)
+		if (tdm_debug_module & TDM_DEBUG_THREAD)
 			TDM_INFO("type(%d), length(%d)", base->type, base->length);
 		switch (base->type) {
 		case TDM_THREAD_CB_OUTPUT_COMMIT: {

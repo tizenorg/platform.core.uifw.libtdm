@@ -75,7 +75,7 @@ _tdm_event_loop_main_fd_handler(int fd, tdm_event_loop_mask mask, void *user_dat
 
 	private_loop = private_display->private_loop;
 
-	if (tdm_debug_thread)
+	if (tdm_debug_module & TDM_DEBUG_THREAD)
 		TDM_INFO("backend fd(%d) event happens", private_loop->backend_fd);
 
 	func_display = &private_display->func_display;
@@ -225,7 +225,7 @@ tdm_event_loop_dispatch(tdm_private_display *private_display)
 
 	TDM_RETURN_VAL_IF_FAIL(private_loop->wl_loop != NULL, TDM_ERROR_OPERATION_FAILED);
 
-	if (tdm_debug_thread)
+	if (tdm_debug_module & TDM_DEBUG_THREAD)
 		TDM_INFO("dispatch");
 
 	if (tdm_thread_is_running() &&
