@@ -601,6 +601,7 @@ interpret_args(tdm_test_server *data)
 				TDM_EXIT_IF_FAIL(l != NULL);
 				LIST_INITHEAD(&l->prop_list);
 				LIST_ADDTAIL(&l->link, &o->layer_list);
+				l->data = data;
 				l->o = o;
 				l->idx = j;
 
@@ -653,6 +654,7 @@ interpret_args(tdm_test_server *data)
 				TDM_EXIT_IF_FAIL(l != NULL);
 				LIST_INITHEAD(&l->prop_list);
 				LIST_ADDTAIL(&l->link, &o->layer_list);
+				l->data = data;
 				l->o = o;
 				l->idx = i;
 				l->is_primary = 1;
@@ -849,7 +851,6 @@ main(int argc, char *argv[])
 	tdm_error ret;
 
 	signal(SIGINT, exit_test);    /* 2 */
-	signal(SIGSEGV, exit_test);   /* 11 */
 	signal(SIGTERM, exit_test);   /* 15 */
 
 	memset(data, 0, sizeof * data);
