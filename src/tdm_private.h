@@ -73,9 +73,16 @@ extern "C" {
  * @brief The private header file for a frontend library
  */
 
-extern int tdm_debug_buffer;
-extern int tdm_debug_mutex;
-extern int tdm_debug_thread;
+enum {
+	TDM_DEBUG_NONE,
+	TDM_DEBUG_BUFFER    = (1 << 0),
+	TDM_DEBUG_MUTEX     = (1 << 1),
+	TDM_DEBUG_THREAD    = (1 << 2),
+	TDM_DEBUG_SERVER    = (1 << 3),
+	TDM_DEBUG_VBLANK    = (1 << 4),
+};
+
+extern int tdm_debug_module;
 extern int tdm_debug_dump;
 
 #ifdef HAVE_TTRACE
@@ -466,7 +473,7 @@ extern int tdm_dump_enable;
 
 #define _pthread_mutex_unlock(l) \
 	do { \
-		if (tdm_debug_mutex) \
+		if (tdm_debug_module & TDM_DEBUG_MUTEX) \
 			TDM_INFO("mutex unlock"); \
 		pthread_mutex_lock(&tdm_mutex_check_lock); \
 		tdm_mutex_locked = 0; \
@@ -477,7 +484,7 @@ extern int tdm_dump_enable;
 #define MUTEX_TIMEOUT_SEC 5
 #define _pthread_mutex_lock(l) \
 	do { \
-		if (tdm_debug_mutex) \
+		if (tdm_debug_module & TDM_DEBUG_MUTEX) \
 			TDM_INFO("mutex lock"); \
 		struct timespec rtime; \
 		clock_gettime(CLOCK_REALTIME, &rtime); \
@@ -495,7 +502,7 @@ extern int tdm_dump_enable;
 #else //TDM_CONFIG_MUTEX_TIMEOUT
 #define _pthread_mutex_lock(l) \
 	do { \
-		if (tdm_debug_mutex) \
+		if (tdm_debug_module & TDM_DEBUG_MUTEX) \
 			TDM_INFO("mutex lock"); \
 		pthread_mutex_lock(l); \
 		pthread_mutex_lock(&tdm_mutex_check_lock); \
@@ -522,9 +529,9 @@ static inline int TDM_MUTEX_IS_LOCKED(void)
 tdm_error
 tdm_display_update_output(tdm_private_display *private_display,
 						  tdm_output *output_backend, int pipe);
-void
-tdm_display_enable_debug(char *debug, int enable);
-void
+tdm_error
+tdm_display_enable_debug_module(const char*modules);
+tdm_error
 tdm_display_enable_dump(const char *dump_str);
 
 /**

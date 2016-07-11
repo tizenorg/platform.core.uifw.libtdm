@@ -140,7 +140,8 @@ _tdm_server_send_done(tdm_server_wait_info *wait_info, tdm_error error,
 		return;
 	}
 
-	TDM_DBG("req_id(%d) done", wait_info->req_id);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		TDM_INFO("req_id(%d) done", wait_info->req_id);
 
 	vblank_info = wait_info->vblank_info;
 	wl_tdm_vblank_send_done(vblank_info->resource, wait_info->req_id,
@@ -254,7 +255,8 @@ _tdm_server_vblank_cb_wait_vblank(struct wl_client *client, struct wl_resource *
 	wait_info->vblank_info = vblank_info;
 	wait_info->req_id = req_id;
 
-	TDM_DBG("req_id(%d) wait", req_id);
+	if (tdm_debug_module & TDM_DEBUG_VBLANK)
+		TDM_INFO("req_id(%d) wait", req_id);
 
 	ret = tdm_vblank_wait(vblank_info->vblank, req_sec, req_usec, interval, _tdm_server_cb_vblank, wait_info);
 	TDM_GOTO_IF_FAIL(ret == TDM_ERROR_NONE, wait_failed);
@@ -442,8 +444,6 @@ _tdm_server_bind(struct wl_client *client, void *data,
 		wl_client_post_no_memory(client);
 		return;
 	}
-
-	TDM_DBG("tdm server binding");
 
 	wl_resource_set_implementation(resource, &tdm_implementation, data, NULL);
 }

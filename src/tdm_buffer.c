@@ -60,7 +60,7 @@ _tdm_buffer_destroy_info(void *user_data)
 
 	if (buf_info->backend_ref_count > 0) {
 		TDM_NEVER_GET_HERE();
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("%p", buf_info->buffer);
 	}
 
@@ -77,7 +77,7 @@ _tdm_buffer_destroy_info(void *user_data)
 		free(func_info);
 	}
 
-	if (tdm_debug_buffer)
+	if (tdm_debug_module & TDM_DEBUG_BUFFER)
 		TDM_INFO("%p destroyed", buf_info->buffer);
 
 	free(buf_info);
@@ -107,7 +107,7 @@ tdm_buffer_get_info(tbm_surface_h buffer)
 			return NULL;
 		}
 
-		if (tdm_debug_buffer)
+		if (tdm_debug_module & TDM_DEBUG_BUFFER)
 			TDM_INFO("%p created", buf_info->buffer);
 	}
 
