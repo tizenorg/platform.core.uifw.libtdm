@@ -141,6 +141,8 @@ static const struct format_info format_info[] = {
 	{ TBM_FORMAT_BGRX1010102, "BX30", MAKE_RGB_INFO(10, 2, 10, 12, 10, 22, 0, 0) },
 };
 
+static unsigned int rand_seed;
+
 unsigned int format_fourcc(const char *name)
 {
 	unsigned int i;
@@ -558,7 +560,6 @@ fill_smpte_rgb32(const struct rgb_info *rgb, unsigned char *mem,
 	};
 	unsigned int x;
 	unsigned int y;
-	unsigned int seed = time(NULL);;
 
 	if (width < 8)
 		return;
@@ -584,7 +585,7 @@ fill_smpte_rgb32(const struct rgb_info *rgb, unsigned char *mem,
 				colors_bottom[(x - width * 5 / 7) * 3
 							  / (width / 7) + 4];
 		for (; x < width; ++x) {
-			((uint32_t *)mem)[x] = (rand_r(&seed) % 2) ? MAKE_RGBA(rgb, 255, 255, 255, 255) : MAKE_RGBA(rgb, 0, 0, 0, 255);
+			((uint32_t *)mem)[x] = (rand_r(&rand_seed) % 2) ? MAKE_RGBA(rgb, 255, 255, 255, 255) : MAKE_RGBA(rgb, 0, 0, 0, 255);
 		}
 		mem += stride;
 	}
@@ -938,6 +939,9 @@ tdm_test_buffer_fill(tbm_surface_h buffer, int pattern)
 	tbm_surface_info_s info;
 	void *plane[3];
 	int ret;
+
+	if (rand_seed == 0)
+		rand_seed = time(NULL);
 
 	ret = tbm_surface_map(buffer, TBM_OPTION_WRITE, &info);
 	TDM_EXIT_IF_FAIL(ret == 0);
