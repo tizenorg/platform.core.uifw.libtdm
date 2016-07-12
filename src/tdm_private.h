@@ -533,6 +533,8 @@ tdm_error
 tdm_display_enable_debug_module(const char*modules);
 tdm_error
 tdm_display_enable_dump(const char *dump_str);
+tdm_error
+tdm_display_enable_path(const char *path);
 
 /**
  * @brief The tdm vblank object
