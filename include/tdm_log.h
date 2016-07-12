@@ -63,6 +63,7 @@ enum {
 	TDM_LOG_LEVEL_DBG,
 };
 
+void tdm_log_enable_color(unsigned int enable);
 void tdm_log_enable_dlog(unsigned int enable);
 void tdm_log_enable_debug(unsigned int enable);
 void tdm_log_set_debug_level(int level);

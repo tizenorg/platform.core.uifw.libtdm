@@ -61,6 +61,7 @@
 #define LOG_TAG "TDM"
 
 static unsigned int dlog_enable;
+static unsigned int color_enable = 1;
 static unsigned int debug_level = TDM_LOG_LEVEL_INFO;
 
 static unsigned int need_check_env = 1;
@@ -82,6 +83,12 @@ _tdm_log_check_env(void)
 	str = getenv("TDM_DLOG");
 	if (str && (strstr(str, "1")))
 		dlog_enable = 1;
+}
+
+EXTERN void
+tdm_log_enable_color(unsigned int enable)
+{
+	color_enable = enable;
 }
 
 EXTERN void
@@ -146,9 +153,12 @@ tdm_log_print(int level, const char *fmt, ...)
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 
-		printf("%s", color[level]);
+		if (color_enable)
+			printf("%s", color[level]);
 		printf("[%s]", lvl_str[level]);
-		printf(COLOR_RESET"[%d.%06d]", (int)ts.tv_sec, (int)ts.tv_nsec / 1000);
+		if (color_enable)
+			printf(COLOR_RESET);
+		printf("[%d.%06d]", (int)ts.tv_sec, (int)ts.tv_nsec / 1000);
 		va_start(arg, fmt);
 		vprintf(fmt, arg);
 		va_end(arg);

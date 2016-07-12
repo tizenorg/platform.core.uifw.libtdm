@@ -907,6 +907,10 @@ tdm_display_init(tdm_error *error)
 	if (debug)
 		tdm_display_enable_dump(debug);
 
+	debug = getenv("TDM_DEBUG_PATH");
+	if (debug)
+		tdm_display_enable_path(debug);
+
 	private_display = calloc(1, sizeof(tdm_private_display));
 	if (!private_display) {
 		ret = TDM_ERROR_OUT_OF_MEMORY;
@@ -1064,6 +1068,8 @@ tdm_display_enable_debug_module(const char*modules)
 			tdm_debug_module |= TDM_DEBUG_THREAD;
 		else if (!strncmp(arg, "mutex", 5))
 			tdm_debug_module |= TDM_DEBUG_MUTEX;
+		else if (!strncmp(arg, "vblank", 6))
+			tdm_debug_module |= TDM_DEBUG_VBLANK;
 		else
 			return TDM_ERROR_BAD_REQUEST;
 
@@ -1108,6 +1114,39 @@ tdm_display_enable_dump(const char *dump_str)
 	}
 
 	TDM_INFO("dump... '%s'", dump_str);
+
+	return TDM_ERROR_NONE;
+}
+
+INTERN tdm_error
+tdm_display_enable_path(const char *path)
+{
+	static int old_stdout = -1;
+	char fd_name[TDM_PATH_LEN];
+	int  log_fd = -1;
+	FILE *log_fl;
+
+	if (old_stdout == -1)
+		old_stdout = dup(STDOUT_FILENO);
+
+	tdm_log_enable_dlog(0);
+
+	snprintf(fd_name, TDM_PATH_LEN, "%s", path);
+
+	log_fl = fopen(fd_name, "a");
+	if (!log_fl) {
+		TDM_ERR("failed: open file(%s)\n", fd_name);
+		return TDM_ERROR_OPERATION_FAILED;
+	}
+
+	fflush(stderr);
+	close(STDOUT_FILENO);
+
+	setvbuf(log_fl, NULL, _IOLBF, 512);
+	log_fd = fileno(log_fl);
+
+	dup2(log_fd, STDOUT_FILENO);
+	fclose(log_fl);
 
 	return TDM_ERROR_NONE;
 }

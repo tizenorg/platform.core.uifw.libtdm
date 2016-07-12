@@ -118,8 +118,6 @@ _tdm_dbg_server_log_path(unsigned int pid, char *cwd, int argc, char *argv[], ch
 {
 	static int old_stdout = -1;
 	char fd_name[TDM_PATH_LEN];
-	int  log_fd = -1;
-	FILE *log_fl;
 	char *path;
 
 	if (argc < 3) {
@@ -149,22 +147,14 @@ _tdm_dbg_server_log_path(unsigned int pid, char *cwd, int argc, char *argv[], ch
 			else
 				snprintf(fd_name, TDM_PATH_LEN, "%s", path);
 		}
+		tdm_log_enable_color(0);
 	}
 
-	log_fl = fopen(fd_name, "a");
-	if (!log_fl) {
-		TDM_SNPRINTF(reply, len, "failed: open file(%s)\n", fd_name);
+	if (tdm_display_enable_path((const char*)fd_name) != TDM_ERROR_NONE) {
+		TDM_SNPRINTF(reply, len, "failed: '%s'\n", path);
 		return;
 	}
 
-	fflush(stderr);
-	close(STDOUT_FILENO);
-
-	setvbuf(log_fl, NULL, _IOLBF, 512);
-	log_fd = fileno(log_fl);
-
-	dup2(log_fd, STDOUT_FILENO);
-	fclose(log_fl);
 done:
 	TDM_SNPRINTF(reply, len, "log path: '%s'\n", path);
 }
