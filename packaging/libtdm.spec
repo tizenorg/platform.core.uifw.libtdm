@@ -27,6 +27,7 @@ This supports frontend & backend library header and so
 %package client
 Summary:        Client library for Tizen Display Manager
 Group:          Development/Libraries
+Requires:       libtdm = %{version}
 
 %description client
 Tizen Display Manager Client Library
@@ -45,7 +46,7 @@ Tizen Display Manager Client Library headers
 %package tools
 Summary:        Tools for libtdm
 Group:          Development/Utilities
-#Provides:       libtdm = %version
+Requires:       libtdm = %{version}
 
 %description tools
 This contains libtdm tools for fundamental testing
