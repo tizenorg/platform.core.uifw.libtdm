@@ -93,7 +93,7 @@ rm -f %{_unitdir_user}/default.target.wants/tdm-socket-user.path
 %defattr(-,root,root,-)
 %{TZ_SYS_RO_SHARE}/license/%{name}
 %{_libdir}/libtdm.so.*
-%{_bindir}/tdm-dbg
+%attr(750,root,root) %{_bindir}/tdm-dbg
 %{_unitdir}/tdm-socket.path
 %{_unitdir}/tdm-socket.service
 %{_unitdir_user}/tdm-socket-user.path
@@ -128,7 +128,7 @@ rm -f %{_unitdir_user}/default.target.wants/tdm-socket-user.path
 
 %files tools
 %manifest %{name}.manifest
-%{_bindir}/tdm-test-server
+%attr(750,root,root) %{_bindir}/tdm-test-server
 %{_bindir}/tdm-test-client
 
 %changelog
