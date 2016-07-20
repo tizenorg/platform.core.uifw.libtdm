@@ -200,12 +200,28 @@ static struct tdm_type_name tdm_conn_names[] = {
 };
 TDM_TYPE_NAME_FN(conn)
 
+static struct tdm_type_name tdm_transform_names[] = {
+	{ TDM_TRANSFORM_NORMAL, "none" },
+	{ TDM_TRANSFORM_90, "90" },
+	{ TDM_TRANSFORM_180, "180" },
+	{ TDM_TRANSFORM_270, "270" },
+	{ TDM_TRANSFORM_FLIPPED, "flipped" },
+	{ TDM_TRANSFORM_FLIPPED_90, "90,flipped" },
+	{ TDM_TRANSFORM_FLIPPED_180, "180,flipped" },
+	{ TDM_TRANSFORM_FLIPPED_270, "270,flipped" },
+};
+TDM_TYPE_NAME_FN(transform)
+
 
 #define TDM_BIT_NAME_FB(res)					\
 static inline const char * tdm_##res##_str(int type, char **reply, int *len)	\
 {			\
 	unsigned int i;						\
 	const char *sep = "";					\
+	if (type == 0) {	\
+		TDM_SNPRINTF(*reply, len, "none");	\
+		return NULL;	\
+	}	\
 	for (i = 0; i < TDM_ARRAY_SIZE(tdm_##res##_names); i++) {		\
 		if (type & (1 << i)) {				\
 			TDM_SNPRINTF(*reply, len, "%s%s", sep, tdm_##res##_names[i]);	\

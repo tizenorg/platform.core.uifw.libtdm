@@ -222,11 +222,6 @@ _tdm_display_update_caps_pp(tdm_private_display *private_display,
 							tdm_caps_pp *caps)
 {
 	tdm_func_display *func_display = &private_display->func_display;
-	char buf[1024];
-	int bufsize = sizeof(buf);
-	char *str_buf = buf;
-	int *len_buf = &bufsize;
-	int i;
 	tdm_error ret;
 
 	if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP))
@@ -243,15 +238,6 @@ _tdm_display_update_caps_pp(tdm_private_display *private_display,
 		return TDM_ERROR_BAD_MODULE;
 	}
 
-	TDM_DBG("pp capabilities: %x", caps->capabilities);
-	buf[0] = '\0';
-	for (i = 0; i < caps->format_count; i++)
-		TDM_SNPRINTF(str_buf, len_buf, "%c%c%c%c ", FOURCC_STR(caps->formats[i]));
-	TDM_DBG("pp formats: %s", buf);
-	TDM_DBG("pp min  : %dx%d", caps->min_w, caps->min_h);
-	TDM_DBG("pp max  : %dx%d", caps->max_w, caps->max_h);
-	TDM_DBG("pp align: %d", caps->preferred_align);
-
 	return TDM_ERROR_NONE;
 }
 
@@ -260,11 +246,6 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display,
 								 tdm_caps_capture *caps)
 {
 	tdm_func_display *func_display = &private_display->func_display;
-	char buf[1024];
-	int bufsize = sizeof(buf);
-	char *str_buf = buf;
-	int *len_buf = &bufsize;
-	int i;
 	tdm_error ret;
 
 	if (!(private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE))
@@ -281,11 +262,6 @@ _tdm_display_update_caps_capture(tdm_private_display *private_display,
 		return TDM_ERROR_BAD_MODULE;
 	}
 
-	buf[0] = '\0';
-	for (i = 0; i < caps->format_count; i++)
-		TDM_SNPRINTF(str_buf, len_buf, "%c%c%c%c ", FOURCC_STR(caps->formats[i]));
-	TDM_DBG("capture formats: %s", buf);
-
 	return TDM_ERROR_NONE;
 }
 
@@ -294,11 +270,6 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display,
 							   tdm_layer *layer_backend, tdm_caps_layer *caps)
 {
 	tdm_func_layer *func_layer = &private_display->func_layer;
-	char buf[1024];
-	int bufsize = sizeof(buf);
-	char *str_buf = buf;
-	int *len_buf = &bufsize;
-	int i;
 	tdm_error ret;
 
 	if (!func_layer->layer_get_capability) {
@@ -312,15 +283,6 @@ _tdm_display_update_caps_layer(tdm_private_display *private_display,
 		return TDM_ERROR_BAD_MODULE;
 	}
 
-	TDM_DBG("layer capabilities: %x", caps->capabilities);
-	TDM_DBG("layer zpos : %d", caps->zpos);
-	buf[0] = '\0';
-	for (i = 0; i < caps->format_count; i++)
-		TDM_SNPRINTF(str_buf, len_buf, "%c%c%c%c ", FOURCC_STR(caps->formats[i]));
-	TDM_DBG("layer formats: %s", buf);
-	for (i = 0; i < caps->prop_count; i++)
-		TDM_DBG("layer props: %d, %s", caps->props[i].id, caps->props[i].name);
-
 	return TDM_ERROR_NONE;
 }
 
@@ -330,7 +292,6 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, int pipe,
 {
 	tdm_func_output *func_output = &private_display->func_output;
 	char temp[TDM_NAME_LEN];
-	int i;
 	tdm_error ret;
 
 	if (!func_output->output_get_capability) {
@@ -347,28 +308,6 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, int pipe,
 	/* FIXME: Use model for tdm client to distinguish amoung outputs */
 	snprintf(temp, TDM_NAME_LEN, "%s-%d", caps->model, pipe);
 	snprintf(caps->model, TDM_NAME_LEN, "%s", temp);
-
-	TDM_DBG("output maker: %s", caps->maker);
-	TDM_DBG("output model: %s", caps->model);
-	TDM_DBG("output name: %s", caps->name);
-	TDM_DBG("output status: %d", caps->status);
-	TDM_DBG("output type : %d", caps->type);
-	for (i = 0; i < caps->prop_count; i++)
-		TDM_DBG("output props: %d, %s", caps->props[i].id, caps->props[i].name);
-	for (i = 0; i < caps->mode_count; i++) {
-		TDM_DBG("output modes: name(%s), clock(%d) vrefresh(%d), flags(%x), type(%d)",
-				caps->modes[i].name, caps->modes[i].clock, caps->modes[i].vrefresh,
-				caps->modes[i].flags, caps->modes[i].type);
-		TDM_DBG("\t\t %d, %d, %d, %d, %d",
-				caps->modes[i].hdisplay, caps->modes[i].hsync_start, caps->modes[i].hsync_end,
-				caps->modes[i].htotal, caps->modes[i].hskew);
-		TDM_DBG("\t\t %d, %d, %d, %d, %d",
-				caps->modes[i].vdisplay, caps->modes[i].vsync_start, caps->modes[i].vsync_end,
-				caps->modes[i].vtotal, caps->modes[i].vscan);
-	}
-	TDM_DBG("output min  : %dx%d", caps->min_w, caps->min_h);
-	TDM_DBG("output max  : %dx%d", caps->max_w, caps->max_h);
-	TDM_DBG("output align: %d", caps->preferred_align);
 
 	return TDM_ERROR_NONE;
 }

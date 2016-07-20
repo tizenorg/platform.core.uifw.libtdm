@@ -494,230 +494,255 @@ tdm_helper_capture_output(tdm_output *output, tbm_surface_h dst_buffer,
 EXTERN void
 tdm_helper_get_display_information(tdm_display *dpy, char *reply, int *len)
 {
-	const char *name, *vendor;
-	int major, minor;
+	tdm_private_display *private_display;
+	tdm_backend_module *module_data;
+	tdm_func_output *func_output;
+	tdm_func_layer *func_layer;
+	tdm_private_output *private_output = NULL;
+	tdm_private_layer *private_layer = NULL;
+	tdm_private_pp *private_pp = NULL;
+	tdm_private_capture *private_capture = NULL;
 	tdm_error ret;
-	int i, count;
-	tdm_output *output;
-	const tdm_prop *props;
-	int min_w, min_h, max_w, max_h, preferred_align;
-	const tbm_format *formats;
-	tdm_display_capability display_caps;
+	int i;
 
-	ret = tdm_display_get_backend_info(dpy, &name, &vendor, &major, &minor);
-	TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+	TDM_DBG_RETURN_IF_FAIL(dpy != NULL);
 
-	TDM_SNPRINTF(reply, len, "TDM backend name: %s\n", name);
-	TDM_SNPRINTF(reply, len, "TDM backend vendor: %s\n", vendor);
-	TDM_SNPRINTF(reply, len, "TDM backend version: %d.%d\n\n", major, minor);
+	private_display = dpy;
+	func_output = &private_display->func_output;
+	func_layer = &private_display->func_layer;
+	_pthread_mutex_lock(&private_display->lock);
 
-	ret =  tdm_display_get_output_count(dpy, &count);
-	TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+	/* module information */
+	module_data = private_display->module_data;
+	TDM_SNPRINTF(reply, len, "[TDM backend information]\n");
+	TDM_SNPRINTF(reply, len, "name: %s\n", module_data->name);
+	TDM_SNPRINTF(reply, len, "vendor: %s\n", module_data->vendor);
+	TDM_SNPRINTF(reply, len, "version: %d.%d\n\n",
+				 (int)TDM_BACKEND_GET_ABI_MAJOR(module_data->abi_version),
+				 (int)TDM_BACKEND_GET_ABI_MINOR(module_data->abi_version));
 
+	/* output information */
 	TDM_SNPRINTF(reply, len, "[Output information]\n");
-	TDM_SNPRINTF(reply, len, "-------------------------------------------------------------------------------------------\n");
-	TDM_SNPRINTF(reply, len, "idx   maker   model   name   type   status   dpms   subpix   prefer   min   max   phy\n");
-	TDM_SNPRINTF(reply, len, "-------------------------------------------------------------------------------------------\n");
-
-	for (i = 0; i < count; i++) {
-		/* idx  maker  model  name  type  status  dpms  subpix  prefer  min  max  phy */
-		const char *maker, *model, *name;
-		tdm_output_type type;
-		tdm_output_conn_status status;
-		unsigned int subpixel;
-		unsigned int mmWidth, mmHeight;
-		tdm_output_dpms dpms;
-		const tdm_output_mode *mode, *modes;
-		int j, cnt;
-
-		output = tdm_display_get_output(dpy, i, &ret);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_model_info(output, &maker, &model, &name);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_output_type(output, &type);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_conn_status(output, &status);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_dpms(output, &dpms);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_subpixel(output, &subpixel);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_available_size(output, &min_w, &min_h, &max_w, &max_h, &preferred_align);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_physical_size(output, &mmWidth, &mmHeight);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
+	TDM_SNPRINTF(reply, len, "--------------------------------------------------------------------------------------------\n");
+	TDM_SNPRINTF(reply, len, "idx   maker   model   name   type   status   dpms   subpixel   align_w   min   max   phy(mm)\n");
+	TDM_SNPRINTF(reply, len, "--------------------------------------------------------------------------------------------\n");
+	LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link) {
 		TDM_SNPRINTF(reply, len, "%d   %s   %s   %s   %s   %s   %s   %d   %d   %dx%d   %dx%d   %dx%d\n",
-					 i, maker, model, name, tdm_conn_str(type), tdm_status_str(status),
-					 tdm_dpms_str(dpms), subpixel, preferred_align,
-					 min_w, min_h, max_w, max_h, mmWidth, mmHeight);
+					 private_output->index, private_output->caps.maker,
+					 private_output->caps.model, private_output->caps.name,
+					 tdm_conn_str(private_output->caps.type),
+					 tdm_status_str(private_output->caps.status),
+					 tdm_dpms_str(private_output->current_dpms_value),
+					 private_output->caps.subpixel,
+					 private_output->caps.preferred_align,
+					 private_output->caps.min_w, private_output->caps.min_h,
+					 private_output->caps.max_w, private_output->caps.max_h,
+					 private_output->caps.mmWidth, private_output->caps.mmHeight);
 
-		ret = tdm_output_get_mode(output, &mode);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+		TDM_SNPRINTF(reply, len, "\t%d modes:\n", private_output->caps.mode_count);
 
-		ret = tdm_output_get_available_modes(output, &modes, &cnt);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+		if (private_output->caps.mode_count > 0) {
+			const tdm_output_mode *current_mode = NULL;
 
-		TDM_SNPRINTF(reply, len, "\t%d modes:\n", cnt);
+			TDM_DBG_GOTO_IF_FAIL(func_output->output_get_mode, unlock);
+			ret = func_output->output_get_mode(private_output->output_backend, &current_mode);
+			TDM_DBG_GOTO_IF_FAIL(ret == TDM_ERROR_NONE, unlock);
 
-		if (cnt > 0) {
-			TDM_SNPRINTF(reply, len, "\t\tname refresh (Hz) hdisp hss hse htot vdisp vss vse vtot\n");
-			for (j = 0; j < cnt; j++) {
-				char *current = (mode == modes + j) ? "*" : " ";
+			TDM_SNPRINTF(reply, len, "\t\t name refresh (Hz) hdisp hss hse htot vdisp vss vse vtot\n");
+			for (i = 0; i < private_output->caps.mode_count; i++) {
+				char *current = (current_mode == private_output->caps.modes + i) ? "*" : " ";
 				TDM_SNPRINTF(reply, len, "\t\t%s%s %d %d %d %d %d %d %d %d %d ",
 							 current,
-							 modes[j].name,
-							 modes[j].vrefresh,
-							 modes[j].hdisplay,
-							 modes[j].hsync_start,
-							 modes[j].hsync_end,
-							 modes[j].htotal,
-							 modes[j].vdisplay,
-							 modes[j].vsync_start,
-							 modes[j].vsync_end,
-							 modes[j].vtotal);
-				tdm_mode_flag_str(modes[j].flags, &reply, len);
+							 private_output->caps.modes[i].name,
+							 private_output->caps.modes[i].vrefresh,
+							 private_output->caps.modes[i].hdisplay,
+							 private_output->caps.modes[i].hsync_start,
+							 private_output->caps.modes[i].hsync_end,
+							 private_output->caps.modes[i].htotal,
+							 private_output->caps.modes[i].vdisplay,
+							 private_output->caps.modes[i].vsync_start,
+							 private_output->caps.modes[i].vsync_end,
+							 private_output->caps.modes[i].vtotal);
+				tdm_mode_flag_str(private_output->caps.modes[i].flags, &reply, len);
 				TDM_SNPRINTF(reply, len, " ");
-				tdm_mode_type_str(modes[j].type, &reply, len);
+				tdm_mode_type_str(private_output->caps.modes[i].type, &reply, len);
 				TDM_SNPRINTF(reply, len, "\n");
 			}
 		}
 
-		ret = tdm_output_get_available_properties(output, &props, &cnt);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
-		TDM_SNPRINTF(reply, len, "\t%d properties:\n", cnt);
-		if (cnt > 0) {
-			TDM_SNPRINTF(reply, len, "\t\tname idx value\n");
-			for (j = 0; j < cnt; j++) {
+		TDM_SNPRINTF(reply, len, "\t%d properties:\n", private_output->caps.prop_count);
+		if (private_output->caps.prop_count > 0) {
+			TDM_SNPRINTF(reply, len, "\t\tname\tidx\tvalue\n");
+			for (i = 0; i < private_output->caps.prop_count; i++) {
 				tdm_value value;
-				ret = tdm_output_get_property(output, props[j].id, &value);
-				TDM_SNPRINTF(reply, len, "\t\t%s %d %d\n",
-							 props[j].name,
-							 props[j].id,
+				TDM_DBG_GOTO_IF_FAIL(func_output->output_get_property, unlock);
+				ret = func_output->output_get_property(private_output->output_backend,
+													   private_output->caps.props[i].id,
+													   &value);
+				TDM_DBG_GOTO_IF_FAIL(ret == TDM_ERROR_NONE, unlock);
+				TDM_SNPRINTF(reply, len, "\t\t%s\t%d\t%d\n",
+							 private_output->caps.props[i].name,
+							 private_output->caps.props[i].id,
 							 value.u32);
 			}
 		}
-		TDM_SNPRINTF(reply, len, "\n");
 	}
+	TDM_SNPRINTF(reply, len, "\n");
 
+	/* layer information */
 	TDM_SNPRINTF(reply, len, "[Layer information]\n");
-	for (i = 0; i < count; i++) {
-		int j, cnt;
-
-		output = tdm_display_get_output(dpy, i, &ret);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
-		ret = tdm_output_get_layer_count(output, &cnt);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
-		if (cnt > 0) {
-			TDM_SNPRINTF(reply, len, "-----------------------------------------------------\n");
-			TDM_SNPRINTF(reply, len, "idx   output   zpos   buf   info   caps\n");
-			TDM_SNPRINTF(reply, len, "-----------------------------------------------------\n");
-			for (j = 0; j < cnt; j++) {
-				tdm_layer *layer;
-				tbm_surface_h buf;
-				tdm_layer_capability layer_caps;
-				int k, c, zpos;
+	TDM_SNPRINTF(reply, len, "-----------------------------------------------------------------------\n");
+	TDM_SNPRINTF(reply, len, "idx   output   zpos   buf   format   size   crop   geometry   transform\n");
+	TDM_SNPRINTF(reply, len, "-----------------------------------------------------------------------\n");
+	LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link) {
+		LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link) {
+			if (!private_layer->usable) {
 				tdm_info_layer info;
+				unsigned int format;
+				tdm_size size;
+				tbm_surface_info_s buf_info;
 
+				TDM_DBG_GOTO_IF_FAIL(func_layer->layer_get_info, unlock);
 				memset(&info, 0, sizeof info);
+				ret = func_layer->layer_get_info(private_layer->layer_backend, &info);
+				TDM_DBG_GOTO_IF_FAIL(ret == TDM_ERROR_NONE, unlock);
 
-				layer = tdm_output_get_layer(output, j, &ret);
-				TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-				ret = tdm_layer_get_capabilities(layer, &layer_caps);
-				TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-				ret = tdm_layer_get_zpos(layer, &zpos);
-				TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
+				format = tbm_surface_get_format(private_layer->showing_buffer);
+				tbm_surface_get_info(private_layer->showing_buffer, &buf_info);
 
-				ret = tdm_layer_get_info(layer, &info);
-				buf = tdm_layer_get_displaying_buffer(layer, &ret);
+				if (IS_RGB(format))
+					size.h = buf_info.planes[0].stride >> 2;
+				else
+					size.h = buf_info.planes[0].stride;
+				size.v = tbm_surface_get_height(private_layer->showing_buffer);
 
 				if (info.src_config.format)
-					TDM_SNPRINTF(reply, len, "%d   %d   %d   %p   %c%c%c%c %dx%d (%d,%d %dx%d) (%d,%d %dx%d) trans(%d)   ",
-								 j, i, zpos, buf,
-								 FOURCC_STR(info.src_config.format), info.src_config.size.h, info.src_config.size.v,
-								 info.src_config.pos.x, info.src_config.pos.y, info.src_config.pos.w, info.src_config.pos.h,
-								 info.dst_pos.x, info.dst_pos.y, info.dst_pos.w, info.dst_pos.h,
-								 info.transform);
-				else
-					TDM_SNPRINTF(reply, len, "%d   %d   %d   %p   %c%c%c%c %dx%d (%d,%d %dx%d) (%d,%d %dx%d) trans(%d)   ",
-								 j, i, zpos, buf,
-								 'N', 'O', 'N', 'E', info.src_config.size.h, info.src_config.size.v,
-								 info.src_config.pos.x, info.src_config.pos.y, info.src_config.pos.w, info.src_config.pos.h,
-								 info.dst_pos.x, info.dst_pos.y, info.dst_pos.w, info.dst_pos.h,
-								 info.transform);
-				tdm_layer_caps_str(layer_caps, &reply, len);
-				TDM_SNPRINTF(reply, len, "\n");
+					format = (info.src_config.format)?:format;
 
-				ret = tdm_layer_get_available_properties(layer, &props, &c);
-				TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-				TDM_SNPRINTF(reply, len, "\t%d properties:\n", c);
-				if (c > 0) {
-					TDM_SNPRINTF(reply, len, "\t\tname idx value\n");
-					for (k = 0; k < c; k++) {
-						tdm_value value;
-						ret = tdm_layer_get_property(layer, props[k].id, &value);
-						TDM_SNPRINTF(reply, len, "\t\t%s %d %d\n",
-									 props[k].name,
-									 props[k].id,
-									 value.u32);
-					}
+				TDM_SNPRINTF(reply, len, "%d   %d   %d   %p   %c%c%c%c   %dx%d   %dx%d+%d+%d   %dx%d+%d+%d   %s\n",
+							 private_layer->index,
+							 private_output->index,
+							 private_layer->caps.zpos,
+							 private_layer->showing_buffer, FOURCC_STR(format), size.h, size.v,
+							 info.src_config.pos.w, info.src_config.pos.h, info.src_config.pos.x, info.src_config.pos.y,
+							 info.dst_pos.w, info.dst_pos.h, info.dst_pos.x, info.dst_pos.y,
+							 tdm_transform_str(info.transform));
+			} else {
+				TDM_SNPRINTF(reply, len, "%d   %d   %d   -\n",
+							 private_layer->index,
+							 private_output->index,
+							 private_layer->caps.zpos);
+			}
+
+			TDM_SNPRINTF(reply, len, "\tcaps\t: ");
+			tdm_layer_caps_str(private_layer->caps.capabilities, &reply, len);
+			TDM_SNPRINTF(reply, len, "\n");
+
+			TDM_SNPRINTF(reply, len, "\tformats\t: ");
+			if (private_layer->caps.format_count > 0) {
+				const char *sep = "";
+				for (i = 0; i < private_layer->caps.format_count; i++) {
+					TDM_SNPRINTF(reply, len, "%s%c%c%c%c", sep, FOURCC_STR(private_layer->caps.formats[i]));
+					sep = ",";
 				}
-
-				ret = tdm_layer_get_available_formats(layer, &formats, &c);
-				TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-				TDM_SNPRINTF(reply, len, "\tformats:");
-				for (k = 0; k < c; k++)
-					TDM_SNPRINTF(reply, len, " %c%c%c%c", FOURCC_STR(formats[k]));
 				TDM_SNPRINTF(reply, len, "\n");
+			}
+
+			TDM_SNPRINTF(reply, len, "\t%d properties:\n", private_layer->caps.prop_count);
+			if (private_layer->caps.prop_count > 0) {
+				TDM_SNPRINTF(reply, len, "\t\tname\tidx\tvalue\n");
+				for (i = 0; i < private_layer->caps.prop_count; i++) {
+					tdm_value value;
+					TDM_DBG_GOTO_IF_FAIL(func_layer->layer_get_property, unlock);
+					ret = func_layer->layer_get_property(private_layer->layer_backend,
+														 private_layer->caps.props[i].id,
+														 &value);
+					TDM_DBG_GOTO_IF_FAIL(ret == TDM_ERROR_NONE, unlock);
+					TDM_SNPRINTF(reply, len, "\t\t%s\t%d\t%d\n",
+								 private_layer->caps.props[i].name,
+								 private_layer->caps.props[i].id,
+								 value.u32);
+				}
 			}
 		}
 	}
-
 	TDM_SNPRINTF(reply, len, "\n");
 
-	ret = tdm_display_get_capabilities(dpy, &display_caps);
-	TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
-	if (display_caps & TDM_DISPLAY_CAPABILITY_PP) {
-		tdm_pp_capability pp_caps;
-
-		ret = tdm_display_get_pp_capabilities(dpy, &pp_caps);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_display_get_pp_available_formats(dpy, &formats, &count);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_display_get_pp_available_size(dpy, &min_w, &min_h, &max_w, &max_h, &preferred_align);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
+	if (private_display->capabilities & TDM_DISPLAY_CAPABILITY_PP) {
+		const char *sep = "";
 		TDM_SNPRINTF(reply, len, "[PP information]\n");
-		TDM_SNPRINTF(reply, len, "caps: ");
-		tdm_pp_caps_str(pp_caps, &reply, len);
+		TDM_SNPRINTF(reply, len, "caps\t: ");
+		tdm_pp_caps_str(private_display->caps_pp.capabilities, &reply, len);
 		TDM_SNPRINTF(reply, len, "\n");
-		TDM_SNPRINTF(reply, len, "formats: ");
-		for (i = 0; i < count; i++)
-			TDM_SNPRINTF(reply, len, " %c%c%c%c", FOURCC_STR(formats[i]));
+		TDM_SNPRINTF(reply, len, "formats\t: ");
+		for (i = 0; i < private_display->caps_pp.format_count; i++) {
+			TDM_SNPRINTF(reply, len, "%s%c%c%c%c", sep, FOURCC_STR(private_display->caps_pp.formats[i]));
+			sep = ",";
+		}
 		TDM_SNPRINTF(reply, len, "\n");
-		TDM_SNPRINTF(reply, len, "size: min(%dx%d) max(%dx%d) preferred(%d)\n",
-					 min_w, min_h, max_w, max_h, preferred_align);
+		TDM_SNPRINTF(reply, len, "size\t: min(%dx%d) max(%dx%d) align_w(%d)\n",
+					 private_display->caps_pp.min_w, private_display->caps_pp.min_h,
+					 private_display->caps_pp.max_w, private_display->caps_pp.max_h,
+					 private_display->caps_pp.preferred_align);
+		if (!LIST_IS_EMPTY(&private_display->pp_list)) {
+			TDM_SNPRINTF(reply, len, "-------------------------------------------------------------\n");
+			TDM_SNPRINTF(reply, len, "src(format size crop)  |  dst(format size crop)  |  transform\n");
+			TDM_SNPRINTF(reply, len, "-------------------------------------------------------------\n");
+			LIST_FOR_EACH_ENTRY(private_pp, &private_display->pp_list, link) {
+				TDM_SNPRINTF(reply, len, "%c%c%c%c %dx%d %dx%d+%d+%d | %c%c%c%c %dx%d %dx%d+%d+%d | %s\n",
+							 FOURCC_STR(private_pp->info.src_config.format),
+							 private_pp->info.src_config.size.h,
+							 private_pp->info.src_config.size.v,
+							 private_pp->info.src_config.pos.x, private_pp->info.src_config.pos.y,
+							 private_pp->info.src_config.pos.w, private_pp->info.src_config.pos.h,
+							 FOURCC_STR(private_pp->info.dst_config.format),
+							 private_pp->info.dst_config.size.h,
+							 private_pp->info.dst_config.size.v,
+							 private_pp->info.dst_config.pos.x, private_pp->info.dst_config.pos.y,
+							 private_pp->info.dst_config.pos.w, private_pp->info.dst_config.pos.h,
+							 tdm_transform_str(private_pp->info.transform));
+			}
+		}
+	} else {
+		TDM_SNPRINTF(reply, len, "[No PP capability]\n");
 	}
+	TDM_SNPRINTF(reply, len, "\n");
 
-	if (display_caps & TDM_DISPLAY_CAPABILITY_CAPTURE) {
-		tdm_capture_capability capture_caps;
-
-		ret = tdm_display_get_capture_capabilities(dpy, &capture_caps);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_display_get_catpure_available_formats(dpy, &formats, &count);
-		TDM_DBG_RETURN_IF_FAIL(ret == TDM_ERROR_NONE);
-
+	if (private_display->capabilities & TDM_DISPLAY_CAPABILITY_CAPTURE) {
+		const char *sep = "";
 		TDM_SNPRINTF(reply, len, "[Capture information]\n");
-		TDM_SNPRINTF(reply, len, "caps: ");
-		tdm_capture_caps_str(capture_caps, &reply, len);
+		TDM_SNPRINTF(reply, len, "caps\t: ");
+		tdm_capture_caps_str(private_display->caps_capture.capabilities, &reply, len);
 		TDM_SNPRINTF(reply, len, "\n");
-		TDM_SNPRINTF(reply, len, "formats: ");
-		for (i = 0; i < count; i++)
-			TDM_SNPRINTF(reply, len, " %c%c%c%c", FOURCC_STR(formats[i]));
+		TDM_SNPRINTF(reply, len, "formats\t: ");
+		for (i = 0; i < private_display->caps_capture.format_count; i++) {
+			TDM_SNPRINTF(reply, len, "%s%c%c%c%c", sep, FOURCC_STR(private_display->caps_capture.formats[i]));
+			sep = ",";
+		}
 		TDM_SNPRINTF(reply, len, "\n");
+		TDM_SNPRINTF(reply, len, "size\t: min(%dx%d) max(%dx%d) align_w(%d)\n",
+					 private_display->caps_capture.min_w, private_display->caps_capture.min_h,
+					 private_display->caps_capture.max_w, private_display->caps_capture.max_h,
+					 private_display->caps_capture.preferred_align);
+		if (!LIST_IS_EMPTY(&private_display->capture_list)) {
+			TDM_SNPRINTF(reply, len, "-----------------------------------\n");
+			TDM_SNPRINTF(reply, len, "dst(format size crop)  |  transform\n");
+			TDM_SNPRINTF(reply, len, "-----------------------------------\n");
+			LIST_FOR_EACH_ENTRY(private_capture, &private_display->capture_list, link) {
+				TDM_SNPRINTF(reply, len, "%c%c%c%c %dx%d %dx%d+%d+%d | %s\n",
+							 FOURCC_STR(private_capture->info.dst_config.format),
+							 private_capture->info.dst_config.size.h,
+							 private_capture->info.dst_config.size.v,
+							 private_capture->info.dst_config.pos.x, private_capture->info.dst_config.pos.y,
+							 private_capture->info.dst_config.pos.w, private_capture->info.dst_config.pos.h,
+							 tdm_transform_str(private_capture->info.transform));
+			}
+		}
+	} else {
+		TDM_SNPRINTF(reply, len, "[No Capture capability]\n");
 	}
+	TDM_SNPRINTF(reply, len, "\n");
+
+unlock:
+	_pthread_mutex_unlock(&private_display->lock);
 }

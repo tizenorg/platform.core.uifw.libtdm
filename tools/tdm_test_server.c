@@ -709,10 +709,9 @@ print_args(tdm_test_server *data)
 	tdm_test_server_capture *c = NULL;
 	tdm_test_server_prop *w = NULL;
 
-	if (data->do_query) {
-		printf("query\n");
+	if (data->do_query)
 		return;
-	}
+
 	LIST_FOR_EACH_ENTRY(o, &data->output_list, link) {
 		printf("output %d: %s", o->idx, o->mode);
 		if (o->refresh > 0)
