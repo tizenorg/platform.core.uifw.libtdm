@@ -128,6 +128,12 @@ extern "C" {
 		return; \
 	} \
 }
+#define TDM_DBG_GOTO_IF_FAIL(cond, dst) { \
+	if (!(cond))  { \
+		TDM_SNPRINTF(reply, len, "[%s %d] '%s' failed\n", __func__, __LINE__, #cond); \
+		goto dst; \
+	} \
+}
 
 #define C(b, m)             (((b) >> (m)) & 0xFF)
 #define B(c, s)             ((((unsigned int)(c)) & 0xff) << (s))

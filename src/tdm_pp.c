@@ -42,13 +42,6 @@
 #include "tdm_private.h"
 #include "tdm_helper.h"
 
-typedef struct _tdm_pp_private_buffer {
-	tbm_surface_h src;
-	tbm_surface_h dst;
-	struct list_head link;
-	struct list_head commit_link;
-} tdm_pp_private_buffer;
-
 #define PP_FUNC_ENTRY() \
 	tdm_func_pp *func_pp; \
 	tdm_private_display *private_display; \
@@ -335,6 +328,8 @@ tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info)
 
 	ret = func_pp->pp_set_info(private_pp->pp_backend, info);
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
+
+	private_pp->info = *info;
 
 	_pthread_mutex_unlock(&private_display->lock);
 

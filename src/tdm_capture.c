@@ -352,6 +352,8 @@ tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info)
 	ret = func_capture->capture_set_info(private_capture->capture_backend, info);
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
+	private_capture->info = *info;
+
 	_pthread_mutex_unlock(&private_display->lock);
 
 	return ret;

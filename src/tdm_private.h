@@ -223,6 +223,7 @@ struct _tdm_private_pp {
 	struct list_head pending_buffer_list;
 	struct list_head buffer_list;
 
+	tdm_info_pp info;
 	pid_t owner_tid;
 };
 
@@ -243,6 +244,7 @@ struct _tdm_private_capture {
 	struct list_head pending_buffer_list;
 	struct list_head buffer_list;
 
+	tdm_info_capture info;
 	pid_t owner_tid;
 };
 
@@ -320,6 +322,13 @@ typedef struct _tdm_buffer_info {
 	struct list_head *list;
 	struct list_head link;
 } tdm_buffer_info;
+
+typedef struct _tdm_pp_private_buffer {
+	tbm_surface_h src;
+	tbm_surface_h dst;
+	struct list_head link;
+	struct list_head commit_link;
+} tdm_pp_private_buffer;
 
 int
 tdm_display_check_module_abi(tdm_private_display *private_display, int abimaj, int abimin);
