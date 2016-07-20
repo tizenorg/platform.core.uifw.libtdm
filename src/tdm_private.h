@@ -160,6 +160,7 @@ struct _tdm_private_display {
 struct _tdm_private_output {
 	struct list_head link;
 
+	int index;
 	unsigned long stamp;
 
 	tdm_private_display *private_display;
@@ -191,6 +192,8 @@ struct _tdm_private_output {
 
 struct _tdm_private_layer {
 	struct list_head link;
+
+	int index;
 
 	tdm_private_display *private_display;
 	tdm_private_output *private_output;

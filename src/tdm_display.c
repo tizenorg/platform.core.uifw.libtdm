@@ -275,7 +275,6 @@ EXTERN tdm_output *
 tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error)
 {
 	tdm_private_output *private_output = NULL;
-	int i = 0;
 
 	DISPLAY_FUNC_ENTRY_ERROR();
 
@@ -284,13 +283,11 @@ tdm_display_get_output(tdm_display *dpy, int index, tdm_error *error)
 	if (error)
 		*error = TDM_ERROR_NONE;
 
-	i = 0;
 	LIST_FOR_EACH_ENTRY(private_output, &private_display->output_list, link) {
-		if (i == index) {
+		if (private_output->index == index) {
 			_pthread_mutex_unlock(&private_display->lock);
 			return private_output;
 		}
-		i++;
 	}
 
 	_pthread_mutex_unlock(&private_display->lock);
@@ -618,7 +615,6 @@ EXTERN tdm_layer *
 tdm_output_get_layer(tdm_output *output, int index, tdm_error *error)
 {
 	tdm_private_layer *private_layer = NULL;
-	int i = 0;
 
 	OUTPUT_FUNC_ENTRY_ERROR();
 
@@ -628,11 +624,10 @@ tdm_output_get_layer(tdm_output *output, int index, tdm_error *error)
 		*error = TDM_ERROR_NONE;
 
 	LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link) {
-		if (i == index) {
+		if (private_layer->index == index) {
 			_pthread_mutex_unlock(&private_display->lock);
 			return private_layer;
 		}
-		i++;
 	}
 
 	_pthread_mutex_unlock(&private_display->lock);

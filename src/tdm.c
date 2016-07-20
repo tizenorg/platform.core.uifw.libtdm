@@ -376,7 +376,7 @@ _tdm_display_update_caps_output(tdm_private_display *private_display, int pipe,
 static tdm_error
 _tdm_display_update_layer(tdm_private_display *private_display,
 						  tdm_private_output *private_output,
-						  tdm_layer *layer_backend)
+						  tdm_layer *layer_backend, int index)
 {
 	tdm_private_layer *private_layer;
 	tdm_error ret;
@@ -387,6 +387,7 @@ _tdm_display_update_layer(tdm_private_display *private_display,
 		TDM_RETURN_VAL_IF_FAIL(private_layer != NULL, TDM_ERROR_OUT_OF_MEMORY);
 
 		LIST_ADDTAIL(&private_layer->link, &private_output->layer_list);
+		private_layer->index = index;
 		private_layer->private_display = private_display;
 		private_layer->private_output = private_output;
 		private_layer->layer_backend = layer_backend;
@@ -433,6 +434,7 @@ tdm_display_update_output(tdm_private_display *private_display,
 		private_output->current_dpms_value = TDM_OUTPUT_DPMS_OFF;
 		private_output->output_backend = output_backend;
 		private_output->pipe = pipe;
+		private_output->index = pipe;
 
 		LIST_INITHEAD(&private_output->layer_list);
 		LIST_INITHEAD(&private_output->capture_list);
@@ -461,7 +463,7 @@ tdm_display_update_output(tdm_private_display *private_display,
 		goto failed_update;
 
 	for (i = 0; i < layer_count; i++) {
-		ret = _tdm_display_update_layer(private_display, private_output, layers[i]);
+		ret = _tdm_display_update_layer(private_display, private_output, layers[i], i);
 		if (ret != TDM_ERROR_NONE)
 			goto failed_update;
 	}
