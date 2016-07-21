@@ -377,6 +377,15 @@ tdm_error
 tdm_output_get_pipe(tdm_output *output, unsigned int *pipe);
 
 /**
+ * @brief Get the index of a primary layer.
+ * @param[in] output A output object
+ * @param[out] index The primary layer index
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_output_get_primary_index(tdm_output *output, int *index);
+
+/**
  * @brief Set the property which has a given id.
  * @param[in] output A output object
  * @param[in] id The property id

@@ -112,7 +112,7 @@ static struct optstrings optstrs[] = {
 		"<prop_name>:<value>", NULL
 	},
 	{
-		OPT_GEN, "b", "set the fill(smtpe,tiles,plane) and framebuffer type(scanout,noncachable,wc)",
+		OPT_GEN, "b", "set the fill(smtpe,tiles,plain) and framebuffer type(scanout,noncachable,wc)",
 		"<fill>[:<buf_flag>[,<buf_flag2>[,...]]]", NULL
 	},
 	{
@@ -121,11 +121,40 @@ static struct optstrings optstrs[] = {
 	},
 };
 
+struct usagestring {
+	const char *string;
+	const char *desc;
+};
+
+static struct usagestring usages[] = {
+	{
+		"-q",
+		NULL
+	},
+	{
+		"-a -b plain",
+		"test all outputs, layers with plain buffers"
+	},
+	{
+		"-o 0@1920x1080",
+		"Set the \"1920x1080\" mode to the output 0. And show a buffer via a primary layer of the output 0"
+	},
+	{
+		"-o 0@1920x1080 -l 1~640x480+50+100",
+		"Create the 640x480 buffer and show it in the (50,100) pos of screen via the layer 1"
+	},
+	{
+		"-p 320x240@NV12~480x360+80+40,640x480@AR24 -l 1~640x480+50+100",
+		"Convert the 320x240@NV12 buffer to the 640x480@AR24 buffer(480x360+80+40) and show the result via the layer 1"
+	},
+};
+
 static void
 usage(char *app_name)
 {
 	int type_size = sizeof(typestrs) / sizeof(struct typestrings);
 	int opt_size = sizeof(optstrs) / sizeof(struct optstrings);
+	int usages_size = sizeof(usages) / sizeof(struct usagestring);
 	int t;
 
 	printf("usage: %s \n\n", app_name);
@@ -147,6 +176,13 @@ usage(char *app_name)
 		printf("\n");
 	}
 
+	printf(" For example)\n\n");
+
+	for (t = 0; t < usages_size; t++) {
+		printf("    $ %s %s\n", app_name, usages[t].string);
+		printf("\t%s\n", usages[t].desc);
+	}
+	printf("\n");
 	exit(0);
 }
 
@@ -158,6 +194,8 @@ static const char *tdm_buf_flag_names[] = {
 	"wc",
 };
 TDM_BIT_NAME_FB(buf_flag)
+
+#define DEFAULT_FORMAT	TBM_FORMAT_ARGB8888
 
 #define print_size(s) \
 	printf("%dx%d", (s)->h, (s)->v)
@@ -212,6 +250,8 @@ typedef struct _tdm_test_server_output {
 	struct list_head layer_list;
 	tdm_test_server *data;
 	tdm_output *output;
+
+	int fill_primary_layer;
 } tdm_test_server_output;
 
 typedef struct _tdm_test_server_pp {
@@ -488,18 +528,16 @@ parse_args(tdm_test_server *data, int argc, char *argv[])
 			LIST_INITHEAD(&o->prop_list);
 			LIST_ADDTAIL(&o->link, &data->output_list);
 			parse_arg_o(o, argv[++i]);
-			last_option = o;
 			last_object = o;
 		} else if (!strncmp(argv[i] + 1, "p", 1)) {
 			TDM_GOTO_IF_FAIL(data->do_all == 0, all);
 			p = calloc(1, sizeof * p);
 			TDM_EXIT_IF_FAIL(p != NULL);
 			p->data = data;
-			p->fps = 30;
+			p->fps = 30;   /* default 30 fps */
 			LIST_ADDTAIL(&p->link, &data->pp_list);
 			parse_arg_p(p, argv[++i]);
 			last_option = p;
-			last_object = o;
 		} else if (!strncmp(argv[i] + 1, "c", 1)) {
 			TDM_GOTO_IF_FAIL(data->do_all == 0, all);
 			c = calloc(1, sizeof * c);
@@ -510,11 +548,16 @@ parse_args(tdm_test_server *data, int argc, char *argv[])
 			LIST_ADDTAIL(&c->link, &data->capture_list);
 			parse_arg_c(c, argv[++i]);
 			last_option = c;
-			last_object = o;
 		} else if (!strncmp(argv[i] + 1, "l", 1)) {
 			TDM_GOTO_IF_FAIL(data->do_all == 0, all);
-			if (!o)
-				goto no_output;
+			if (!o) {
+				o = calloc(1, sizeof * o);
+				TDM_EXIT_IF_FAIL(o != NULL);
+				o->data = data;
+				LIST_INITHEAD(&o->layer_list);
+				LIST_INITHEAD(&o->prop_list);
+				LIST_ADDTAIL(&o->link, &data->output_list);
+			}
 			l = calloc(1, sizeof * l);
 			TDM_EXIT_IF_FAIL(l != NULL);
 			LIST_INITHEAD(&l->prop_list);
@@ -525,12 +568,11 @@ parse_args(tdm_test_server *data, int argc, char *argv[])
 			if (p && last_option == p) {
 				p->l = l;
 				l->owner_p = p;
-			}
-			else if (c && last_option == c) {
+			} else if (c && last_option == c) {
 				c->l = l;
 				l->owner_c = c;
 			}
-			last_object = o;
+			last_object = l;
 		} else if (!strncmp(argv[i] + 1, "w", 1)) {
 			TDM_GOTO_IF_FAIL(data->do_all == 0, all);
 			if (!last_object)
@@ -551,12 +593,22 @@ parse_args(tdm_test_server *data, int argc, char *argv[])
 			exit(0);
 		}
 	}
+
+	LIST_FOR_EACH_ENTRY(p, &data->pp_list, link) {
+		if (!p->l)
+			goto no_layer;
+	}
+	LIST_FOR_EACH_ENTRY(c, &data->capture_list, link) {
+		if (!c->l)
+			goto no_layer;
+	}
+
 	return;
-no_output:
-	printf("Use '-o' to set a output first.\n");
+no_layer:
+	printf("Use '-l' to set a layer for '-p' or '-c'.\n");
 	exit(0);
 no_object:
-	printf("Use '-o' or '-l' or '-p' or '-c' to set a object first.\n");
+	printf("Use '-o' or '-l' to set a object first.\n");
 	exit(0);
 all:
 	printf("Can't use '-%s' with '-a'.\n", argv[i] + 1);
@@ -570,6 +622,7 @@ interpret_args(tdm_test_server *data)
 	tdm_test_server_layer *l = NULL;
 	tdm_error ret;
 
+	/* create the objects of outputs */
 	if (data->do_all) {
 		int i, output_count;
 
@@ -577,9 +630,6 @@ interpret_args(tdm_test_server *data)
 		TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
 		for (i = 0; i < output_count; i++) {
-			tdm_output *output;
-			int j, layer_count;
-
 			o = calloc(1, sizeof * o);
 			TDM_EXIT_IF_FAIL(o != NULL);
 			o->data = data;
@@ -587,41 +637,16 @@ interpret_args(tdm_test_server *data)
 			LIST_INITHEAD(&o->prop_list);
 			LIST_ADDTAIL(&o->link, &data->output_list);
 			o->idx = i;
-
-			output = tdm_display_get_output(data->display, i, &ret);
-			TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-			ret = tdm_output_get_layer_count(output, &layer_count);
-			TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-
-			for (j = 0; j < layer_count; j++) {
-				tdm_layer *layer;
-				tdm_layer_capability capabilities;
-
-				l = calloc(1, sizeof * l);
-				TDM_EXIT_IF_FAIL(l != NULL);
-				LIST_INITHEAD(&l->prop_list);
-				LIST_ADDTAIL(&l->link, &o->layer_list);
-				l->data = data;
-				l->o = o;
-				l->idx = j;
-
-				layer = tdm_output_get_layer(output, j, &ret);
-				TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-				ret = tdm_layer_get_capabilities(layer, &capabilities);
-				TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-
-				if (capabilities & TDM_LAYER_CAPABILITY_PRIMARY)
-					l->is_primary = 1;
-			}
+			o->fill_primary_layer = 1;
 		}
 	}
 
-	/* fill layer information */
+	/* check if the primary layer object exists */
 	LIST_FOR_EACH_ENTRY(o, &data->output_list, link) {
 		tdm_output *output;
 		const tdm_output_mode *mode;
-		int minw, minh, maxw, maxh;
-		int layer_count, i = 1;
+		int j, layer_count, primary_index = 0;
+		tdm_test_server_layer *primary_l = NULL;
 
 		output_setup(o);
 
@@ -631,141 +656,95 @@ interpret_args(tdm_test_server *data)
 		TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 		ret = tdm_output_get_layer_count(output, &layer_count);
 		TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-		ret = tdm_output_get_available_size(output, &minw, &minh, &maxw, &maxh, NULL);
+		ret = tdm_output_get_primary_index(output, &primary_index);
 		TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
-		if (LIST_IS_EMPTY(&o->layer_list)) {
-			ret = tdm_output_get_layer_count(output, &layer_count);
-			TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+		if (LIST_IS_EMPTY(&o->layer_list))
+			o->fill_primary_layer = 1;
+		else {
+			LIST_FOR_EACH_ENTRY(l, &o->layer_list, link) {
+				if (l->idx == primary_index) {
+					l->is_primary = 1;
+					o->fill_primary_layer = 1;
+					primary_l = l;
+					break;
+				}
+			}
+		}
 
-			for (i = 0; i < layer_count; i++) {
-				tdm_layer *layer;
-				tdm_layer_capability capabilities;
-
-				layer = tdm_output_get_layer(output, i, &ret);
-				TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-				ret = tdm_layer_get_capabilities(layer, &capabilities);
-				TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
-
-				if (!(capabilities & TDM_LAYER_CAPABILITY_PRIMARY))
+		if (!primary_l || data->do_all) {
+			for (j = 0; j < layer_count; j++) {
+				if (j != primary_index && !data->do_all)
 					continue;
-
 				l = calloc(1, sizeof * l);
 				TDM_EXIT_IF_FAIL(l != NULL);
 				LIST_INITHEAD(&l->prop_list);
 				LIST_ADDTAIL(&l->link, &o->layer_list);
 				l->data = data;
 				l->o = o;
-				l->idx = i;
-				l->is_primary = 1;
-				l->info.src_config.pos.w = l->info.src_config.size.h = mode->hdisplay;
-				l->info.src_config.pos.h = l->info.src_config.size.v = mode->vdisplay;
-				l->info.dst_pos = l->info.src_config.pos;
-			}
-		} else {
-			LIST_FOR_EACH_ENTRY(l, &o->layer_list, link) {
-				if (l->info.dst_pos.w == 0) {
-					TDM_EXIT_IF_FAIL(!l->owner_p && !l->owner_c);
-					if (l->is_primary) {
-						l->info.dst_pos.w = mode->hdisplay;
-						l->info.dst_pos.h = mode->vdisplay;
-					} else {
-						l->info.dst_pos.w = TDM_ALIGN(mode->hdisplay / 3, 2);
-						l->info.dst_pos.h = TDM_ALIGN(mode->vdisplay / 3, 2);
-						l->info.dst_pos.x = TDM_ALIGN(((mode->hdisplay / 3) / layer_count) * i, 2);
-						l->info.dst_pos.y = TDM_ALIGN(((mode->vdisplay / 3) / layer_count) * i, 2);
-						i++;
-					}
-				}
-				if (minw > 0 && minh > 0) {
-					TDM_EXIT_IF_FAIL(l->info.dst_pos.w >= minw);
-					TDM_EXIT_IF_FAIL(l->info.dst_pos.h >= minh);
-				}
-				if (maxw > 0 && maxh > 0) {
-					TDM_EXIT_IF_FAIL(l->info.dst_pos.w <= maxw);
-					TDM_EXIT_IF_FAIL(l->info.dst_pos.h <= maxh);
-				}
-				if (l->owner_p) {
-					l->info.src_config = l->owner_p->info.dst_config;
-				} else if (l->owner_c) {
-					l->info.src_config = l->owner_c->info.dst_config;
+				l->idx = j;
+				if (j == primary_index) {
+					l->is_primary = 1;
+					l->info.dst_pos.w = mode->hdisplay;
+					l->info.dst_pos.h = mode->vdisplay;
+					primary_l = l;
 				} else {
-					if (l->info.src_config.pos.w == 0) {
-						l->info.src_config.pos.w = l->info.dst_pos.w;
-						l->info.src_config.pos.h = l->info.dst_pos.h;
-					}
+					l->info.dst_pos.w = TDM_ALIGN(mode->hdisplay / 3, 2);
+					l->info.dst_pos.h = TDM_ALIGN(mode->vdisplay / 3, 2);
+					l->info.dst_pos.x = TDM_ALIGN(((mode->hdisplay / 3) / layer_count) * j, 2);
+					l->info.dst_pos.y = TDM_ALIGN(((mode->vdisplay / 3) / layer_count) * j, 2);
 				}
 			}
 		}
+
+		TDM_EXIT_IF_FAIL(primary_l != NULL);
+		LIST_DEL(&primary_l->link);
+		LIST_ADD(&primary_l->link, &o->layer_list);
 	}
-}
 
-static void
-print_args(tdm_test_server *data)
-{
-	tdm_test_server_output *o = NULL;
-	tdm_test_server_layer *l = NULL;
-	tdm_test_server_pp *p = NULL;
-	tdm_test_server_capture *c = NULL;
-	tdm_test_server_prop *w = NULL;
-
-	if (data->do_query)
-		return;
-
+	/* fill the empty information of layers */
 	LIST_FOR_EACH_ENTRY(o, &data->output_list, link) {
-		printf("output %d: %s", o->idx, o->mode);
-		if (o->refresh > 0)
-			printf(" %d\n", o->refresh);
-		else
-			printf("\n");
-		if (!LIST_IS_EMPTY(&o->prop_list)) {
-			printf("\tprops: ");
-			LIST_FOR_EACH_ENTRY(w, &o->prop_list, link) {
-				print_prop(w);
-				printf(" ");
-			}
-			printf("\n");
-		}
+		tdm_output *output;
+		int minw, minh, maxw, maxh;
+
+		output = tdm_display_get_output(data->display, o->idx, &ret);
+		TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+		ret = tdm_output_get_available_size(output, &minw, &minh, &maxw, &maxh, NULL);
+		TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+
+		/* l->info.src_config.size will be decided when a buffer shows really */
 		LIST_FOR_EACH_ENTRY(l, &o->layer_list, link) {
-			printf("\t");
-			printf("layer %d: ", l->idx);
-			print_config(&l->info.src_config);
-			printf(" ! ");
-			print_pos(&l->info.dst_pos);
-			printf(" trans(%d)\n", l->info.transform);
-			if (!LIST_IS_EMPTY(&l->prop_list)) {
-				printf("\t\tprops: ");
-				LIST_FOR_EACH_ENTRY(w, &l->prop_list, link) {
-					print_prop(w);
-					printf(" ");
+			if (minw > 0 && minh > 0) {
+				TDM_EXIT_IF_FAIL(l->info.dst_pos.w >= minw);
+				TDM_EXIT_IF_FAIL(l->info.dst_pos.h >= minh);
+			}
+			if (maxw > 0 && maxh > 0) {
+				TDM_EXIT_IF_FAIL(l->info.dst_pos.w <= maxw);
+				TDM_EXIT_IF_FAIL(l->info.dst_pos.h <= maxh);
+			}
+
+			if (l->owner_p) {
+				l->info.src_config.format = l->owner_p->info.dst_config.format;
+				if (l->info.src_config.pos.w == 0) {
+					TDM_EXIT_IF_FAIL(l->owner_p->info.dst_config.size.h > 0);
+					l->info.src_config.pos.w = l->owner_p->info.dst_config.size.h;
+					l->info.src_config.pos.h = l->owner_p->info.dst_config.size.v;
 				}
-				printf("\n");
+			} else if (l->owner_c) {
+				l->info.src_config.format = l->owner_c->info.dst_config.format;
+				if (l->info.src_config.pos.w == 0) {
+					TDM_EXIT_IF_FAIL(l->owner_c->info.dst_config.size.h > 0);
+					l->info.src_config.pos.w = l->owner_c->info.dst_config.size.h;
+					l->info.src_config.pos.h = l->owner_c->info.dst_config.size.v;
+				}
+			} else {
+				if (l->info.src_config.pos.w == 0) {
+					TDM_EXIT_IF_FAIL(l->info.dst_pos.w > 0);
+					l->info.src_config.pos.w = l->info.dst_pos.w;
+					l->info.src_config.pos.h = l->info.dst_pos.h;
+				}
 			}
 		}
-	}
-	LIST_FOR_EACH_ENTRY(p, &data->pp_list, link) {
-		printf("pp: ");
-		print_config(&p->info.src_config);
-		printf(" ! ");
-		print_config(&p->info.dst_config);
-		printf(" fps(%d) trans(%d)\n", p->fps, p->info.transform);
-		if (p->l)
-			printf("\toutput_idx(%d) layer_idx(%d)\n", p->l->o->idx, p->l->idx);
-	}
-	LIST_FOR_EACH_ENTRY(c, &data->capture_list, link) {
-		printf("capture: o(%d) l(%d) ", c->output_idx, c->layer_idx);
-		print_config(&c->info.dst_config);
-		printf(" trans(%d)\n", c->info.transform);
-		if (c->l)
-			printf("\toutput_idx(%d) layer_idx(%d)\n", c->l->o->idx, c->l->idx);
-	}
-	if (data->bflags != 0) {
-		printf("buffer: ");
-		char temp[256];
-		char *p = temp;
-		int len = sizeof temp;
-		tdm_buf_flag_str(data->bflags, &p, &len);
-		printf(" (%s)\n", temp);
 	}
 }
 
@@ -866,7 +845,6 @@ main(int argc, char *argv[])
 
 	parse_args(data, argc, argv);
 	interpret_args(data);
-	print_args(data);
 
 	if (data->do_query) {
 		tdm_helper_get_display_information(data->display, temp, &len);
@@ -926,6 +904,8 @@ output_setup(tdm_test_server_output *o)
 	ret = tdm_output_set_mode(o->output, found);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
+	printf("output %d: %s %d\n", o->idx, found->name, found->vrefresh);
+
 	ret = tdm_output_get_available_properties(o->output, &props, &count);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
@@ -935,6 +915,7 @@ output_setup(tdm_test_server_output *o)
 				continue;
 			ret = tdm_output_set_property(o->output, props[i].id, w->value);
 			TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+			printf("\tprop '%s': %d\n", props[i].name, w->value.u32);
 			break;
 		}
 	}
@@ -952,21 +933,19 @@ layer_get_buffer(tdm_test_server_layer *l)
 		for (i = 0; i < size; i++) {
 			int width = (l->info.src_config.size.h)?:l->info.src_config.pos.w;
 			int height = (l->info.src_config.size.v)?:l->info.src_config.pos.h;
-			unsigned int format = (l->info.src_config.format)?:TBM_FORMAT_ARGB8888;
+			unsigned int format = (l->info.src_config.format)?:DEFAULT_FORMAT;
 			int flags = l->o->data->bflags;
 			tdm_test_server_buffer *b = calloc(1, sizeof *b);
 			TDM_EXIT_IF_FAIL(b != NULL);
 			b->buffer = tbm_surface_internal_create_with_flags(width, height, format, flags);
 			TDM_EXIT_IF_FAIL(b->buffer != NULL);
+			tdm_helper_clear_buffer(b->buffer);
 			l->bufs[i] = b;
 		}
 	}
-	for (i = 0; i < size; i++) {
-		if (!l->bufs[i]->in_use) {
-			tdm_test_buffer_fill(l->bufs[i]->buffer, l->data->b_fill);
+	for (i = 0; i < size; i++)
+		if (!l->bufs[i]->in_use)
 			return l->bufs[i];
-		}
-	}
 	printf("no available layer buffer.\n");
 	exit(0);
 }
@@ -979,8 +958,13 @@ layer_cb_commit(tdm_output *output, unsigned int sequence,
 	tdm_test_server_layer *l = user_data;
 	tdm_test_server_buffer *b = layer_get_buffer(l);
 
+	if (!l->is_primary || l->o->fill_primary_layer)
+		tdm_test_buffer_fill(b->buffer, l->data->b_fill);
+
 	TDM_EXIT_IF_FAIL(b != NULL);
-	layer_show_buffer(l, b);
+
+	if (!l->is_primary || l->o->fill_primary_layer)
+		layer_show_buffer(l, b);
 }
 
 static void
@@ -1040,6 +1024,12 @@ layer_setup(tdm_test_server_layer *l, tdm_test_server_buffer *b)
 	ret = tdm_layer_set_info(l->layer, &l->info);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
+	printf("layer %d: output(%d) ", l->idx, l->o->idx);
+	print_config(&l->info.src_config);
+	printf(" ! ");
+	print_pos(&l->info.dst_pos);
+	printf(" transform(%s)\n", tdm_transform_str(l->info.transform));
+
 	ret = tdm_layer_get_available_properties(l->layer, &props, &count);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
@@ -1049,6 +1039,7 @@ layer_setup(tdm_test_server_layer *l, tdm_test_server_buffer *b)
 				continue;
 			ret = tdm_layer_set_property(l->layer, props[i].id, w->value);
 			TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+			printf("\tprop '%s': %d\n", props[i].name, w->value.u32);
 			break;
 		}
 	}
@@ -1062,12 +1053,12 @@ pp_get_buffer(tdm_test_server_pp *p)
 		for (i = 0; i < size; i++) {
 			int width = (p->info.src_config.size.h)?:p->info.src_config.pos.w;
 			int height = (p->info.src_config.size.v)?:p->info.src_config.pos.h;
-			unsigned int format = (p->info.src_config.format)?:TBM_FORMAT_ARGB8888;
-			int flags = p->l->o->data->bflags;
+			unsigned int format = (p->info.src_config.format)?:DEFAULT_FORMAT;
 			tdm_test_server_buffer *b = calloc(1, sizeof *b);
 			TDM_EXIT_IF_FAIL(b != NULL);
-			b->buffer = tbm_surface_internal_create_with_flags(width, height, format, flags);
+			b->buffer = tbm_surface_create(width, height, format);
 			TDM_EXIT_IF_FAIL(b->buffer != NULL);
+			tdm_helper_clear_buffer(b->buffer);
 			p->bufs[i] = b;
 		}
 	}
@@ -1186,6 +1177,14 @@ pp_setup(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buff
 	ret = tdm_pp_set_info(p->pp, &p->info);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
+	printf("pp: ");
+	print_config(&p->info.src_config);
+	printf(" ! ");
+	print_config(&p->info.dst_config);
+	printf(" fps(%d) transform(%s)\n", p->fps, tdm_transform_str(p->info.transform));
+	if (p->l)
+		printf("\toutput_idx(%d) layer_idx(%d)\n", p->l->o->idx, p->l->idx);
+
 	layer_setup(p->l, db);
 
 	/* tdm_event_loop_xxx() function is not for the display server. It's for TDM
@@ -1280,6 +1279,12 @@ capture_setup(tdm_test_server_capture *c, tdm_test_server_buffer *b)
 	ret = tdm_capture_set_info(c->capture, &c->info);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
+	printf("capture: o(%d) l(%d) ", c->output_idx, c->layer_idx);
+	print_config(&c->info.dst_config);
+	printf(" transform(%s)\n", tdm_transform_str(c->info.transform));
+	if (c->l)
+		printf("\toutput_idx(%d) layer_idx(%d)\n", c->l->o->idx, c->l->idx);
+
 	layer_setup(c->l, b);
 }
 
@@ -1301,6 +1306,8 @@ run_test(tdm_test_server *data)
 			if (!l->owner_p && !l->owner_c) {
 				tdm_test_server_buffer *b;
 				b = layer_get_buffer(l);
+				if (!l->is_primary || l->o->fill_primary_layer)
+					tdm_test_buffer_fill(b->buffer, data->b_fill);
 				layer_setup(l, b);
 				layer_show_buffer(l, b);
 			}
