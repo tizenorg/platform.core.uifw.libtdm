@@ -41,6 +41,7 @@
 #include "tdm_macro.h"
 #include "buffers.h"
 
+#define ALPHA_VALUE  100
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 /* -----------------------------------------------------------------------------
@@ -401,32 +402,32 @@ fill_smpte_rgb16(const struct rgb_info *rgb, unsigned char *mem,
 				 unsigned int width, unsigned int height, unsigned int stride)
 {
 	const uint16_t colors_top[] = {
-		MAKE_RGBA(rgb, 192, 192, 192, 255),	/* grey */
-		MAKE_RGBA(rgb, 192, 192, 0, 255),	/* yellow */
-		MAKE_RGBA(rgb, 0, 192, 192, 255),	/* cyan */
-		MAKE_RGBA(rgb, 0, 192, 0, 255),		/* green */
-		MAKE_RGBA(rgb, 192, 0, 192, 255),	/* magenta */
-		MAKE_RGBA(rgb, 192, 0, 0, 255),		/* red */
-		MAKE_RGBA(rgb, 0, 0, 192, 255),		/* blue */
+		MAKE_RGBA(rgb, 192, 192, 192, ALPHA_VALUE),	/* grey */
+		MAKE_RGBA(rgb, 192, 192, 0, ALPHA_VALUE),	/* yellow */
+		MAKE_RGBA(rgb, 0, 192, 192, ALPHA_VALUE),	/* cyan */
+		MAKE_RGBA(rgb, 0, 192, 0, ALPHA_VALUE),		/* green */
+		MAKE_RGBA(rgb, 192, 0, 192, ALPHA_VALUE),	/* magenta */
+		MAKE_RGBA(rgb, 192, 0, 0, ALPHA_VALUE),		/* red */
+		MAKE_RGBA(rgb, 0, 0, 192, ALPHA_VALUE),		/* blue */
 	};
 	const uint16_t colors_middle[] = {
-		MAKE_RGBA(rgb, 0, 0, 192, 255),		/* blue */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 192, 0, 192, 255),	/* magenta */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 0, 192, 192, 255),	/* cyan */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 192, 192, 192, 255),	/* grey */
+		MAKE_RGBA(rgb, 0, 0, 192, ALPHA_VALUE),		/* blue */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 192, 0, 192, ALPHA_VALUE),	/* magenta */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 0, 192, 192, ALPHA_VALUE),	/* cyan */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 192, 192, 192, ALPHA_VALUE),	/* grey */
 	};
 	const uint16_t colors_bottom[] = {
-		MAKE_RGBA(rgb, 0, 33, 76, 255),		/* in-phase */
-		MAKE_RGBA(rgb, 255, 255, 255, 255),	/* super white */
-		MAKE_RGBA(rgb, 50, 0, 106, 255),	/* quadrature */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 9, 9, 9, 255),		/* 3.5% */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* 7.5% */
-		MAKE_RGBA(rgb, 29, 29, 29, 255),	/* 11.5% */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
+		MAKE_RGBA(rgb, 0, 33, 76, ALPHA_VALUE),		/* in-phase */
+		MAKE_RGBA(rgb, 255, 255, 255, ALPHA_VALUE),	/* super white */
+		MAKE_RGBA(rgb, 50, 0, 106, ALPHA_VALUE),	/* quadrature */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 9, 9, 9, ALPHA_VALUE),		/* 3.5% */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* 7.5% */
+		MAKE_RGBA(rgb, 29, 29, 29, ALPHA_VALUE),	/* 11.5% */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
 	};
 	unsigned int x;
 	unsigned int y;
@@ -531,32 +532,32 @@ fill_smpte_rgb32(const struct rgb_info *rgb, unsigned char *mem,
 				 unsigned int width, unsigned int height, unsigned int stride)
 {
 	const uint32_t colors_top[] = {
-		MAKE_RGBA(rgb, 192, 192, 192, 255),	/* grey */
-		MAKE_RGBA(rgb, 192, 192, 0, 255),	/* yellow */
-		MAKE_RGBA(rgb, 0, 192, 192, 255),	/* cyan */
-		MAKE_RGBA(rgb, 0, 192, 0, 255),		/* green */
-		MAKE_RGBA(rgb, 192, 0, 192, 255),	/* magenta */
-		MAKE_RGBA(rgb, 192, 0, 0, 255),		/* red */
-		MAKE_RGBA(rgb, 0, 0, 192, 255),		/* blue */
+		MAKE_RGBA(rgb, 192, 192, 192, ALPHA_VALUE),	/* grey */
+		MAKE_RGBA(rgb, 192, 192, 0, ALPHA_VALUE),	/* yellow */
+		MAKE_RGBA(rgb, 0, 192, 192, ALPHA_VALUE),	/* cyan */
+		MAKE_RGBA(rgb, 0, 192, 0, ALPHA_VALUE),		/* green */
+		MAKE_RGBA(rgb, 192, 0, 192, ALPHA_VALUE),	/* magenta */
+		MAKE_RGBA(rgb, 192, 0, 0, ALPHA_VALUE),		/* red */
+		MAKE_RGBA(rgb, 0, 0, 192, ALPHA_VALUE),		/* blue */
 	};
 	const uint32_t colors_middle[] = {
-		MAKE_RGBA(rgb, 0, 0, 192, 255),		/* blue */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 192, 0, 192, 255),	/* magenta */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 0, 192, 192, 255),	/* cyan */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 192, 192, 192, 255),	/* grey */
+		MAKE_RGBA(rgb, 0, 0, 192, ALPHA_VALUE),		/* blue */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 192, 0, 192, ALPHA_VALUE),	/* magenta */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 0, 192, 192, ALPHA_VALUE),	/* cyan */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 192, 192, 192, ALPHA_VALUE),	/* grey */
 	};
 	const uint32_t colors_bottom[] = {
-		MAKE_RGBA(rgb, 0, 33, 76, 255),		/* in-phase */
-		MAKE_RGBA(rgb, 255, 255, 255, 255),	/* super white */
-		MAKE_RGBA(rgb, 50, 0, 106, 255),	/* quadrature */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
-		MAKE_RGBA(rgb, 9, 9, 9, 255),		/* 3.5% */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* 7.5% */
-		MAKE_RGBA(rgb, 29, 29, 29, 255),	/* 11.5% */
-		MAKE_RGBA(rgb, 19, 19, 19, 255),	/* black */
+		MAKE_RGBA(rgb, 0, 33, 76, ALPHA_VALUE),		/* in-phase */
+		MAKE_RGBA(rgb, 255, 255, 255, ALPHA_VALUE),	/* super white */
+		MAKE_RGBA(rgb, 50, 0, 106, ALPHA_VALUE),	/* quadrature */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
+		MAKE_RGBA(rgb, 9, 9, 9, ALPHA_VALUE),		/* 3.5% */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* 7.5% */
+		MAKE_RGBA(rgb, 29, 29, 29, ALPHA_VALUE),	/* 11.5% */
+		MAKE_RGBA(rgb, 19, 19, 19, ALPHA_VALUE),	/* black */
 	};
 	unsigned int x;
 	unsigned int y;
@@ -585,7 +586,7 @@ fill_smpte_rgb32(const struct rgb_info *rgb, unsigned char *mem,
 				colors_bottom[(x - width * 5 / 7) * 3
 							  / (width / 7) + 4];
 		for (; x < width; ++x) {
-			((uint32_t *)mem)[x] = (rand_r(&rand_seed) % 2) ? MAKE_RGBA(rgb, 255, 255, 255, 255) : MAKE_RGBA(rgb, 0, 0, 0, 255);
+			((uint32_t *)mem)[x] = (rand_r(&rand_seed) % 2) ? MAKE_RGBA(rgb, 255, 255, 255, ALPHA_VALUE) : MAKE_RGBA(rgb, 0, 0, 0, ALPHA_VALUE);
 		}
 		mem += stride;
 	}
@@ -751,7 +752,7 @@ fill_tiles_rgb16(const struct format_info *info, unsigned char *mem,
 			uint16_t color =
 				MAKE_RGBA(rgb, (rgb32 >> 16) & 0xff,
 						  (rgb32 >> 8) & 0xff, rgb32 & 0xff,
-						  255);
+						  ALPHA_VALUE);
 
 			((uint16_t *)mem)[x] = color;
 		}
@@ -796,7 +797,7 @@ fill_tiles_rgb32(const struct format_info *info, unsigned char *mem,
 			uint32_t color =
 				MAKE_RGBA(rgb, (rgb32 >> 16) & 0xff,
 						  (rgb32 >> 8) & 0xff, rgb32 & 0xff,
-						  255);
+						  ALPHA_VALUE);
 
 			((uint32_t *)mem)[x] = color;
 		}
