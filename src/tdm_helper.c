@@ -265,6 +265,57 @@ tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file)
 	TDM_INFO("dump %s", file);
 }
 
+EXTERN void
+tdm_helper_clear_buffer(tbm_surface_h buffer)
+{
+	tbm_surface_info_s info;
+	int ret;
+
+	TDM_RETURN_IF_FAIL(buffer != NULL);
+
+	ret = tbm_surface_map(buffer, TBM_OPTION_READ, &info);
+	TDM_RETURN_IF_FAIL(ret == TBM_SURFACE_ERROR_NONE);
+
+	switch (info.format) {
+	case TBM_FORMAT_ARGB8888:
+	case TBM_FORMAT_XRGB8888:
+		memset(info.planes[0].ptr, 0, info.planes[0].stride * info.height);
+		break;
+	case TBM_FORMAT_YVU420:
+	case TBM_FORMAT_YUV420:
+		memset((char*)info.planes[0].ptr, 0x10, info.planes[0].stride * info.height);
+		memset((char*)info.planes[1].ptr, 0x80, info.planes[1].stride * (info.height >> 1));
+		memset((char*)info.planes[2].ptr, 0x80, info.planes[2].stride * (info.height >> 1));
+		break;
+	case TBM_FORMAT_NV12:
+	case TBM_FORMAT_NV21:
+		memset((char*)info.planes[0].ptr, 0x10, info.planes[0].stride * info.height);
+		memset((char*)info.planes[1].ptr, 0x80, info.planes[1].stride * (info.height >> 1));
+		break;
+	case TBM_FORMAT_YUYV: {
+		int *ibuf = (int*)info.planes[0].ptr;
+		int i, size = info.planes[0].stride * info.height / 4;
+
+		for (i = 0 ; i < size ; i++)
+			ibuf[i] = 0x10801080;
+	}
+	break;
+	case TBM_FORMAT_UYVY: {
+		int *ibuf = (int*)info.planes[0].ptr;
+		int i, size = info.planes[0].stride * info.height / 4;
+
+		for (i = 0 ; i < size ; i++)
+			ibuf[i] = 0x80108010; /* YUYV -> 0xVYUY */
+	}
+	break;
+	default:
+		TDM_ERR("can't clear %c%c%c%c buffer", FOURCC_STR(info.format));
+		break;
+	}
+
+	tbm_surface_unmap(buffer);
+}
+
 EXTERN int
 tdm_helper_get_fd(const char *env)
 {

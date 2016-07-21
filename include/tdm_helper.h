@@ -69,6 +69,23 @@ void
 tdm_helper_dump_buffer(tbm_surface_h buffer, const char *file);
 
 /**
+ * @brief fill a buffer with 0.
+ * @details
+ * This function supports only if a buffer has below formats.
+ * - TBM_FORMAT_ARGB8888
+ * - TBM_FORMAT_XRGB8888
+ * - TBM_FORMAT_YVU420
+ * - TBM_FORMAT_YUV420
+ * - TBM_FORMAT_NV12
+ * - TBM_FORMAT_NV21
+ * - TBM_FORMAT_YUYV
+ * - TBM_FORMAT_UYVY
+ * @param[in] buffer A TDM buffer
+ */
+void
+tdm_helper_clear_buffer(tbm_surface_h buffer);
+
+/**
  * @brief Get a fd from the given enviroment variable.
  * @details
  * This function will dup the fd of the given enviroment variable. The Caller
