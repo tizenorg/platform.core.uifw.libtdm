@@ -745,6 +745,27 @@ tdm_output_get_pipe(tdm_output *output, unsigned int *pipe)
 	return ret;
 }
 
+EXTERN tdm_error
+tdm_output_get_primary_index(tdm_output *output, int *index)
+{
+	tdm_private_layer *private_layer = NULL;
+
+	OUTPUT_FUNC_ENTRY();
+	TDM_RETURN_VAL_IF_FAIL(index != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+	_pthread_mutex_lock(&private_display->lock);
+
+	LIST_FOR_EACH_ENTRY(private_layer, &private_output->layer_list, link) {
+		if (private_layer->caps.capabilities & TDM_LAYER_CAPABILITY_PRIMARY) {
+			*index = private_layer->index;
+			break;
+		}
+	}
+
+	_pthread_mutex_unlock(&private_display->lock);
+
+	return ret;
+}
 
 EXTERN tdm_error
 tdm_output_set_property(tdm_output *output, unsigned int id, tdm_value value)
