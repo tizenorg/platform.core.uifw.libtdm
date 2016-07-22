@@ -693,6 +693,8 @@ tdm_helper_get_display_information(tdm_display *dpy, char *reply, int *len)
 			if (private_layer->caps.format_count > 0) {
 				const char *sep = "";
 				for (i = 0; i < private_layer->caps.format_count; i++) {
+					if (private_layer->caps.formats[i] == 0)
+						continue;
 					TDM_SNPRINTF(reply, len, "%s%c%c%c%c", sep, FOURCC_STR(private_layer->caps.formats[i]));
 					sep = ",";
 				}
@@ -727,6 +729,8 @@ tdm_helper_get_display_information(tdm_display *dpy, char *reply, int *len)
 		TDM_SNPRINTF(reply, len, "\n");
 		TDM_SNPRINTF(reply, len, "formats\t: ");
 		for (i = 0; i < private_display->caps_pp.format_count; i++) {
+			if (private_display->caps_pp.formats[i] == 0)
+				continue;
 			TDM_SNPRINTF(reply, len, "%s%c%c%c%c", sep, FOURCC_STR(private_display->caps_pp.formats[i]));
 			sep = ",";
 		}
@@ -767,6 +771,8 @@ tdm_helper_get_display_information(tdm_display *dpy, char *reply, int *len)
 		TDM_SNPRINTF(reply, len, "\n");
 		TDM_SNPRINTF(reply, len, "formats\t: ");
 		for (i = 0; i < private_display->caps_capture.format_count; i++) {
+			if (private_display->caps_capture.formats[i] == 0)
+				continue;
 			TDM_SNPRINTF(reply, len, "%s%c%c%c%c", sep, FOURCC_STR(private_display->caps_capture.formats[i]));
 			sep = ",";
 		}
