@@ -162,6 +162,25 @@ tdm_buffer_remove_release_handler(tbm_surface_h buffer,
 	}
 }
 
+INTERN void
+tdm_buffer_remove_release_handler_internal(tbm_surface_h buffer)
+{
+	tdm_buffer_info *buf_info;
+	tdm_buffer_func_info *func_info = NULL, *next = NULL;
+
+	TDM_RETURN_IF_FAIL(buffer != NULL);
+
+	buf_info = tdm_buffer_get_info(buffer);
+	TDM_RETURN_IF_FAIL(buf_info != NULL);
+
+	LIST_FOR_EACH_ENTRY_SAFE(func_info, next, &buf_info->release_funcs, link) {
+
+		LIST_DEL(&func_info->link);
+		free(func_info);
+
+		return;
+	}
+}
 
 EXTERN tbm_surface_h
 tdm_buffer_ref_backend(tbm_surface_h buffer)

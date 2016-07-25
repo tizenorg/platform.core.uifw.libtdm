@@ -386,6 +386,9 @@ tdm_buffer_list_get_first_entry(struct list_head *list);
 void
 tdm_buffer_list_dump(struct list_head *list);
 
+void
+tdm_buffer_remove_release_handler_internal(tbm_surface_h buffer);
+
 /* event functions for private */
 tdm_error
 tdm_event_loop_init(tdm_private_display *private_display);

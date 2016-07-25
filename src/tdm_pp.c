@@ -438,6 +438,9 @@ tdm_pp_commit(tdm_pp *pp)
 		LIST_DEL(&b->commit_link);
 
 		if (ret != TDM_ERROR_NONE) {
+			tdm_buffer_remove_release_handler_internal(b->src);
+			tdm_buffer_remove_release_handler_internal(b->dst);
+
 			tdm_buffer_unref_backend(b->src);
 			tdm_buffer_unref_backend(b->dst);
 			LIST_DEL(&b->link);
