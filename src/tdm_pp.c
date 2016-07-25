@@ -441,8 +441,10 @@ tdm_pp_commit(tdm_pp *pp)
 			tdm_buffer_remove_release_handler_internal(b->src);
 			tdm_buffer_remove_release_handler_internal(b->dst);
 
+			_pthread_mutex_unlock(&private_display->lock);
 			tdm_buffer_unref_backend(b->src);
 			tdm_buffer_unref_backend(b->dst);
+			_pthread_mutex_lock(&private_display->lock);
 			LIST_DEL(&b->link);
 		}
 	}
