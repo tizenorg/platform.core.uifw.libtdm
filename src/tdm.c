@@ -1005,10 +1005,11 @@ tdm_display_deinit(tdm_display *dpy)
 
 	_pthread_mutex_lock(&private_display->lock);
 
+	_tdm_display_unload_module(private_display);
+
 	tdm_event_loop_deinit(private_display);
 
 	_tdm_display_destroy_private_display(private_display);
-	_tdm_display_unload_module(private_display);
 
 #ifdef INIT_BUFMGR
 	if (private_display->bufmgr)
