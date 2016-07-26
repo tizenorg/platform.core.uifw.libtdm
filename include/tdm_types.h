@@ -167,6 +167,17 @@ typedef void (*tdm_output_vblank_handler)(tdm_output *output, unsigned int seque
 typedef void (*tdm_output_commit_handler)(tdm_output *output, unsigned int sequence,
 										  unsigned int tv_sec, unsigned int tv_usec,
 										  void *user_data);
+/**
+ * @brief The done handler of a pp object
+ */
+typedef void (*tdm_pp_done_handler)(tdm_pp *pp, tbm_surface_h src,
+									tbm_surface_h dst, void *user_data);
+
+/**
+ * @brief The done handler of a capture object
+ */
+typedef void (*tdm_capture_done_handler)(tdm_capture *capture,
+										 tbm_surface_h buffer, void *user_data);
 
 #ifdef __cplusplus
 }

@@ -123,6 +123,8 @@ tdm_capture_cb_done(tdm_capture *capture_backend, tbm_surface_h buffer,
 		LIST_DEL(&buf_info->link);
 
 	_pthread_mutex_unlock(&private_display->lock);
+	if (private_capture->done_func)
+		private_capture->done_func(private_capture, buffer, private_capture->done_user_data);
 	tdm_buffer_unref_backend(buffer);
 	_pthread_mutex_lock(&private_display->lock);
 }
@@ -353,6 +355,30 @@ tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info)
 	TDM_WARNING_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	private_capture->info = *info;
+
+	_pthread_mutex_unlock(&private_display->lock);
+
+	return ret;
+}
+
+EXTERN tdm_error
+tdm_capture_set_done_handler(tdm_capture *capture, tdm_capture_done_handler func, void *user_data)
+{
+	tdm_private_display *private_display;
+	tdm_private_capture *private_capture;
+	tdm_error ret = TDM_ERROR_NONE;
+
+	TDM_RETURN_VAL_IF_FAIL(capture != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+	private_capture = (tdm_private_capture*)capture;
+	private_display = private_capture->private_display;
+
+	TDM_RETURN_VAL_IF_FAIL(func != NULL, TDM_ERROR_INVALID_PARAMETER);
+
+	_pthread_mutex_lock(&private_display->lock);
+
+	private_capture->done_func = func;
+	private_capture->done_user_data = user_data;
 
 	_pthread_mutex_unlock(&private_display->lock);
 

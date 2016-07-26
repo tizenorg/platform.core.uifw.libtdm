@@ -639,12 +639,6 @@ typedef struct _tdm_func_layer {
 } tdm_func_layer;
 
 /**
- * @brief The done handler of a pp object
- */
-typedef void (*tdm_pp_done_handler)(tdm_pp *pp, tbm_surface_h src,
-									tbm_surface_h dst, void *user_data);
-
-/**
  * @brief The pp functions for a backend module.
  */
 typedef struct _tdm_func_pp {
@@ -711,12 +705,6 @@ typedef struct _tdm_func_pp {
 	void (*reserved7)(void);
 	void (*reserved8)(void);
 } tdm_func_pp;
-
-/**
- * @brief The done handler of a capture object
- */
-typedef void (*tdm_capture_done_handler)(tdm_capture *capture,
-										 tbm_surface_h buffer, void *user_data);
 
 /**
  * @brief The capture functions for a backend module.

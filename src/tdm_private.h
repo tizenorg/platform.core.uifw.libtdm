@@ -225,6 +225,9 @@ struct _tdm_private_pp {
 
 	tdm_info_pp info;
 	pid_t owner_tid;
+
+	tdm_pp_done_handler done_func;
+	void *done_user_data;
 };
 
 struct _tdm_private_capture {
@@ -246,6 +249,9 @@ struct _tdm_private_capture {
 
 	tdm_info_capture info;
 	pid_t owner_tid;
+
+	tdm_capture_done_handler done_func;
+	void *done_user_data;
 };
 
 /* CAUTION:

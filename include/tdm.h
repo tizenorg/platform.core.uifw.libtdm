@@ -693,12 +693,25 @@ tdm_error
 tdm_pp_set_info(tdm_pp *pp, tdm_info_pp *info);
 
 /**
+ * @brief Set the PP done handler to a pp object
+ * @details
+ * The user PP done handler will be called after converting a source buffer's image
+ * to a destination buffer.
+ * @param[in] pp A pp object
+ * @param[in] func A user PP done handler
+ * @param[in] user_data The user data
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_pp_set_done_handler(tdm_pp *pp, tdm_pp_done_handler func, void *user_data);
+
+/**
  * @brief Attach a source buffer and a destination buffer to a pp object
  * @param[in] pp A pp object
  * @param[in] src A source buffer
  * @param[in] dst A destination buffer
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
- * @see tdm_pp_commit, tdm_buffer_add_release_handler, tdm_buffer_release_handler
+ * @see tdm_pp_commit, tdm_pp_set_done_handler
  */
 tdm_error
 tdm_pp_attach(tdm_pp *pp, tbm_surface_h src, tbm_surface_h dst);
@@ -730,11 +743,24 @@ tdm_error
 tdm_capture_set_info(tdm_capture *capture, tdm_info_capture *info);
 
 /**
+ * @brief Set the capture done handler to a capture object
+ * @details
+ * The user capture done handler will be called after capturing a screen into a
+ * buffer.
+ * @param[in] capture A capture object
+ * @param[in] func A user capture done handler
+ * @param[in] user_data The user data
+ * @return #TDM_ERROR_NONE if success. Otherwise, error value.
+ */
+tdm_error
+tdm_capture_set_done_handler(tdm_capture *capture, tdm_capture_done_handler func, void *user_data);
+
+/**
  * @brief Attach a TDM buffer to a capture object
  * @param[in] capture A capture object
  * @param[in] buffer A TDM buffer
  * @return #TDM_ERROR_NONE if success. Otherwise, error value.
- * @see tdm_capture_commit, tdm_buffer_add_release_handler, tdm_buffer_release_handler
+ * @see tdm_capture_commit, tdm_capture_set_done_handler
  */
 tdm_error
 tdm_capture_attach(tdm_capture *capture, tbm_surface_h buffer);
