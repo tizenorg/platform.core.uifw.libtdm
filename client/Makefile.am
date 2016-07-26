@@ -27,18 +27,18 @@ libtdm_client_la_SOURCES = \
 	tdm_client.c
 
 ##########################################################################
-### tdm-dbg
+### tdm-monitor
 ##########################################################################
 bin_PROGRAMS = \
-	tdm-dbg
+	tdm-monitor
 
-#tdm-dbg
-tdm_dbg_SOURCES = \
+#tdm-monitor
+tdm_monitor_SOURCES = \
 	$(top_srcdir)/protocol/tdm-protocol.c \
-	tdm_dbg.c
-tdm_dbg_LDFLAGS = ${LDFLAGS}
-tdm_dbg_LDADD = $(TDM_CLIENT_LIBS) ../common/libtdm-common.la
-tdm_dbg_CFLAGS = \
+	tdm_monitor.c
+tdm_monitor_LDFLAGS = ${LDFLAGS}
+tdm_monitor_LDADD = $(TDM_CLIENT_LIBS) ../common/libtdm-common.la
+tdm_monitor_CFLAGS = \
 	$(TDM_CFLAGS) \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/protocol \

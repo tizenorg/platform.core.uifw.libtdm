@@ -424,7 +424,7 @@ _tdm_server_cb_debug(struct wl_client *client, struct wl_resource *resource, con
 	char message[TDM_SERVER_REPLY_MSG_LEN];
 	int size = sizeof(message);
 
-	tdm_dbg_server_command(private_loop->dpy, options, message, &size);
+	tdm_monitor_server_command(private_loop->dpy, options, message, &size);
 	wl_tdm_send_debug_done(resource, message);
 }
 

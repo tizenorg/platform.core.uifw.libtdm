@@ -579,7 +579,7 @@ tdm_error
 tdm_vblank_wait(tdm_vblank *vblank, unsigned int req_sec, unsigned int req_usec, unsigned int interval, tdm_vblank_handler func, void *user_data);
 
 void
-tdm_dbg_server_command(tdm_display *dpy, const char *options, char *reply, int *len);
+tdm_monitor_server_command(tdm_display *dpy, const char *options, char *reply, int *len);
 
 #ifdef __cplusplus
 }

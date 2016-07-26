@@ -45,16 +45,16 @@
 
 #define TDM_DBG_SERVER_ARGS_MAX		32
 
-static void _tdm_dbg_server_usage(char *app_name, char *reply, int *len);
+static void _tdm_monitor_server_usage(char *app_name, char *reply, int *len);
 
 static void
-_tdm_dbg_server_query(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
+_tdm_monitor_server_query(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
 	tdm_helper_get_display_information(dpy, reply, len);
 }
 
 static void
-_tdm_dbg_server_dpms(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
+_tdm_monitor_server_dpms(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
 	tdm_output *output;
 	int output_idx, dpms_value;
@@ -63,7 +63,7 @@ _tdm_dbg_server_dpms(unsigned int pid, char *cwd, int argc, char *argv[], char *
 	tdm_error ret;
 
 	if (argc < 3) {
-		_tdm_dbg_server_usage(argv[0], reply, len);
+		_tdm_monitor_server_usage(argv[0], reply, len);
 		return;
 	}
 
@@ -87,14 +87,14 @@ _tdm_dbg_server_dpms(unsigned int pid, char *cwd, int argc, char *argv[], char *
 }
 
 static void
-_tdm_dbg_server_debug(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
+_tdm_monitor_server_debug(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
 	int level;
 	char *arg;
 	char *end;
 
 	if (argc < 3) {
-		_tdm_dbg_server_usage(argv[0], reply, len);
+		_tdm_monitor_server_usage(argv[0], reply, len);
 		return;
 	}
 
@@ -114,14 +114,14 @@ _tdm_dbg_server_debug(unsigned int pid, char *cwd, int argc, char *argv[], char 
 }
 
 static void
-_tdm_dbg_server_log_path(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
+_tdm_monitor_server_log_path(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
 	static int old_stdout = -1;
 	char fd_name[TDM_PATH_LEN];
 	char *path;
 
 	if (argc < 3) {
-		_tdm_dbg_server_usage(argv[0], reply, len);
+		_tdm_monitor_server_usage(argv[0], reply, len);
 		return;
 	}
 
@@ -160,7 +160,7 @@ done:
 }
 
 static void
-_tdm_dbg_server_prop(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
+_tdm_monitor_server_prop(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
 	tdm_output *output;
 	tdm_output *layer = NULL;
@@ -175,7 +175,7 @@ _tdm_dbg_server_prop(unsigned int pid, char *cwd, int argc, char *argv[], char *
 	const tdm_prop *props;
 
 	if (argc < 3) {
-		_tdm_dbg_server_usage(argv[0], reply, len);
+		_tdm_monitor_server_usage(argv[0], reply, len);
 		return;
 	}
 
@@ -245,10 +245,10 @@ _tdm_dbg_server_prop(unsigned int pid, char *cwd, int argc, char *argv[], char *
 }
 
 static void
-_tdm_dbg_server_dump(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
+_tdm_monitor_server_dump(unsigned int pid, char *cwd, int argc, char *argv[], char *reply, int *len, tdm_display *dpy)
 {
 	if (argc < 3) {
-		_tdm_dbg_server_usage(argv[0], reply, len);
+		_tdm_monitor_server_usage(argv[0], reply, len);
 		return;
 	}
 
@@ -265,33 +265,33 @@ static struct {
 	const char *ex;
 } option_proc[] = {
 	{
-		"info", _tdm_dbg_server_query,
+		"info", _tdm_monitor_server_query,
 		"show tdm output, layer information", NULL, NULL
 	},
 	{
-		"dpms", _tdm_dbg_server_dpms,
+		"dpms", _tdm_monitor_server_dpms,
 		"set output dpms", "<output_idx>:<dpms>", "0:3 or 0:0"
 	},
 	{
-		"debug", _tdm_dbg_server_debug,
+		"debug", _tdm_monitor_server_debug,
 		"set the debug level and modules(none,mutex,buffer,thread,vblank)",
 		"<level>[@<module1>[,<module2>]]",
 		NULL
 	},
 	{
-		"log_path", _tdm_dbg_server_log_path,
+		"log_path", _tdm_monitor_server_log_path,
 		"set the log path (console,dlog,filepath)",
 		"<path>",
 		"console"
 	},
 	{
-		"prop", _tdm_dbg_server_prop,
+		"prop", _tdm_monitor_server_prop,
 		"set the property of a output or a layer",
 		"<output_idx>[,<layer_idx>]:<prop_name>,<value>",
 		NULL
 	},
 	{
-		"dump", _tdm_dbg_server_dump,
+		"dump", _tdm_monitor_server_dump,
 		"dump buffers (type: layer, pp, capture, none)",
 		"<object_type1>[,<object_type2>[,...]]",
 		NULL
@@ -299,7 +299,7 @@ static struct {
 };
 
 static void
-_tdm_dbg_server_usage(char *app_name, char *reply, int *len)
+_tdm_monitor_server_usage(char *app_name, char *reply, int *len)
 {
 	int opt_size = sizeof(option_proc) / sizeof(option_proc[0]);
 	int i;
@@ -317,13 +317,13 @@ _tdm_dbg_server_usage(char *app_name, char *reply, int *len)
 }
 
 static void
-_tdm_dbg_server_command(unsigned int pid, char *cwd, tdm_display *dpy, int argc, char *argv[], char *reply, int *len)
+_tdm_monitor_server_command(unsigned int pid, char *cwd, tdm_display *dpy, int argc, char *argv[], char *reply, int *len)
 {
 	int opt_size = sizeof(option_proc) / sizeof(option_proc[0]);
 	int i;
 
 	if (argc < 2) {
-		_tdm_dbg_server_usage(argv[0], reply, len);
+		_tdm_monitor_server_usage(argv[0], reply, len);
 		return;
 	}
 
@@ -339,13 +339,13 @@ _tdm_dbg_server_command(unsigned int pid, char *cwd, tdm_display *dpy, int argc,
 		}
 	}
 
-	_tdm_dbg_server_usage(argv[0], reply, len);
+	_tdm_monitor_server_usage(argv[0], reply, len);
 	return;
 }
 
 
 INTERN void
-tdm_dbg_server_command(tdm_display *dpy, const char *options, char *reply, int *len)
+tdm_monitor_server_command(tdm_display *dpy, const char *options, char *reply, int *len)
 {
 	unsigned int pid;
 	char cwd[1024];
@@ -359,14 +359,14 @@ tdm_dbg_server_command(tdm_display *dpy, const char *options, char *reply, int *
 
 	arg = strtok_r(temp, " ", &end);
 	if (!arg) {
-		TDM_SNPRINTF(reply, len, "no pid for tdm-dbg");
+		TDM_SNPRINTF(reply, len, "no pid for tdm-monitor");
 		return;
 	}
 	pid = strtol(arg, &e, 10);
 
 	arg = strtok_r(NULL, " ", &end);
 	if (!arg) {
-		TDM_SNPRINTF(reply, len, "no cwd for tdm-dbg");
+		TDM_SNPRINTF(reply, len, "no cwd for tdm-monitor");
 		return;
 	}
 	snprintf(cwd, sizeof(cwd), "%s", arg);
@@ -377,11 +377,11 @@ tdm_dbg_server_command(tdm_display *dpy, const char *options, char *reply, int *
 	while (argv[argc]) {
 		argc++;
 		if (argc == TDM_DBG_SERVER_ARGS_MAX) {
-			TDM_SNPRINTF(reply, len, "too many arguments for tdm-dbg");
+			TDM_SNPRINTF(reply, len, "too many arguments for tdm-monitor");
 			break;
 		}
 		argv[argc] = strtok_r(NULL, " ", &end);
 	}
 
-	_tdm_dbg_server_command(pid, cwd, dpy, argc, argv, reply, len);
+	_tdm_monitor_server_command(pid, cwd, dpy, argc, argv, reply, len);
 }

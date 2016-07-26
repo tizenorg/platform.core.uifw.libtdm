@@ -50,56 +50,56 @@
 	} \
 }
 
-typedef struct _tdm_dbg_info {
+typedef struct _tdm_monitor_info {
 	struct wl_display *display;
 	struct wl_registry *registry;
 	struct wl_tdm *tdm;
-} tdm_dbg_info;
+} tdm_monitor_info;
 
-static tdm_dbg_info td_info;
+static tdm_monitor_info td_info;
 static int done;
 
 static void
-_tdm_dbg_cb_debug_done(void *data, struct wl_tdm *wl_tdm, const char *message)
+_tdm_monitor_cb_debug_done(void *data, struct wl_tdm *wl_tdm, const char *message)
 {
 	printf("%s", message);
 
 	done = 1;
 }
 
-static const struct wl_tdm_listener  tdm_dbg_listener = {
-	_tdm_dbg_cb_debug_done,
+static const struct wl_tdm_listener  tdm_monitor_listener = {
+	_tdm_monitor_cb_debug_done,
 };
 
 static void
-_tdm_dbg_cb_global(void *data, struct wl_registry *registry,
-				   uint32_t name, const char *interface,
-				   uint32_t version)
+_tdm_monitor_cb_global(void *data, struct wl_registry *registry,
+					   uint32_t name, const char *interface,
+					   uint32_t version)
 {
-	tdm_dbg_info *info = data;
+	tdm_monitor_info *info = data;
 
 	if (strncmp(interface, "wl_tdm", 6) == 0) {
 		info->tdm = wl_registry_bind(registry, name, &wl_tdm_interface, version);
 		exit_if_fail(info->tdm != NULL);
-		wl_tdm_add_listener(info->tdm, &tdm_dbg_listener, info);
+		wl_tdm_add_listener(info->tdm, &tdm_monitor_listener, info);
 		wl_display_flush(info->display);
 	}
 }
 
 static void
-_tdm_dbg_cb_global_remove(void *data, struct wl_registry *registry, uint32_t name)
+_tdm_monitor_cb_global_remove(void *data, struct wl_registry *registry, uint32_t name)
 {
 }
 
-static const struct wl_registry_listener tdm_dbg_registry_listener = {
-	_tdm_dbg_cb_global,
-	_tdm_dbg_cb_global_remove
+static const struct wl_registry_listener tdm_monitor_registry_listener = {
+	_tdm_monitor_cb_global,
+	_tdm_monitor_cb_global_remove
 };
 
 int
 main(int argc, char ** argv)
 {
-	tdm_dbg_info *info = &td_info;
+	tdm_monitor_info *info = &td_info;
 	int i, ret = 0;
 	char cwd[1024];
 	char options[1024];
@@ -124,7 +124,7 @@ main(int argc, char ** argv)
 	exit_if_fail(info->registry != NULL);
 
 	wl_registry_add_listener(info->registry,
-							 &tdm_dbg_registry_listener, info);
+							 &tdm_monitor_registry_listener, info);
 	wl_display_roundtrip(info->display);
 	exit_if_fail(info->tdm != NULL);
 
