@@ -230,7 +230,7 @@ typedef struct _tdm_test_server_prop {
 
 typedef struct _tdm_test_server_buffer {
 	/* variables for test */
-	tbm_surface_h buffer;
+	tbm_surface_h b;
 	int in_use;
 	tdm_test_server_layer *l;
 
@@ -264,7 +264,7 @@ typedef struct _tdm_test_server_pp {
 	tdm_test_server *data;
 	tdm_test_server_layer *l;
 	tdm_pp *pp;
-	tdm_test_server_buffer *bufs[6];
+	tbm_surface_h bufs[6];
 	int buf_idx;
 
 	tdm_event_loop_source *timer_source;
@@ -297,7 +297,7 @@ struct _tdm_test_server_layer {
 	int is_primary;
 	tdm_test_server_pp *owner_p;
 	tdm_test_server_capture *owner_c;
-	tdm_test_server_buffer *bufs[3];
+	tbm_surface_h bufs[3];
 	int buf_idx;
 };
 
@@ -318,8 +318,8 @@ struct _tdm_test_server {
 
 static void run_test(tdm_test_server *data);
 static void output_setup(tdm_test_server_output *o);
-static void layer_show_buffer(tdm_test_server_layer *l, tdm_test_server_buffer *b);
-static void capture_attach(tdm_test_server_capture *c, tdm_test_server_buffer *b);
+static void layer_show_buffer(tdm_test_server_layer *l, tbm_surface_h b);
+static void capture_attach(tdm_test_server_capture *c, tbm_surface_h b);
 
 static char*
 parse_size(tdm_size *size, char *arg)
@@ -749,6 +749,29 @@ interpret_args(tdm_test_server *data)
 }
 
 static tdm_test_server tts_data;
+static int tts_buffer_key;
+#define TTS_BUFFER_KEY ((unsigned long)&tts_buffer_key)
+
+static tbm_surface_h
+buffer_allocate(int width, int height, int format, int flags)
+{
+	tdm_test_server_buffer *tb = calloc(1, sizeof *tb);
+	TDM_EXIT_IF_FAIL(tb != NULL);
+	tb->b = tbm_surface_internal_create_with_flags(width, height, format, flags);
+	TDM_EXIT_IF_FAIL(tb->b != NULL);
+	tdm_helper_clear_buffer(tb->b);
+	tbm_surface_internal_add_user_data(tb->b, TTS_BUFFER_KEY, free);
+	tbm_surface_internal_set_user_data(tb->b, TTS_BUFFER_KEY, tb);
+	return tb->b;
+}
+
+static tdm_test_server_buffer*
+get_tts_buffer(tbm_surface_h b)
+{
+	tdm_test_server_buffer *tb = NULL;
+	tbm_surface_internal_get_user_data(b, TTS_BUFFER_KEY, (void **)&tb);
+	return tb;
+}
 
 static void
 exit_test(int sig)
@@ -775,10 +798,8 @@ exit_test(int sig)
 				LIST_DEL(&w->link);
 				free(w);
 			}
-			for (i = 0; i < TDM_ARRAY_SIZE(l->bufs); i++) {
-				tbm_surface_destroy(l->bufs[i]->buffer);
-				free(l->bufs[i]);
-			}
+			for (i = 0; i < TDM_ARRAY_SIZE(l->bufs); i++)
+				tbm_surface_destroy(l->bufs[i]);
 			free(l);
 		}
 
@@ -801,10 +822,8 @@ exit_test(int sig)
 		tdm_display_unlock(data->display);
 
 		tdm_pp_destroy(p->pp);
-		for (i = 0; i < TDM_ARRAY_SIZE(p->bufs); i++) {
-			tbm_surface_destroy(p->bufs[i]->buffer);
-			free(p->bufs[i]);
-		}
+		for (i = 0; i < TDM_ARRAY_SIZE(p->bufs); i++)
+			tbm_surface_destroy(p->bufs[i]);
 		free(p);
 	}
 
@@ -925,7 +944,7 @@ output_setup(tdm_test_server_output *o)
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 }
 
-static tdm_test_server_buffer*
+static tbm_surface_h
 layer_get_buffer(tdm_test_server_layer *l)
 {
 	int i, size = TDM_ARRAY_SIZE(l->bufs);
@@ -935,17 +954,17 @@ layer_get_buffer(tdm_test_server_layer *l)
 			int height = (l->info.src_config.size.v)?:l->info.src_config.pos.h;
 			unsigned int format = (l->info.src_config.format)?:DEFAULT_FORMAT;
 			int flags = l->o->data->bflags;
-			tdm_test_server_buffer *b = calloc(1, sizeof *b);
+			tbm_surface_h b = buffer_allocate(width, height, format, flags);
 			TDM_EXIT_IF_FAIL(b != NULL);
-			b->buffer = tbm_surface_internal_create_with_flags(width, height, format, flags);
-			TDM_EXIT_IF_FAIL(b->buffer != NULL);
-			tdm_helper_clear_buffer(b->buffer);
 			l->bufs[i] = b;
 		}
 	}
-	for (i = 0; i < size; i++)
-		if (!l->bufs[i]->in_use)
+	for (i = 0; i < size; i++) {
+		tdm_test_server_buffer *tb = get_tts_buffer(l->bufs[i]);
+		TDM_EXIT_IF_FAIL(tb != NULL);
+		if (!tb->in_use)
 			return l->bufs[i];
+	}
 	printf("no available layer buffer.\n");
 	exit(0);
 }
@@ -956,38 +975,41 @@ layer_cb_commit(tdm_output *output, unsigned int sequence,
 				void *user_data)
 {
 	tdm_test_server_layer *l = user_data;
-	tdm_test_server_buffer *b = layer_get_buffer(l);
+	tbm_surface_h b = layer_get_buffer(l);
+	TDM_EXIT_IF_FAIL(b != NULL);
 
 	if (!l->is_primary || l->o->fill_primary_layer)
-		tdm_test_buffer_fill(b->buffer, l->data->b_fill);
-
-	TDM_EXIT_IF_FAIL(b != NULL);
+		tdm_test_buffer_fill(b, l->data->b_fill);
 
 	if (!l->is_primary || l->o->fill_primary_layer)
 		layer_show_buffer(l, b);
 }
 
 static void
-layer_cb_buffer_release(tbm_surface_h buffer, void *user_data)
+layer_cb_buffer_release(tbm_surface_h b, void *user_data)
 {
-	tdm_test_server_buffer *b = user_data;
-	b->in_use = 0;
-	tdm_buffer_remove_release_handler(b->buffer, layer_cb_buffer_release, b);
-	if (b->done)
-		b->done(buffer, user_data);
+	tdm_test_server_buffer *tb = get_tts_buffer(b);
+	tb->in_use = 0;
+	tdm_buffer_remove_release_handler(b, layer_cb_buffer_release, NULL);
+	if (tb->done)
+		tb->done(b, user_data);
 }
 
 static void
-layer_show_buffer(tdm_test_server_layer *l, tdm_test_server_buffer *b)
+layer_show_buffer(tdm_test_server_layer *l, tbm_surface_h b)
 {
 	tdm_test_server *data = l->o->data;
+	tdm_test_server_buffer *tb;
 	tdm_error ret;
 
-	ret = tdm_layer_set_buffer(l->layer, b->buffer);
+	ret = tdm_layer_set_buffer(l->layer, b);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
-	b->in_use = 1;
-	tdm_buffer_add_release_handler(b->buffer, layer_cb_buffer_release, b);
+	tb = get_tts_buffer(b);
+	TDM_EXIT_IF_FAIL(tb != NULL);
+
+	tb->in_use = 1;
+	tdm_buffer_add_release_handler(b, layer_cb_buffer_release, NULL);
 
 	if (data->do_vblank)
 		ret = tdm_output_commit(l->o->output, 0, layer_cb_commit, l);
@@ -999,7 +1021,7 @@ layer_show_buffer(tdm_test_server_layer *l, tdm_test_server_buffer *b)
 }
 
 static void
-layer_setup(tdm_test_server_layer *l, tdm_test_server_buffer *b)
+layer_setup(tdm_test_server_layer *l, tbm_surface_h b)
 {
 	tdm_test_server_prop *w = NULL;
 	const tdm_prop *props;
@@ -1011,7 +1033,7 @@ layer_setup(tdm_test_server_layer *l, tdm_test_server_buffer *b)
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	/* The size and format information should be same with buffer's */
-	tbm_surface_get_info(b->buffer, &info);
+	tbm_surface_get_info(b, &info);
 	if (IS_RGB(info.format)) {
 		l->info.src_config.size.h = info.planes[0].stride >> 2;
 		l->info.src_config.size.v = info.height;
@@ -1045,7 +1067,7 @@ layer_setup(tdm_test_server_layer *l, tdm_test_server_buffer *b)
 	}
 }
 
-static tdm_test_server_buffer*
+static tbm_surface_h
 pp_get_buffer(tdm_test_server_pp *p)
 {
 	int i, size = TDM_ARRAY_SIZE(p->bufs);
@@ -1054,17 +1076,15 @@ pp_get_buffer(tdm_test_server_pp *p)
 			int width = (p->info.src_config.size.h)?:p->info.src_config.pos.w;
 			int height = (p->info.src_config.size.v)?:p->info.src_config.pos.h;
 			unsigned int format = (p->info.src_config.format)?:DEFAULT_FORMAT;
-			tdm_test_server_buffer *b = calloc(1, sizeof *b);
+			tbm_surface_h b = buffer_allocate(width, height, format, 0);
 			TDM_EXIT_IF_FAIL(b != NULL);
-			b->buffer = tbm_surface_create(width, height, format);
-			TDM_EXIT_IF_FAIL(b->buffer != NULL);
-			tdm_helper_clear_buffer(b->buffer);
 			p->bufs[i] = b;
 		}
 	}
 	for (i = 0; i < size; i++) {
-		if (!p->bufs[i]->in_use) {
-			tdm_test_buffer_fill(p->bufs[i]->buffer, p->data->b_fill);
+		tdm_test_server_buffer *tb = get_tts_buffer(p->bufs[i]);
+		if (!tb->in_use) {
+			tdm_test_buffer_fill(p->bufs[i], p->data->b_fill);
 			return p->bufs[i];
 		}
 	}
@@ -1073,34 +1093,38 @@ pp_get_buffer(tdm_test_server_pp *p)
 }
 
 static void
-pp_cb_sb_release(tbm_surface_h buffer, void *user_data)
+pp_cb_done(tdm_pp *pp, tbm_surface_h sb, tbm_surface_h db, void *user_data)
 {
-	tdm_test_server_buffer *b = user_data;
-	b->in_use = 0;
-	tdm_buffer_remove_release_handler(b->buffer, pp_cb_sb_release, b);
+	tdm_test_server_buffer *stb, *dtb;
+
+	stb = get_tts_buffer(sb);
+	TDM_EXIT_IF_FAIL(stb != NULL);
+
+	dtb = get_tts_buffer(db);
+	TDM_EXIT_IF_FAIL(dtb != NULL);
+
+	stb->in_use = dtb->in_use = 0;
+
+	layer_show_buffer(dtb->l, db);
 }
 
 static void
-pp_cb_db_release(tbm_surface_h buffer, void *user_data)
+pp_convert_buffer(tdm_test_server_pp *p, tbm_surface_h sb, tbm_surface_h db)
 {
-	tdm_test_server_buffer *b = user_data;
-	b->in_use = 0;
-	tdm_buffer_remove_release_handler(b->buffer, pp_cb_db_release, b);
-	layer_show_buffer(b->l, b);
-}
-
-static void
-pp_convert_buffer(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buffer *db)
-{
+	tdm_test_server_buffer *stb, *dtb;
 	tdm_error ret;
 
-	ret = tdm_pp_attach(p->pp, sb->buffer, db->buffer);
-	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+	stb = get_tts_buffer(sb);
+	TDM_EXIT_IF_FAIL(stb != NULL);
 
-	sb->in_use = db->in_use = 1;
-	db->l = p->l;
-	tdm_buffer_add_release_handler(sb->buffer, pp_cb_sb_release, sb);
-	tdm_buffer_add_release_handler(db->buffer, pp_cb_db_release, db);
+	dtb = get_tts_buffer(db);
+	TDM_EXIT_IF_FAIL(dtb != NULL);
+
+	stb->in_use = dtb->in_use = 1;
+	dtb->l = p->l;
+
+	ret = tdm_pp_attach(p->pp, sb, db);
+	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	ret = tdm_pp_commit(p->pp);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
@@ -1120,7 +1144,7 @@ pp_cb_timeout(void *user_data)
 {
 	tdm_test_server_pp *p = user_data;
 	tdm_test_server *data = p->l->o->data;
-	tdm_test_server_buffer *sb, *db;
+	tbm_surface_h sb, db;
 	tdm_error ret;
 
 	tdm_display_unlock(data->display);
@@ -1143,7 +1167,7 @@ pp_cb_timeout(void *user_data)
 }
 
 static void
-pp_setup(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buffer *db)
+pp_setup(tdm_test_server_pp *p, tbm_surface_h sb, tbm_surface_h db)
 {
 	tdm_test_server *data = p->l->o->data;
 	tbm_surface_info_s info;
@@ -1153,7 +1177,7 @@ pp_setup(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buff
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	/* The size and format information should be same with buffer's */
-	tbm_surface_get_info(sb->buffer, &info);
+	tbm_surface_get_info(sb, &info);
 	if (IS_RGB(info.format)) {
 		p->info.src_config.size.h = info.planes[0].stride >> 2;
 		p->info.src_config.size.v = info.height;
@@ -1164,7 +1188,7 @@ pp_setup(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buff
 	p->info.src_config.format = info.format;
 
 	/* The size and format information should be same with buffer's */
-	tbm_surface_get_info(db->buffer, &info);
+	tbm_surface_get_info(db, &info);
 	if (IS_RGB(info.format)) {
 		p->info.dst_config.size.h = info.planes[0].stride >> 2;
 		p->info.dst_config.size.v = info.height;
@@ -1175,6 +1199,9 @@ pp_setup(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buff
 	p->info.dst_config.format = info.format;
 
 	ret = tdm_pp_set_info(p->pp, &p->info);
+	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+
+	ret = tdm_pp_set_done_handler(p->pp, pp_cb_done, NULL);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	printf("pp: ");
@@ -1206,34 +1233,46 @@ pp_setup(tdm_test_server_pp *p, tdm_test_server_buffer *sb, tdm_test_server_buff
 }
 
 static void
-capture_cb_buffer_done(tbm_surface_h buffer, void *user_data)
+capture_cb_buffer_done(tbm_surface_h b, void *user_data)
 {
-	tdm_test_server_buffer *b = user_data;
-	capture_attach(b->c, b);
+	tdm_test_server_buffer *tb;
+
+	tb = get_tts_buffer(b);
+	TDM_EXIT_IF_FAIL(tb != NULL);
+
+	capture_attach(tb->c, b);
 }
 
 static void
-capture_cb_buffer_release(tbm_surface_h buffer, void *user_data)
+capture_cb_done(tdm_capture *capture, tbm_surface_h b, void *user_data)
 {
-	tdm_test_server_buffer *b = user_data;
-	b->in_use = 0;
-	tdm_buffer_remove_release_handler(b->buffer, capture_cb_buffer_release, b);
-	b->done = capture_cb_buffer_done;
-	layer_show_buffer(b->l, b);
+	tdm_test_server_buffer *tb;
+
+	tb = get_tts_buffer(b);
+	TDM_EXIT_IF_FAIL(tb != NULL);
+
+	tb->in_use = 0;
+
+	tb->done = capture_cb_buffer_done;
+	layer_show_buffer(tb->l, b);
 }
 
 static void
-capture_attach(tdm_test_server_capture *c, tdm_test_server_buffer *b)
+capture_attach(tdm_test_server_capture *c, tbm_surface_h b)
 {
 	tdm_error ret;
+	tdm_test_server_buffer *tb;
 
-	ret = tdm_capture_attach(c->capture, b->buffer);
+	tb = get_tts_buffer(b);
+	TDM_EXIT_IF_FAIL(tb != NULL);
+
+	tb->in_use = 1;
+	tb->l = c->l;
+	tb->c = c;
+
+	ret = tdm_capture_attach(c->capture, b);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
-	b->in_use = 1;
-	b->l = c->l;
-	b->c = c;
-	tdm_buffer_add_release_handler(b->buffer, capture_cb_buffer_release, b);
 	printf("capture:\tc(%p) b(%p)\n", c, b);
 
 	ret = tdm_capture_commit(c->capture);
@@ -1241,7 +1280,7 @@ capture_attach(tdm_test_server_capture *c, tdm_test_server_buffer *b)
 }
 
 static void
-capture_setup(tdm_test_server_capture *c, tdm_test_server_buffer *b)
+capture_setup(tdm_test_server_capture *c, tbm_surface_h b)
 {
 	tdm_test_server *data = c->l->o->data;
 	tdm_output *output;
@@ -1266,7 +1305,7 @@ capture_setup(tdm_test_server_capture *c, tdm_test_server_buffer *b)
 	TDM_EXIT_IF_FAIL(c->capture != NULL);
 
 	/* The size and format information should be same with buffer's */
-	tbm_surface_get_info(b->buffer, &info);
+	tbm_surface_get_info(b, &info);
 	if (IS_RGB(info.format)) {
 		c->info.dst_config.size.h = info.planes[0].stride >> 2;
 		c->info.dst_config.size.v = info.height;
@@ -1277,6 +1316,9 @@ capture_setup(tdm_test_server_capture *c, tdm_test_server_buffer *b)
 	c->info.dst_config.format = info.format;
 
 	ret = tdm_capture_set_info(c->capture, &c->info);
+	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
+
+	ret = tdm_capture_set_done_handler(c->capture, capture_cb_done, NULL);
 	TDM_EXIT_IF_FAIL(ret == TDM_ERROR_NONE);
 
 	printf("capture: o(%d) l(%d) ", c->output_idx, c->layer_idx);
@@ -1304,10 +1346,10 @@ run_test(tdm_test_server *data)
 	LIST_FOR_EACH_ENTRY(o, &data->output_list, link) {
 		LIST_FOR_EACH_ENTRY(l, &o->layer_list, link) {
 			if (!l->owner_p && !l->owner_c) {
-				tdm_test_server_buffer *b;
+				tbm_surface_h b;
 				b = layer_get_buffer(l);
 				if (!l->is_primary || l->o->fill_primary_layer)
-					tdm_test_buffer_fill(b->buffer, data->b_fill);
+					tdm_test_buffer_fill(b, data->b_fill);
 				layer_setup(l, b);
 				layer_show_buffer(l, b);
 			}
@@ -1315,7 +1357,7 @@ run_test(tdm_test_server *data)
 	}
 
 	LIST_FOR_EACH_ENTRY(p, &data->pp_list, link) {
-		tdm_test_server_buffer *sb, *db;
+		tbm_surface_h sb, db;
 		TDM_GOTO_IF_FAIL(caps & TDM_DISPLAY_CAPABILITY_PP, no_pp);
 		sb = pp_get_buffer(p);
 		TDM_EXIT_IF_FAIL(sb != NULL);
@@ -1327,7 +1369,7 @@ run_test(tdm_test_server *data)
 
 	LIST_FOR_EACH_ENTRY(c, &data->capture_list, link) {
 		TDM_GOTO_IF_FAIL(caps & TDM_DISPLAY_CAPABILITY_CAPTURE, no_capture);
-		tdm_test_server_buffer *b;
+		tbm_surface_h b;
 		b = layer_get_buffer(c->l);
 		capture_setup(c, b);
 		capture_attach(c, b);
