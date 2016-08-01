@@ -30,6 +30,16 @@ LT_INIT([disable-static])
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+AC_ARG_ENABLE(android-support, [ AS_HELP_STRING([--enable-android-support], [to build for the Android]) ],
+				[ android_support="yes" ],
+				[ android_support="no" ])
+
+AM_CONDITIONAL(ANDROID_SUPPORT, test "x$android_support" = xyes)
+
+if test "x$android_support" = "xyes"; then
+   AC_DEFINE(HAVE_ANDROID_SUPPORT, 1, [If the library is being built under the Android.])
+fi
+
 AC_PATH_PROG([wayland_scanner], [wayland-scanner])
 if test x$wayland_scanner = x; then
    AC_MSG_ERROR([wayland-scanner is needed to compile])
@@ -37,7 +47,12 @@ fi
 
 PKG_CHECK_MODULES(WAYLAND_SCANNER, wayland-scanner >= 1.7.0)
 
-PKG_CHECK_MODULES(TDM, dlog libtbm libpng pixman-1 wayland-server)
+# Android hasn't dlog
+if test "x$android_support" = "xno"; then
+   PKG_CHECK_MODULES(TDM, dlog libtbm libpng pixman-1 wayland-server)
+else
+   PKG_CHECK_MODULES(TDM, libtbm libpng pixman-1 wayland-server)
+fi
 
 PKG_CHECK_MODULES(TTRACE,
 		[ttrace],
@@ -51,7 +66,13 @@ fi
 AC_SUBST(TDM_CFLAGS)
 AC_SUBST(TDM_LIBS)
 
-PKG_CHECK_MODULES(TDM_CLIENT, dlog wayland-client)
+# Android hasn't dlog
+if test "x$android_support" = "xno"; then
+   PKG_CHECK_MODULES(TDM_CLIENT, dlog wayland-client)
+else
+   PKG_CHECK_MODULES(TDM_CLIENT, wayland-client)
+fi
+
 AC_SUBST(TDM_CLIENT_CFLAGS)
 AC_SUBST(TDM_CLIENT_LIBS)
 
