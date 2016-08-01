@@ -179,9 +179,18 @@ tdm_thread_deinit(tdm_private_loop *private_loop)
 
 	if (!private_loop->private_thread)
 		return;
-
+	
+	/* TODO: the Android's libc (bionic) doesn't implement full POSIX threads
+	 * functionality, in particular pthread_cancel, so we have to figure out
+	 * how to stop this thread by the another means or to implement pthread_cancel by self.
+	 * Now this function is called ONLY before a program termination, so we don't care
+	 * about anything :-) */
+#ifndef HAVE_ANDROID_SUPPORT
 	pthread_cancel(private_loop->private_thread->event_thread);
-
+#else
+	return;
+#endif
+	
 	private_display = private_loop->dpy;
 
 	/* before falling into the block of pthread_join, we have to unlock the mutex
