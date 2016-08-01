@@ -1,7 +1,15 @@
 libtdm_la_LTLIBRARIES = libtdm.la
 libtdm_ladir = $(libdir)
 libtdm_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-libtdm_la_LIBADD = $(TDM_LIBS) -ldl -lpthread ../common/libtdm-common.la
+libtdm_la_LIBADD = $(TDM_LIBS) -ldl ../common/libtdm-common.la
+
+# the Android's libc (bionic) has the built-in support for pthread
+if ANDROID_SUPPORT
+libtdm_la_LIBADD += -lm
+else
+libtdm_la_LIBADD += -lpthread
+endif
+
 libtdm_la_CFLAGS = \
 	$(CFLAGS) \
 	$(WARN_CFLAGS) \

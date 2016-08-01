@@ -30,6 +30,16 @@ LT_INIT([disable-static])
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+AC_ARG_ENABLE([android-support], AS_HELP_STRING([--enable-android-support], [to build for the Android]),,
+	      enable_android_support=no)
+
+AM_CONDITIONAL([ANDROID_SUPPORT], [test "x$enable_android_support" != "xno"])
+
+if test "x$enable_android_support" != "xno"; then
+   AC_MSG_WARN("Library is being built under the Android.")
+   AC_DEFINE(HAVE_ANDROID_SUPPORT, 1, [If the library is being built under the Android.])
+fi
+
 AC_PATH_PROG([wayland_scanner], [wayland-scanner])
 if test x$wayland_scanner = x; then
    AC_MSG_ERROR([wayland-scanner is needed to compile])
